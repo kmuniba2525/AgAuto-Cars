@@ -42,7 +42,7 @@ import bakery_image from "./bakery_image.png";                       // Sanding
 import grain_image from "./grain_image.png";                         // Masking Tape
 import Meat from './Meat.png';                                       // Body Sealant
 import Snacks from './Snacks.png';                                   // Gloves
-import HouseHold from './HouseHold.jpg';                             // Ceramic Shield
+import household from './household.jpg';                             // Ceramic Shield
 import Spices from './Spices.jpg';                                   // Acrylic Spray
 import PersonalCare from './PersonalCare.png';                       // Workwear
 
@@ -140,7 +140,7 @@ export const categories = [
   {
     text: "Ceramic & Car Care",
     path: "CarCare",
-    image: HouseHold,
+    image: household,
     bgColor: "#2A1E1A",
   },
   {
