@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+
+@import "tailwindcss";
+
+html,
+body,
+#root {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    width: 100%;
+}
+
+* {
+    font-family: "Outfit", sans-serif;
+}
+
+@theme {
+    --color-primary: #111111;
+    --color-primary-dull: #1C1F26;
+
+    /* Automotive Red */
+    --color-accent: #E10600;
+    --color-accent-dull: #C50500;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+/* Navigation arrows */
+
+.swiper-button-next,
+.swiper-button-prev {
+    color: #FFFFFF !important;
+}
+
+.swiper-button-next:after,
+.swiper-button-prev:after {
+    font-size: 30px !important;
+}
+
+/* Pagination dots */
+
+.swiper-pagination-bullet {
+    background: #E5E7EB !important;
+    opacity: .6;
+}
+
+.swiper-pagination-bullet-active {
+    background: #E10600 !important;
+    opacity: 1;
+}
+
+/* Smooth text animation */
+
+.swiper-slide-active h1 {
+    animation: fadeUp .8s ease;
+}
+
+.swiper-slide-active p {
+    animation: fadeUp 1s ease;
+}
+
+.swiper-slide-active a {
+    animation: fadeUp 1.2s ease;
+}
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Theme Colors
+
+Primary Red: #E10600
+Dark Red: #C50500
+
+Dark Black: #111111
+Secondary Black: #1C1F26
+
+Light Gray: #E5E7EB
+White: #FFFFFF
+
+*/
