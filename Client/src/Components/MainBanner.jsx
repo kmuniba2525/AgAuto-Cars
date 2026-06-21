@@ -13,7 +13,6 @@ import "swiper/css/pagination";
 const slides = [
   {
     image: assets.main_banner_bg,
-    mobileImage: assets.main_banner_bg_sm,
     tagline: "🚗 Premium Auto Parts",
     title: (
       <>
@@ -31,7 +30,6 @@ const slides = [
 
   {
     image: assets.main_banner_bg2,
-    mobileImage: assets.main_banner_bg_sm2,
     tagline: "⚙️ Performance Upgrades",
     title: (
       <>
@@ -49,7 +47,6 @@ const slides = [
 
   {
     image: assets.main_banner_bg3,
-    mobileImage: assets.main_banner_bg_sm3,
     tagline: "🔥 Best Deals",
     title: (
       <>
@@ -83,19 +80,12 @@ const MainBanner = () => {
         {slides.map((slide, index) => (
           <SwiperSlide key={index}>
             <div className="relative w-full h-screen">
-              
-              {/* Desktop Image */}
+
+              {/* Single image for both desktop and mobile */}
               <img
                 src={slide.image}
                 alt=""
-                className="hidden md:block absolute inset-0 w-full h-full object-cover"
-              />
-
-              {/* Mobile Image */}
-              <img
-                src={slide.mobileImage}
-                alt=""
-                className="md:hidden absolute inset-0 w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover"
               />
 
               {/* Premium Overlay */}
@@ -104,7 +94,7 @@ const MainBanner = () => {
               {/* Content */}
               <div className="absolute inset-0 flex items-center justify-center text-center px-6">
                 <div className="max-w-3xl">
-                  
+
                   {/* Badge */}
                   <span className="inline-block px-5 py-2 rounded-full bg-[#E10600]/20 border border-[#E10600]/40 text-[#E10600] text-sm font-medium mb-6 backdrop-blur-sm">
                     {slide.tagline}

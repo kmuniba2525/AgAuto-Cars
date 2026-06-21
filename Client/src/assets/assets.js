@@ -23,9 +23,9 @@ import trust_icon from "./trust_icon.svg";
 import black_arrow_icon from "./black_arrow_icon.svg";
 import white_arrow_icon from "./white_arrow_icon.svg";
 import main_banner_bg from "./main_banner_bg.png";
-import main_banner_bg_sm from "./main_banner_bg_sm.png";
+// import main_banner_bg_sm from "./main_banner_bg_sm.png";
 import bottom_banner_image from "./bottom_banner_image.png";
-import bottom_banner_image_sm from "./bottom_banner_image_sm.png";
+// import bottom_banner_image_sm from "./bottom_banner_image_sm.png";
 import add_address_iamge from "./add_address_image.svg";
 import bell_icon from './bell_icon.png';
 import chat_icon from './chat_icon.png';
@@ -69,9 +69,9 @@ export const assets = {
   black_arrow_icon,
   white_arrow_icon,
   main_banner_bg,
-  main_banner_bg_sm,
+  // main_banner_bg_sm,
   bottom_banner_image,
-  bottom_banner_image_sm,
+  // bottom_banner_image_sm,
   main_banner_bg2,
   main_banner_bg3,
   add_address_iamge,
