@@ -56,7 +56,7 @@ const Navbar = () => {
                         <img
     src={assets.Logo}
     alt="Auto Center AB"
-    className="h-24 md:h-20 w-auto object-contain"
+    className="h-12 sm:h-14 md:h-20 w-auto object-contain"
 />
                     </NavLink>
                 </div>
@@ -70,8 +70,8 @@ const Navbar = () => {
                     </div>
                 </div>
 
-                {/* RIGHT: SEARCH + ICONS */}
-                <div className="flex flex-2 items-center justify-end gap-5">
+                {/* RIGHT: SEARCH + ICONS (hidden on mobile, shown from sm and up) */}
+                <div className="hidden sm:flex flex-1 items-center justify-end gap-5">
 
                     {/* SEARCH */}
                     <div className="hidden lg:flex items-center gap-2 border border-gray-700 bg-[#1C1C1C] px-4 py-2 rounded-md w-[260px] focus-within:border-red-600 transition">
@@ -149,14 +149,38 @@ const Navbar = () => {
                         <img src={assets.chat_icon} className="w-6 opacity-80" />
                     </button>
 
-                    <button onClick={() => setOpen(!open)}>
-                        <img src={assets.menu_icon} />
+                    <button onClick={() => setOpen(!open)} aria-label="Toggle menu">
+                        <img src={assets.menu_icon} className="w-6 h-6 opacity-80" alt="menu" />
                     </button>
                 </div>
 
                 {/* MOBILE MENU */}
                 {open && (
-                    <div className="absolute top-[72px] left-0 w-full bg-[#111111] border-t border-gray-800 py-5 flex flex-col gap-3 px-6 text-sm md:hidden z-50">
+                    <div className="absolute top-[72px] left-0 w-full bg-[#111111] border-t border-gray-800 py-5 flex flex-col gap-3 px-6 text-sm sm:hidden z-50">
+
+                        {/* MOBILE SEARCH (search is hidden until lg, so give mobile a way to search here) */}
+                        <div className="flex items-center gap-2 border border-gray-700 bg-[#1C1C1C] px-4 py-2 rounded-md w-full mb-2">
+                            <input
+                                value={searchQuery}
+                                onChange={(e) => {
+                                    const value = e.target.value
+                                    setSearchQuery(value)
+
+                                    if (value.trim().length > 0 && location.pathname !== "/products") {
+                                        setOpen(false)
+                                        navigate("/products")
+                                    }
+                                }}
+                                className="w-full bg-transparent outline-none text-white placeholder-gray-400 text-sm"
+                                type="text"
+                                placeholder="Search automotive parts..."
+                            />
+                            <img
+                                src={assets.search_icon}
+                                alt="search"
+                                className="w-4 h-4 opacity-100 brightness-150"
+                            />
+                        </div>
 
                         <NavLink to='/' onClick={() => setOpen(false)} className={navLinkClass}>
                             Home
@@ -169,6 +193,18 @@ const Navbar = () => {
                         <NavLink to='/contact' onClick={() => setOpen(false)} className={navLinkClass}>
                             Contact
                         </NavLink>
+
+                        {user && (
+                            <button
+                                onClick={() => {
+                                    setOpen(false)
+                                    navigate("/my-orders")
+                                }}
+                                className="text-left text-gray-300 hover:text-red-600 font-semibold uppercase text-sm tracking-wide"
+                            >
+                                My Orders
+                            </button>
+                        )}
 
                         {!user ? (
                             <button

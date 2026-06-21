@@ -6,7 +6,7 @@ import { useEffect } from 'react'
 
 const InputField = ({ type, placeholder, name, handleChange, address }) => (
   <input
-    className='w-full px-2 py-2.5 border border-gray-500/30 rounded outline-none text-gray-500 focus:border-primary transition'
+    className='w-full  px-2 py-2.5 border border-gray-500/30 rounded outline-none text-gray-500 focus:border-primary transition'
     type={type}
     placeholder={placeholder}
     onChange={handleChange}
@@ -52,9 +52,8 @@ const AddAddress = () => {
         toast.error(data.message)
       }
     }catch(error){
- toast.success(error.message)
-        
-    }
+ toast.error(error.message)
+}
   }
   useEffect(()=>{
 if(!user){
@@ -63,7 +62,7 @@ navigate('/cart')
   },[])
 
   return (
-    <div className='mt-16 pb-16'>
+    <div className='m-16 pb-16'>
       <p className='text-2xl md:text-3xl text-gray-500'>
         Add Shipping <span className='font-semibold text-primary'>Address</span>
       </p>
