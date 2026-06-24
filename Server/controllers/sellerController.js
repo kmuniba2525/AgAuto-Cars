@@ -1,34 +1,46 @@
 import jwt from "jsonwebtoken";
 import { errorResponse, successResponse } from "../utils/response.js";
 
+const isProd = process.env.NODE_ENV === "production";
+
+// Shared so login/logout/refresh can never drift out of sync with each other.
+// A mismatch here (e.g. sameSite differs) is the #1 reason clearCookie "doesn't work".
+const SELLER_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: isProd,
+  sameSite: isProd ? "none" : "lax",
+};
+
 // ================= SELLER LOGIN =================
 export const sellerLogin = async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    if (!email || !password) {
+      return errorResponse(res, 400, "Email and password are required");
+    }
+
+    if (!process.env.SELLER_EMAIL || !process.env.SELLER_PASSWORD) {
+      console.error("SELLER_EMAIL / SELLER_PASSWORD env vars are not set");
+      return errorResponse(res, 500, "Server misconfiguration");
+    }
+
     if (
       password === process.env.SELLER_PASSWORD &&
       email === process.env.SELLER_EMAIL
     ) {
-      // assign token (FIXED: added role)
       const token = jwt.sign(
-        {
-          email,
-          role: "seller", // ✅ ADDED (important fix)
-        },
+        { email, role: "seller" },
         process.env.JWT_SECRET,
         { expiresIn: "7d" }
       );
 
-      // store cookie
       res.cookie("sellerToken", token, {
-        httpOnly: true,
-        secure: false,
-        sameSite: "lax",
+        ...SELLER_COOKIE_OPTIONS,
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
-      return successResponse(res, 201, "Logged In");
+      return successResponse(res, 200, "Logged In");
     } else {
       return errorResponse(res, 401, "Invalid Credentials");
     }
@@ -42,37 +54,34 @@ export const isSellerAuth = async (req, res) => {
   try {
     const token = req.cookies?.sellerToken;
 
-    // FIX: handle missing token safely
     if (!token) {
       return errorResponse(res, 401, "Not authenticated");
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // FIX: return actual data instead of undefined "user"
-    return successResponse(res, 200, {
+    if (decoded.role !== "seller") {
+      return errorResponse(res, 401, "Not authenticated");
+    }
+
+    return successResponse(res, 200, "Seller authenticated", {
       email: decoded.email,
       role: decoded.role,
       isAuthenticated: true,
     });
   } catch (error) {
-    console.log(error.message);
-    return errorResponse(res, 500, error.message);
+    return errorResponse(res, 401, "Not authenticated");
   }
 };
 
 // ================= SELLER LOGOUT =================
 export const sellerLogout = async (req, res) => {
   try {
-    res.clearCookie("sellerToken", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    });
+    res.clearCookie("sellerToken", SELLER_COOKIE_OPTIONS);
 
-    return successResponse(res, 201, "Logged Out");
+    return successResponse(res, 200, "Logged Out");
   } catch (error) {
-    console.log(error.message);
+    console.error(error.message);
     return errorResponse(res, 500, error.message);
   }
 };

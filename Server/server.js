@@ -38,13 +38,11 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+  origin: [
+    "http://localhost:5173",
+    "https://ag-auto-cars.vercel.app",
+    /\.vercel\.app$/   // ✅ allow all vercel preview domains
+  ],
   credentials: true
 }));
 

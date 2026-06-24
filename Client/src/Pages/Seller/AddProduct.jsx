@@ -79,9 +79,9 @@ const AddProduct = () => {
       setLoadingAI(true);
 
       const { data } = await axios.post(
-        "http://localhost:4000/api/product/generate-description",
-        { name, category }
-      );
+  "/api/product/generate-description",
+  { name, category }
+);
 
       if (data.success) {
         setDescription(data.description);
@@ -150,7 +150,7 @@ const AddProduct = () => {
             // onChange={(e) => setName(e.target.value)}
             onChange={(e)=>{
               const value=e.target.value;
-              if(/^[A-Za-z]*$/.test(value)){
+              if (/^[A-Za-z\s\-]*$/.test(value)){
                 setName(value);
                 setError("");
 

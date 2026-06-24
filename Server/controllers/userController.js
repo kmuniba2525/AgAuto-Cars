@@ -4,51 +4,51 @@ import jwt from "jsonwebtoken";
 import { successResponse, errorResponse } from "../utils/response.js";
 import Notification from "../models/Notification.js";
 
+const isProd = process.env.NODE_ENV === "production";
 
-// console.log("🔥 NEW userController LOADED");
-// ================= REGISTER =================
+const USER_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: isProd,
+  sameSite: isProd ? "none" : "lax",
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
 export const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-const normalizedEmail = email.toLowerCase().trim();
+    const normalizedEmail = email.toLowerCase().trim();
 
-if (!name || !normalizedEmail || !password) {
-  return errorResponse(res, 400, "Missing Credentials");
-}
+    if (!name || !normalizedEmail || !password) {
+      return errorResponse(res, 400, "Missing Credentials");
+    }
 
-const existingUser = await User.findOne({ email: normalizedEmail });
+    const existingUser = await User.findOne({ email: normalizedEmail });
 
-if (existingUser) {
-  return errorResponse(res, 409, "User Already exists");
-}
+    if (existingUser) {
+      return errorResponse(res, 409, "User Already exists");
+    }
 
-const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-const user = await User.create({
-  name,
-  email: normalizedEmail,
-  password: hashedPassword,
-});
+    const user = await User.create({
+      name,
+      email: normalizedEmail,
+      password: hashedPassword,
+    });
+
     await Notification.create({
-      title:'A new User Created',
-  message: `New user registered: ${user.name}`,
-  type: "user",
-});
+      title: "A new User Created",
+      message: `New user registered: ${user.name}`,
+      type: "user",
+    });
 
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
-    res.cookie("token", token, {
-  httpOnly: true,
-  secure: false, // ✅ IMPORTANT for localhost
-  sameSite: "lax",
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-});
-    // ✅ Fixed: actual user fields instead of { ... }
+    res.cookie("token", token, USER_COOKIE_OPTIONS);
+
     return successResponse(res, 201, "Registered successfully", {
       user: {
         id: user._id,
@@ -56,14 +56,12 @@ const user = await User.create({
         email: user.email,
       },
     });
-
   } catch (error) {
     console.log(error.message);
     return errorResponse(res, 500, error.message);
   }
 };
 
-// ================= LOGIN =================
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -86,37 +84,28 @@ export const login = async (req, res) => {
       return errorResponse(res, 401, "Invalid Email or Password");
     }
 
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
     });
+
+    res.cookie("token", token, USER_COOKIE_OPTIONS);
 
     return successResponse(res, 200, "Login successful", {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
-      }
+        email: user.email,
+      },
     });
-
   } catch (error) {
     return errorResponse(res, 500, error.message);
   }
 };
-// ================= Check Auth=================
-//api/user/is-auth
+
+// ================= Check Auth =================
+// api/user/is-auth
 export const isAuth = async (req, res) => {
   try {
-    
-
     if (!req.user || !req.user.id) {
       console.log("❌ req.user missing");
       return errorResponse(res, 401, "Not Authorized");
@@ -137,24 +126,23 @@ export const isAuth = async (req, res) => {
       },
     });
   } catch (error) {
-    // console.log("❌ isAuth Error:", error.message);
     return errorResponse(res, 500, error.message);
   }
 };
 
 // ================= LOGOUT USER =================
 // api/user/logout
-export const logout=async(req,res)=>{
-try{
-res.clearCookie('token', {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax', // ✅ matches the value used when setting the cookie
-});
+export const logout = async (req, res) => {
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
+    });
 
-return successResponse(res,201,'Logged Out')
-}catch(error){
-console.log(error.message);
+    return successResponse(res, 200, "Logged Out");
+  } catch (error) {
+    console.log(error.message);
     return errorResponse(res, 500, error.message);
-}
-}
+  }
+};
