@@ -30,20 +30,23 @@ const ProductCard = ({ product }) => {
       }}
 
       className="
-        group relative
-        border border-gray-100
-        rounded-2xl
-        bg-white
-        overflow-hidden
-        w-full
-        flex flex-col
-        h-full
-        shadow-sm
-        hover:shadow-xl
-        transition-all
-        duration-300
-        hover:-translate-y-1
-      "
+group
+relative
+bg-white
+rounded-3xl
+overflow-hidden
+w-full
+h-full
+flex
+flex-col
+border
+border-gray-100
+shadow-[0_4px_20px_rgba(0,0,0,0.05)]
+hover:shadow-[0_12px_35px_rgba(0,0,0,0.12)]
+transition-all
+duration-300
+hover:-translate-y-1
+"
     >
 
       {/* IMAGE */}
