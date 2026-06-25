@@ -28,7 +28,6 @@ const AllProducts = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [categoryPage, setCategoryPage] = useState(1);
-  // const [categoryPage, setCategoryPage] = useState(1);
 
 const CATEGORIES_PER_PAGE = 3;
 
@@ -52,8 +51,6 @@ const totalCategoryPages =
   };
 
   const clearAllCategories = () => setSelectedCategories([]);
-
-  
 
   // Main filtering + sorting
   const filteredProducts = useMemo(() => {
@@ -144,7 +141,6 @@ const totalCategoryPages =
       </div>
 
       {/* Scrollable body */}
-      {/* <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-6"> */}
       <div className="p-4 sm:p-5 space-y-6">
         {/* Availability */}
         <div>
@@ -315,21 +311,6 @@ const totalCategoryPages =
                 Find the products that match your style and needs.
               </p>
             </div>
-
-            <p className="
-text-sm
-text-gray-600
-bg-white
-border
-border-gray-200
-rounded-2xl
-px-4
-py-2.5
-shadow-sm
-">
-              <span className="font-semibold text-gray-900">{filteredProducts.length}</span>{" "}
-              Products available
-            </p>
           </div>
         </div>
 
@@ -344,35 +325,12 @@ shadow-sm
           {/* Main content */}
           <main className="flex-1 min-w-0">
             {/* Sort / Filter bar */}
-            <div className="
-bg-white
-border
-border-gray-200/80
-rounded-3xl
-p-4
-sm:p-5
-md:p-6
-mb-6
-shadow-lg
-shadow-black/[0.03]
-">
+            <div className="bg-white border border-gray-200/80 rounded-3xl px-4 sm:px-5 py-3 mb-6 shadow-lg shadow-black/[0.03] flex items-center justify-between gap-3">
+              {/* Left: mobile filter button + product count */}
               <div className="flex items-center gap-3">
-                {/* Mobile filter trigger */}
                 <button
                   onClick={() => setMobileFilterOpen(true)}
-                  className="lg:hidden
-flex
-items-center
-justify-center
-gap-2
-px-4
-py-3
-rounded-2xl
-border
-border-gray-200
-bg-gray-50
-font-medium
- border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:border-primary hover:text-primary transition-colors relative"
+                  className="lg:hidden flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-sm font-medium text-gray-700 hover:border-primary hover:text-primary transition-colors relative"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h18M7 10h10M11 16h2" />
@@ -385,37 +343,35 @@ font-medium
                   )}
                 </button>
 
-                <div>
-                  <p className="font-semibold text-gray-900 text-sm sm:text-base">
-                    {showCategoryWise
-                      ? "Browse by Category"
-                      : `${filteredProducts.length} Products Found`}
-                  </p>
-                  <p className="text-xs sm:text-sm text-gray-500 hidden sm:block mt-0.5">
-                    Premium products selected for you
-                  </p>
-                </div>
+                <p className="text-sm text-gray-500">
+                  <span className="font-semibold text-gray-800">{filteredProducts.length}</span>{" "}
+                  Products Found
+                </p>
               </div>
 
-              <div className="flex items-center gap-2 sm:gap-3">
-                <span className="text-sm text-gray-500 whitespace-nowrap">Sort:</span>
-                <div className="relative flex-1 sm:flex-none">
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="w-full appearance-none border border-gray-200 rounded-xl pl-3 pr-8 py-2 sm:py-2.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/15 bg-white cursor-pointer transition-colors"
-                  >
-                    <option value="default">Featured</option>
-                    <option value="newest">Newest First</option>
-                    <option value="priceLow">Price: Low to High</option>
-                    <option value="priceHigh">Price: High to Low</option>
-                    <option value="nameAZ">Name: A to Z</option>
-                    <option value="nameZA">Name: Z to A</option>
-                  </select>
-                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">
-                    ▾
-                  </span>
-                </div>
+              {/* Right: sort dropdown */}
+              <div className="relative">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="appearance-none pl-3 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all cursor-pointer hover:border-gray-300"
+                >
+                  <option value="default">Sort: Default</option>
+                  <option value="priceLow">Price: Low → High</option>
+                  <option value="priceHigh">Price: High → Low</option>
+                  <option value="nameAZ">Name: A → Z</option>
+                  <option value="nameZA">Name: Z → A</option>
+                  <option value="newest">Newest First</option>
+                </select>
+                <svg
+                  className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
               </div>
             </div>
 
@@ -515,22 +471,13 @@ font-medium
                             "
                           >
                             View All
-
                             <span className="transition-transform group-hover:translate-x-0.5">
                               →
                             </span>
                           </button>
                         </div>
 
-                        <div className="
-    grid
-    grid-cols-1
-    sm:grid-cols-2
-    lg:grid-cols-3
-    xl:grid-cols-4
-    gap-5
-    sm:gap-6
-  ">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6">
                           {categoryProducts.slice(0, 4).map((product) => (
                             <div
                               key={product._id}
@@ -583,15 +530,7 @@ font-medium
               <>
                 {/* Filtered products grid */}
                 {paginatedProducts.length > 0 ? (
-                  <div className="
-grid
-grid-cols-1
-sm:grid-cols-2
-lg:grid-cols-3
-xl:grid-cols-4
-gap-5
-sm:gap-6
-">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6">
                     {paginatedProducts.map((product) => (
                       <div
                         key={product._id}
@@ -602,19 +541,7 @@ sm:gap-6
                     ))}
                   </div>
                 ) : (
-                  <div className="
-                bg-white
-border
-border-gray-200/80
-rounded-[32px]
-px-6
-py-16
-sm:px-10
-sm:py-20
-text-center
-shadow-lg
-shadow-black/[0.03]
-shadow-[0_2px_16px_-6px_rgba(0,0,0,0.06)]">
+                  <div className="bg-white border border-gray-200/80 rounded-[32px] px-6 py-16 sm:px-10 sm:py-20 text-center shadow-lg shadow-black/[0.03] shadow-[0_2px_16px_-6px_rgba(0,0,0,0.06)]">
                     <div className="mx-auto mb-4 w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -643,8 +570,7 @@ shadow-[0_2px_16px_-6px_rgba(0,0,0,0.06)]">
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                
-  <div className="w-full flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mt-8 sm:mt-12 lg:-ml-[140px]">
+                  <div className="w-full flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mt-8 sm:mt-12 lg:-ml-[140px]">
                     <button
                       onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                       disabled={currentPage === 1}

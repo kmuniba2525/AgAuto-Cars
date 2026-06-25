@@ -52,20 +52,33 @@ const InfoBanner = () => {
   ];
 
   return (
-    <div className=" border-y border-gray-200 px-10 py-8">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-6xl mx-auto">
+  <div className="border-y border-gray-200 py-6 sm:py-8">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
         {items.map((item) => (
-          <div key={item.title} className="flex items-center gap-4">
-            <div className="shrink-0">{item.icon}</div>
+          <div
+            key={item.title}
+            className="flex items-center gap-4 text-center sm:text-left"
+          >
+            <div className="shrink-0 mx-auto sm:mx-0">
+              {item.icon}
+            </div>
+
             <div>
-              <p className="font-bold text-lg text-gray-900 mb-1">{item.title}</p>
-              <p className="text-sm text-gray-500">{item.description}</p>
+              <p className="font-bold text-base sm:text-lg text-gray-900 mb-1">
+                {item.title}
+              </p>
+
+              <p className="text-sm text-gray-500 leading-relaxed">
+                {item.description}
+              </p>
             </div>
           </div>
         ))}
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default InfoBanner;
