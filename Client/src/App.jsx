@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import Navbar from './Components/Navbar'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import Home from './Pages/Home'
@@ -20,12 +20,20 @@ import Orders from './Pages/Seller/Orders'
 import Loading from './Components/Loading'
 import TrackOrder from './Pages/TrackOrder'
 import Analytics from './Pages/Seller/Analytics'
+import LanguageDialog from './Components/LanguageDialog'
 const App = () => {
 
   const isSellerPath=useLocation().pathname.includes("seller");
   const {showUserLogin,isSeller}=useAppContext();
+  const [showLangDialog, setShowLangDialog] = useState(
+    !localStorage.getItem('selectedLanguage')
+  );
   return (
     <div className='text-default min-h-screen text-gray-700 bg-white'>
+
+      {showLangDialog && (
+        <LanguageDialog onClose={() => setShowLangDialog(false)} />
+      )}
       {isSellerPath?null:<Navbar/>}
       {showUserLogin?<Login/>:null}
     <Toaster position='top-right'/>

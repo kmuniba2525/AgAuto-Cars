@@ -1,0 +1,103 @@
+{
+  "language_dialog": {
+    "title": "Escolha o Seu Idioma",
+    "subtitle": "Selecione seu idioma preferido para continuar"
+  },
+  "navbar": {
+    "home": "Início",
+    "products": "Produtos",
+    "contact": "Contato",
+    "all_products": "Todos os Produtos",
+    "my_orders": "Meus Pedidos",
+    "login": "Entrar",
+    "logout": "Sair",
+    "search_placeholder": "Buscar peças automotivas..."
+  },
+  "footer": {
+    "description": "Seu destino confiável para peças e acessórios automotivos premium. Oferecemos produtos de alta qualidade, preços competitivos e entrega rápida em todo o país.",
+    "all_rights": "Todos os Direitos Reservados.",
+    "privacy": "Política de Privacidade",
+    "terms": "Termos e Condições"
+  },
+  "banner": {
+    "slide1_tagline": "🚗 Peças Auto Premium",
+    "slide1_title1": "Peças Premium",
+    "slide1_title2": "Para Todo",
+    "slide1_highlight": "Veículo",
+    "slide1_subtitle": "Encontre peças automotivas originais, acessórios e upgrades de desempenho para qualquer veículo.",
+    "slide1_primary": "Ver Peças",
+    "slide1_secondary": "Contato",
+    "slide2_tagline": "⚙️ Upgrades de Desempenho",
+    "slide2_title1": "Melhore o Seu",
+    "slide2_title2": "Desempenho do Veículo",
+    "slide2_subtitle": "Soluções de motor, suspensão, freios e desempenho feitas para confiabilidade.",
+    "slide2_primary": "Explorar",
+    "slide2_secondary": "Saiba Mais",
+    "slide3_tagline": "🔥 Melhores Ofertas",
+    "slide3_title1": "Peças Originais",
+    "slide3_title2": "A Preços Competitivos",
+    "slide3_subtitle": "Qualidade em que você pode confiar para uso diário, oficinas e reparos profissionais.",
+    "slide3_primary": "Ver Produtos",
+    "slide3_secondary": "Contato"
+  },
+  "newsletter": {
+    "title": "Não Perca Nenhuma Oferta!",
+    "subtitle": "Assine para receber as últimas ofertas, novidades e descontos exclusivos",
+    "placeholder": "Digite seu e-mail",
+    "subscribe": "Assinar",
+    "success": "Inscrito com sucesso 🎉",
+    "invalid_email": "Por favor, insira um e-mail válido"
+  },
+  "product_card": {
+    "add": "Adicionar"
+  },
+  "best_seller": {
+    "title": "Mais Vendidos"
+  },
+  "categories": {
+    "title": "Comprar por Categoria",
+    "shop_now": "Comprar Agora"
+  },
+  "info_banner": {
+    "shipping_title": "FRETE GRÁTIS",
+    "shipping_desc": "Em todos os pedidos acima de 999:-",
+    "help_title": "PRECISA DE AJUDA?",
+    "help_desc": "Entre em contato com nossa equipe de suporte",
+    "guarantee_title": "INFORMAÇÕES DE GARANTIA",
+    "guarantee_desc": "Leia mais sobre nossa garantia",
+    "returns_title": "DEVOLUÇÕES",
+    "returns_desc": "Leia mais sobre nossa política de devolução"
+  },
+  "login": {
+    "user": "Usuário",
+    "login_title": "Entrar",
+    "signup_title": "Cadastrar",
+    "name": "Nome",
+    "email": "E-mail",
+    "password": "Senha",
+    "placeholder": "digite aqui",
+    "have_account": "Já tem uma conta?",
+    "click_here": "clique aqui",
+    "create_account_prompt": "Criar uma conta?",
+    "create_account_btn": "Criar Conta",
+    "login_btn": "Entrar"
+  },
+  "footer_links": {
+  "quick_links": "Links Rápidos",
+  "home": "Início",
+  "best_sellers": "Mais Vendidos",
+  "offers_deals": "Ofertas & Promoções",
+  "contact_us": "Contato",
+  "faqs": "Perguntas Frequentes",
+  "need_help": "Precisa de Ajuda?",
+  "delivery_info": "Informações de Entrega",
+  "return_policy": "Política de Devolução",
+  "payment_methods": "Métodos de Pagamento",
+  "track_order": "Rastrear Pedido",
+  "follow_us": "Siga-nos",
+  "instagram": "Instagram",
+  "twitter": "Twitter",
+  "facebook": "Facebook",
+  "youtube": "YouTube"
+}
+}

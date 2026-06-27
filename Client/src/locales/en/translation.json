@@ -1,0 +1,103 @@
+{
+  "language_dialog": {
+    "title": "Choose Your Language",
+    "subtitle": "Select your preferred language to continue"
+  },
+  "navbar": {
+    "home": "Home",
+    "products": "Products",
+    "contact": "Contact",
+    "all_products": "All Products",
+    "my_orders": "My Orders",
+    "login": "Login",
+    "logout": "Logout",
+    "search_placeholder": "Search automotive parts..."
+  },
+  "footer": {
+    "description": "Your trusted destination for premium automotive parts and accessories. We provide high-quality products, competitive prices, and fast nationwide delivery to keep your vehicle performing at its best.",
+    "all_rights": "All Rights Reserved.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms & Conditions"
+  },
+  "banner": {
+    "slide1_tagline": "🚗 Premium Auto Parts",
+    "slide1_title1": "Premium Parts",
+    "slide1_title2": "For Every",
+    "slide1_highlight": "Vehicle",
+    "slide1_subtitle": "Find genuine automotive parts, accessories, and performance upgrades for every vehicle.",
+    "slide1_primary": "Shop Parts",
+    "slide1_secondary": "Contact Us",
+    "slide2_tagline": "⚙️ Performance Upgrades",
+    "slide2_title1": "Boost Your",
+    "slide2_title2": "Vehicle Performance",
+    "slide2_subtitle": "Engine, suspension, braking, and performance solutions built for reliability.",
+    "slide2_primary": "Explore",
+    "slide2_secondary": "Learn More",
+    "slide3_tagline": "🔥 Best Deals",
+    "slide3_title1": "Genuine Parts",
+    "slide3_title2": "At Competitive Prices",
+    "slide3_subtitle": "Quality you can trust for daily driving, workshops, and professional repairs.",
+    "slide3_primary": "View Products",
+    "slide3_secondary": "Contact"
+  },
+  "newsletter": {
+    "title": "Never Miss a Deal!",
+    "subtitle": "Subscribe to get the latest offers, new arrivals, and exclusive discounts",
+    "placeholder": "Enter your email id",
+    "subscribe": "Subscribe",
+    "success": "Subscribed successfully 🎉",
+    "invalid_email": "Please enter a valid email"
+  },
+  "product_card": {
+    "add": "Add"
+  },
+  "best_seller": {
+    "title": "Best Sellers"
+  },
+  "categories": {
+    "title": "Shop By Category",
+    "shop_now": "Shop Now"
+  },
+  "info_banner": {
+    "shipping_title": "FREE SHIPPING",
+    "shipping_desc": "On all orders over 999:-",
+    "help_title": "DO YOU NEED HELP?",
+    "help_desc": "Contact our support team",
+    "guarantee_title": "GUARANTEE INFORMATION",
+    "guarantee_desc": "Read more about our guarantee",
+    "returns_title": "RETURNS",
+    "returns_desc": "Read more about our return policy"
+  },
+  "login": {
+    "user": "User",
+    "login_title": "Login",
+    "signup_title": "Sign Up",
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "placeholder": "type here",
+    "have_account": "Already have account?",
+    "click_here": "click here",
+    "create_account_prompt": "Create an account?",
+    "create_account_btn": "Create Account",
+    "login_btn": "Login"
+  },
+  "footer_links": {
+  "quick_links": "Quick Links",
+  "home": "Home",
+  "best_sellers": "Best Sellers",
+  "offers_deals": "Offers & Deals",
+  "contact_us": "Contact Us",
+  "faqs": "FAQs",
+  "need_help": "Need Help?",
+  "delivery_info": "Delivery Information",
+  "return_policy": "Return & Refund Policy",
+  "payment_methods": "Payment Methods",
+  "track_order": "Track your Order",
+  "follow_us": "Follow Us",
+  "instagram": "Instagram",
+  "twitter": "Twitter",
+  "facebook": "Facebook",
+  "youtube": "YouTube"
+}
+}

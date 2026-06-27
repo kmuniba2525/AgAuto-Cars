@@ -1,13 +1,17 @@
 import React from "react";
 import ProductCard from "./ProductCard";
 import { useAppContext } from "../Context/AppContext";
+import { useTranslation } from "react-i18next";
 
 const BestSeller = () => {
   const { products } = useAppContext();
+  const { t } = useTranslation();
 
   return (
     <div className="mt-16">
-      <p className="text-2xl md:text-3xl text-center font-bold">Best Sellers</p>
+      <p className="text-2xl md:text-3xl text-center font-bold">
+        {t('best_seller.title')}
+      </p>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-6 mt-6">
         {products
