@@ -17,17 +17,16 @@ import orderRouter from "./routes/orderRoute.js";
 import { stripeWebhooks } from "./controllers/orderController.js";
 import aiRouter from "./routes/aiRoutes.js";
 import notificationRouter from "./routes/Notification.js";
+import paymentRoutes from './routes/payment.js';
+import webhookRoutes from './routes/webhook.js';
+
 
 const app = express();
 const port = process.env.PORT || 4000;
 
 // STRIPE WEBHOOK FIRST
-app.post(
-  "/api/order/webhook",
-  express.raw({ type: "application/json" }),
-  stripeWebhooks
-);
 
+app.use('/webhook', webhookRoutes);
 // NORMAL MIDDLEWARE AFTER
 app.use(express.json());
 app.use(cookieParser());
@@ -45,6 +44,7 @@ app.use(cors({
   ],
   credentials: true
 }));
+app.use('/api', paymentRoutes);
 
 // routes
 app.get("/", (req, res) => {

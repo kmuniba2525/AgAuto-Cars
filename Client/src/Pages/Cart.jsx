@@ -15,7 +15,7 @@ const Cart = () => {
     updateCartItems,
     axios,
     user,
-    setCartItems // ✅ ADDED
+    setCartItems,
   } = useAppContext();
 
   const [showAddress, setShowAddress] = useState(false);
@@ -25,7 +25,6 @@ const Cart = () => {
   const [paymentOption, setPaymentOption] = useState("COD");
   const [loading, setLoading] = useState(false);
 
-  // ✅ FIXED CART BUILDER
   const getCart = () => {
     const productMap = {};
     products.forEach((p) => {
@@ -33,23 +32,16 @@ const Cart = () => {
     });
 
     const tempArray = [];
-
     for (const key in cartItems) {
       const product = productMap[key];
-
       if (product && cartItems[key] > 0) {
-        tempArray.push({
-          ...product,
-          quantity: cartItems[key],
-        });
+        tempArray.push({ ...product, quantity: cartItems[key] });
       }
     }
 
-    // ✅ FORCE CLEAR UI WHEN EMPTY
     setCartArray(tempArray.length > 0 ? tempArray : []);
   };
 
-  // ✅ Get user addresses
   const getUserAddress = async () => {
     try {
       const { data } = await axios.get("/api/address/get", {
@@ -59,10 +51,7 @@ const Cart = () => {
       if (data.success) {
         const addr = data.addresses || [];
         setAddresses(addr);
-
-        if (addr.length > 0) {
-          setSelectedAddress(addr[0]);
-        }
+        if (addr.length > 0) setSelectedAddress(addr[0]);
       } else {
         toast.error(data.message);
       }
@@ -71,57 +60,49 @@ const Cart = () => {
     }
   };
 
-  // ✅ PLACE ORDER (FIXED)
   const placeOrder = async () => {
+    if (cartArray.length === 0) return toast.error("Cart is empty");
+    if (!selectedAddress) return toast.error("Please select an address");
+
+    setLoading(true);
+
+    const payload = {
+      items: cartArray.map((item) => ({
+        product: item._id,
+        quantity: item.quantity,
+      })),
+      address: selectedAddress._id,
+    };
+
     try {
-      if (cartArray.length === 0) {
-        return toast.error("Cart is empty");
-      }
-
-      if (!selectedAddress) {
-        return toast.error("Please select an address");
-      }
-
-      setLoading(true);
-
-      const payload = {
-        items: cartArray.map((item) => ({
-          product: item._id,
-          quantity: item.quantity,
-        })),
-        address: selectedAddress._id,
-      };
-
       if (paymentOption === "COD") {
-        const { data } = await axios.post(
-          "/api/order/cod",
-          payload,
-          { withCredentials: true }
-        );
+        // ── Cash on delivery ──────────────────────────────────────
+        const { data } = await axios.post("/api/order/cod", payload, {
+          withCredentials: true,
+        });
 
         if (data.success) {
           toast.success(data.message);
-
           setCartItems({});
-setCartArray([]);
-
+          setCartArray([]);
           navigate("/my-orders");
         } else {
           toast.error(data.message);
         }
 
       } else {
-        const { data } = await axios.post(
-          "/api/order/stripe",
-          payload,
-          { withCredentials: true }
+        // ── Online payment → go to /checkout with order payload ───
+        // 1. Save the pending order details so Checkout page can read them
+        sessionStorage.setItem(
+          "pendingOrder",
+          JSON.stringify({
+            payload,                          // items + address
+            amount: getCartAmount(),          // total in euros (float)
+          })
         );
 
-        if (data.success && data.url) {
-          window.location.replace(data.url);
-        } else {
-          toast.error(data.message || "Stripe error");
-        }
+        // 2. Navigate to the Stripe checkout page
+        navigate("/checkout");
       }
 
     } catch (error) {
@@ -131,19 +112,15 @@ setCartArray([]);
     }
   };
 
-  // ✅ SYNC CART
   useEffect(() => {
-    getCart(); // ✅ ALWAYS RUN
+    getCart();
   }, [products, cartItems]);
 
-  // ✅ FETCH ADDRESSES
   useEffect(() => {
-    if (user) {
-      getUserAddress();
-    }
+    if (user) getUserAddress();
   }, [user]);
 
-  // ✅ EMPTY CART UI
+  // ── Empty cart ─────────────────────────────────────────────────
   if (cartArray.length === 0) {
     return (
       <div className="mt-16 text-center text-gray-500">
@@ -160,13 +137,11 @@ setCartArray([]);
 
   return (
     <div className="flex flex-col md:flex-row m-16">
-      {/* LEFT SIDE */}
+      {/* ── LEFT SIDE ── */}
       <div className="flex-1 max-w-4xl">
         <h1 className="text-3xl font-medium mb-6">
           Shopping Cart{" "}
-          <span className="text-sm text-primary">
-            {getCartCount()} items
-          </span>
+          <span className="text-sm text-primary">{getCartCount()} items</span>
         </h1>
 
         <div className="grid grid-cols-[2fr_1fr_1fr] text-gray-500 pb-3">
@@ -184,7 +159,7 @@ setCartArray([]);
               <div
                 onClick={() => {
                   navigate(
-                    `/product/${product.category.toLowerCase()}/${product._id}`
+                    `/products/${product.category.toLowerCase()}/${product._id}`
                   );
                   scrollTo(0, 0);
                 }}
@@ -199,19 +174,14 @@ setCartArray([]);
 
               <div>
                 <p className="font-semibold">{product.name}</p>
-
                 <div className="text-gray-500">
                   <p>Weight: {product.weight || "N/A"}</p>
-
                   <div className="flex items-center">
                     <p>Qty:</p>
                     <select
                       value={product.quantity}
                       onChange={(e) =>
-                        updateCartItems(
-                          product._id,
-                          Number(e.target.value)
-                        )
+                        updateCartItems(product._id, Number(e.target.value))
                       }
                       className="ml-2"
                     >
@@ -233,43 +203,48 @@ setCartArray([]);
               {product.offerPrice * product.quantity}
             </p>
 
-            <button
-              onClick={() => removeFromCart(product._id)}
-              className="mx-auto"
-            >
-              <img
-                src={assets.remove_icon}
-                className="w-6 h-6"
-                alt="remove"
-              />
+            <button onClick={() => removeFromCart(product._id)} className="mx-auto">
+              <img src={assets.remove_icon} className="w-6 h-6" alt="remove" />
             </button>
           </div>
         ))}
 
-        <button
-          onClick={() => navigate("/products")}
-          className="mt-8 text-primary"
-        >
+        <button onClick={() => navigate("/products")} className="mt-8 text-primary">
           Continue Shopping →
         </button>
       </div>
 
-      {/* RIGHT SIDE */}
+      {/* ── RIGHT SIDE ── */}
       <div className="max-w-[360px] w-full p-5 border mt-10 md:mt-0">
         <h2 className="text-xl font-medium">Order Summary</h2>
 
+        {/* Price breakdown */}
+        <div className="mt-4 space-y-1 text-sm text-gray-600">
+          <div className="flex justify-between">
+            <span>Subtotal</span>
+            <span>{currency}{getCartAmount()}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Shipping</span>
+            <span className="text-green-600">Free</span>
+          </div>
+          <div className="flex justify-between font-semibold text-gray-800 pt-2 border-t">
+            <span>Total</span>
+            <span>{currency}{getCartAmount()}</span>
+          </div>
+        </div>
+
+        {/* Delivery address */}
         <div className="mt-4">
           <p className="text-sm uppercase">Delivery Address</p>
-
           <p className="text-gray-500 mt-2">
             {selectedAddress
-              ? `${selectedAddress?.street || ""}, ${selectedAddress?.city || ""}, ${selectedAddress?.state || ""}, ${selectedAddress?.country || ""}`
+              ? `${selectedAddress.street || ""}, ${selectedAddress.city || ""}, ${selectedAddress.state || ""}, ${selectedAddress.country || ""}`
               : "No address found"}
           </p>
-
           <button
             onClick={() => setShowAddress(!showAddress)}
-            className="text-primary"
+            className="text-primary text-sm"
           >
             Change
           </button>
@@ -284,49 +259,54 @@ setCartArray([]);
                       setSelectedAddress(addr);
                       setShowAddress(false);
                     }}
-                    className="p-2 hover:bg-gray-100 cursor-pointer"
+                    className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
                   >
                     {addr.street}, {addr.city}
                   </p>
                 ))
               ) : (
-                <p className="p-2 text-gray-400">
-                  No saved addresses
-                </p>
+                <p className="p-2 text-gray-400 text-sm">No saved addresses</p>
               )}
-
               <p
                 onClick={() => navigate("/add-address")}
-                className="p-2 text-primary cursor-pointer"
+                className="p-2 text-primary cursor-pointer text-sm"
               >
-                Add address
+                + Add address
               </p>
             </div>
           )}
         </div>
 
+        {/* Payment method */}
         <div className="mt-4">
           <p className="text-sm uppercase">Payment Method</p>
-
           <select
             onChange={(e) => setPaymentOption(e.target.value)}
-            className="w-full border mt-2 p-2"
+            className="w-full border mt-2 p-2 text-sm"
           >
             <option value="COD">Cash On Delivery</option>
-            <option value="Online">Online Payment</option>
+            <option value="Online">Online Payment (Card / MB Way / Multibanco)</option>
           </select>
         </div>
+
+        {/* Info banner for online payment */}
+        {paymentOption === "Online" && (
+          <p className="mt-2 text-xs text-gray-400 bg-gray-50 p-2 rounded border">
+            You will be taken to a secure payment page supporting MB Way,
+            Multibanco, Visa, Mastercard, SEPA & Apple/Google Pay.
+          </p>
+        )}
 
         <button
           onClick={placeOrder}
           disabled={loading}
-          className="w-full mt-4 bg-primary text-white py-2"
+          className="w-full mt-4 bg-primary text-white py-2 disabled:opacity-60"
         >
           {loading
             ? "Processing..."
             : paymentOption === "COD"
             ? "Place Order"
-            : "Proceed to Checkout"}
+            : "Proceed to Payment →"}
         </button>
       </div>
     </div>

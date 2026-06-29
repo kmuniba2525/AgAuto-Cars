@@ -51,7 +51,7 @@ const Navbar = () => {
 
                 {/* LEFT: LOGO */}
                 <div className="flex flex-1 items-center">
-                    <NavLink to='/' onClick={() => setOpen(false)} className="flex items-center">
+                <NavLink to='/' onClick={() => setOpen(false)} className="flex items-center">
                         <img src={assets.Logo} alt="Auto Center AB" className="h-12 sm:h-14 md:h-20 w-auto object-contain" />
                     </NavLink>
                 </div>
@@ -59,7 +59,7 @@ const Navbar = () => {
                 {/* CENTER: NAV LINKS */}
                 <div className="hidden sm:flex flex-none px-6 justify-center">
                     <div className="flex items-center gap-10">
-                        <NavLink to='/' className={navLinkClass}>{t('navbar.home')}</NavLink>
+                        <NavLink to='/home' className={navLinkClass}>{t('navbar.home')}</NavLink>
                         <NavLink to='/products' className={navLinkClass}>{t('navbar.products')}</NavLink>
                         <NavLink to='/contact' className={navLinkClass}>{t('navbar.contact')}</NavLink>
                     </div>
@@ -191,7 +191,7 @@ const Navbar = () => {
                             <img src={assets.search_icon} alt="search" className="w-4 h-4 opacity-100 brightness-150" />
                         </div>
 
-                        <NavLink to='/' onClick={() => setOpen(false)} className={navLinkClass}>{t('navbar.home')}</NavLink>
+                        <NavLink to='/home' onClick={() => setOpen(false)} className={navLinkClass}>{t('navbar.home')}</NavLink>
                         <NavLink to='/products' onClick={() => setOpen(false)} className={navLinkClass}>{t('navbar.all_products')}</NavLink>
                         <NavLink to='/contact' onClick={() => setOpen(false)} className={navLinkClass}>{t('navbar.contact')}</NavLink>
 
