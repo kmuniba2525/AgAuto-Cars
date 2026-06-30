@@ -74,7 +74,7 @@ const App = () => {
         <Route path="/my-orders" element={<MyOrder />} />
         <Route path="/track-order/:id" element={<TrackOrder />} />
 
-        {/* Payment */}                               {/* 👈 new */}
+        {/* Payment */}                               
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
 

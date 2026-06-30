@@ -17,7 +17,7 @@ const BestSeller = () => {
     .slice(0, 5);
 
   return (
-    <div className="mt-20 px-4 sm:px-6 lg:px-10">
+    <div className="mt-20 px-4 sm:px-6 text center  lg:px-10">
       {/* Section Header */}
       <div className="relative mb-10">
         {/* Background watermark text */}

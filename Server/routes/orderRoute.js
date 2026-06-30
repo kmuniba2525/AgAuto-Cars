@@ -7,6 +7,7 @@ import {
   updateOrderStatus,
   getSingleOrder,
   getAnalytics,
+  placeOrderStripeIntent,
 } from "../controllers/orderController.js";
 import authUser from "../middlewares/authUser.js";
 import { authSeller } from "../middlewares/authSeller.js";
@@ -26,6 +27,7 @@ orderRouter.get("/seller",  authSeller, getAllOrders);
 
 //Placing order Online
 orderRouter.post("/stripe", authUser, placeOrderStripe);
+orderRouter.post('/stripe-intent', authUser, placeOrderStripeIntent);
 
 orderRouter.put("/status/:id",updateOrderStatus);
 orderRouter.get("/analytics", getAnalytics)

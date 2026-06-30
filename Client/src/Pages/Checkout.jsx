@@ -1,40 +1,100 @@
-// src/pages/Checkout.jsx
 import { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
+import axios from 'axios';
 import CheckoutForm from '../Components/CheckoutForm';
 
-// ✅ FIX
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+
+const appearance = {
+  theme: 'night',
+  variables: {
+    colorPrimary: '#E8442C',
+    colorBackground: '#161616',
+    colorText: '#F2F2F2',
+    colorTextSecondary: '#8C8C8C',
+    colorDanger: '#E24B4A',
+    fontFamily: 'system-ui, sans-serif',
+    borderRadius: '8px',
+    spacingUnit: '3px',
+    fontSizeBase: '13px',
+  },
+  rules: {
+    '.Tab': {
+      border: '0.5px solid #2A2A2A',
+      backgroundColor: '#1E1E1E',
+      padding: '8px 10px',
+    },
+    '.Tab:hover': {
+      border: '0.5px solid #444',
+    },
+    '.Tab--selected': {
+      border: '1px solid #E8442C',
+      backgroundColor: '#1E1E1E',
+    },
+    '.Input': {
+      backgroundColor: '#1E1E1E',
+      border: '0.5px solid #2A2A2A',
+      padding: '8px 10px',
+    },
+    '.Input:focus': {
+      border: '1px solid #E8442C',
+      boxShadow: '0 0 0 1px #E8442C',
+    },
+    '.Label': {
+      color: '#8C8C8C',
+      fontSize: '12px',
+    },
+  },
+};
 
 export default function Checkout() {
   const [clientSecret, setClientSecret] = useState('');
+  const [amount, setAmount] = useState(0);
 
-
-// convert euros to cents for Stripe
-
-  // ✅ FIX — use the actual amount from sessionStorage
 useEffect(() => {
-  const { payload, amount } = JSON.parse(sessionStorage.getItem("pendingOrder") || "{}");
-  const amountInCents = Math.round((amount || 0) * 100);
+  const pending = JSON.parse(sessionStorage.getItem("pendingOrder") || "{}");
+  console.log("pendingOrder from sessionStorage:", pending);
 
-  fetch('/api/create-payment-intent', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ amount: amountInCents }),
-  })
-    .then(res => res.json())
-    .then(data => setClientSecret(data.clientSecret));
+  const { items, address } = pending.payload || {};
+
+  if (!items || !address) {
+    console.error("Missing items or address in pendingOrder");
+    return;
+  }
+
+  axios
+    .post(`${import.meta.env.VITE_BACKEND_URL}/api/order/stripe-intent`, {
+      items,
+      address,
+    }, { withCredentials: true })
+    .then((res) => {
+      setClientSecret(res.data.clientSecret);
+      setAmount(res.data.amount || 0);
+    })
+    .catch((err) => {
+      console.error('Payment intent error:', err.response?.data || err.message);
+    });
 }, []);
 
   return (
-    <div>
-      <h2>Complete your payment</h2>
-      {clientSecret && (
-        <Elements stripe={stripePromise} options={{ clientSecret }}>
-          <CheckoutForm />
-        </Elements>
-      )}
+    <div className="min-h-screen bg-black flex items-center justify-center px-4 py-6">
+      <div className="w-full max-w-sm">
+        <div className="mb-3">
+          <h2 className="text-zinc-100 text-base font-medium leading-tight">
+            Complete your payment
+          </h2>
+          <p className="text-zinc-100 text-2xl font-medium mt-0.5">
+            €{amount.toFixed(2)}
+          </p>
+        </div>
+
+        {clientSecret && (
+          <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
+            <CheckoutForm amount={amount} />
+          </Elements>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,8 +1,7 @@
-// src/components/CheckoutForm.jsx
 import { useState } from 'react';
 import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
-export default function CheckoutForm() {
+export default function CheckoutForm({ amount }) {
   const stripe = useStripe();
   const elements = useElements();
   const [message, setMessage] = useState('');
@@ -17,25 +16,37 @@ export default function CheckoutForm() {
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-    // ✅ FIX — use env variable
-return_url: `${import.meta.env.VITE_APP_URL}/payment-success`, // your success page
+        return_url: `${import.meta.env.VITE_APP_URL}/payment-success`,
       },
     });
 
-    if (error) {
-      setMessage(error.message);
-    }
-
+    if (error) setMessage(error.message);
     setLoading(false);
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <PaymentElement />
-      <button disabled={!stripe || loading}>
-        {loading ? 'Processing...' : 'Pay Now'}
+    <form
+      onSubmit={handleSubmit}
+      className="bg-zinc-900 border border-zinc-800 rounded-xl p-4"
+    >
+      <div className="max-h-[50vh] overflow-y-auto pr-1">
+        <PaymentElement />
+      </div>
+
+      <button
+        disabled={!stripe || loading}
+        className="w-full bg-[#E8442C] hover:bg-[#d23b25] disabled:opacity-60 text-white rounded-lg py-2.5 text-sm font-medium mt-4 transition-colors"
+      >
+        {loading ? 'Processing…' : `Pay €${amount.toFixed(2)}`}
       </button>
-      {message && <p>{message}</p>}
+
+      {message && (
+        <p className="text-red-400 text-xs mt-2">{message}</p>
+      )}
+
+      <p className="text-center text-zinc-600 text-[11px] mt-3">
+        Secured by Stripe
+      </p>
     </form>
   );
 }

@@ -310,31 +310,76 @@ export const stripeWebhooks = async (request, response) => {
       .send(`Webhook Error: ${error.message}`);
   }
 
- switch (event.type) {
-  case "checkout.session.completed": {
-    const session = event.data.object;
-
-    const { orderId, userId } = session.metadata;
-
-    await Order.findByIdAndUpdate(orderId, { isPaid: true });
-    await User.findByIdAndUpdate(userId, { cartItems: {} });
-
-    break;
+  switch (event.type) {
+    case "checkout.session.completed": {
+      const session = event.data.object;
+      const { orderId, userId } = session.metadata;
+      await Order.findByIdAndUpdate(orderId, { isPaid: true });
+      await User.findByIdAndUpdate(userId, { cartItems: {} });
+      break;
+    }
+    case "checkout.session.async_payment_failed": {
+      const session = event.data.object;
+      const { orderId } = session.metadata;
+      await Order.findByIdAndDelete(orderId);
+      break;
+    }
+    case "payment_intent.succeeded": {
+      const paymentIntent = event.data.object;
+      const { orderId, userId } = paymentIntent.metadata;
+      if (orderId) {
+        await Order.findByIdAndUpdate(orderId, { isPaid: true });
+        await User.findByIdAndUpdate(userId, { cartItems: {} });
+        const order = await Order.findById(orderId);
+        const productIds = order.items.map((item) => item.product);
+        const products = await Product.find({ _id: { $in: productIds } });
+        const productMap = {};
+        products.forEach((p) => (productMap[p._id.toString()] = p));
+        for (const item of order.items) {
+          const product = productMap[item.product.toString()];
+          if (!product) continue;
+          product.stock -= item.quantity;
+          await product.save();
+          if (product.stock === 5) {
+            await Notification.create({
+              title: "Low Stock Alert",
+              message: `Only ${product.stock} ${product.name} left in inventory`,
+              type: "stock",
+            });
+          }
+          if (product.stock === 0) {
+            await Notification.create({
+              title: "Out Of Stock",
+              message: `${product.name} is now out of stock`,
+              type: "stock",
+            });
+          }
+        }
+        const itemSummary = order.items
+          .map((item) => {
+            const product = productMap[item.product.toString()];
+            return `${item.quantity}x ${product?.name ?? "item"}`;
+          })
+          .join(", ");
+        await Notification.create({
+          title: "New Online Order",
+          message: itemSummary,
+          type: "order",
+        });
+      }
+      break;
+    }
+    case "payment_intent.payment_failed": {
+      const paymentIntent = event.data.object;
+      const { orderId } = paymentIntent.metadata;
+      if (orderId) {
+        await Order.findByIdAndDelete(orderId);
+      }
+      break;
+    }
+    default:
+      console.log(`Unhandled event type: ${event.type}`);
   }
-
-  case "checkout.session.async_payment_failed": {
-    const session = event.data.object;
-
-    const { orderId } = session.metadata;
-
-    await Order.findByIdAndDelete(orderId);
-
-    break;
-  }
-
-  default:
-    console.log(`Unhandled event type: ${event.type}`);
-}
 
   response.json({ received: true });
 };
@@ -497,5 +542,72 @@ export const getAnalytics = async (req, res) => {
       success: false,
       message: error.message,
     });
+  }
+};
+
+// Place Order STRIPE — Payment Intent version (for custom Payment Element UI)
+export const placeOrderStripeIntent = async (req, res) => {
+  try {
+    const { items, address } = req.body;
+    const userId = req.user.id;
+
+    if (!address || !items || items.length === 0) {
+      return errorResponse(res, 400, "Invalid Data");
+    }
+
+    const productIds = items.map((item) => item.product);
+    const products = await Product.find({ _id: { $in: productIds } });
+
+    const productMap = {};
+    products.forEach((product) => {
+      productMap[product._id.toString()] = product;
+    });
+
+    let amount = 0;
+
+    for (const item of items) {
+      const product = productMap[item.product];
+      if (!product) continue;
+
+      if (product.stock < item.quantity) {
+        return errorResponse(res, 400, `${product.name} has insufficient stock`);
+      }
+
+      amount += product.offerPrice * item.quantity;
+    }
+
+    const tax = amount * 0.02;
+    amount += Math.floor(tax);
+
+    const order = await Order.create({
+      userId,
+      items,
+      amount,
+      address,
+      paymentType: "Online",
+      isPaid: false,
+    });
+
+    const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+    const paymentIntent = await stripeInstance.paymentIntents.create({
+      amount: Math.round(amount * 100),
+      currency: "eur",
+      automatic_payment_methods: { enabled: true },
+      metadata: {
+        orderId: order._id.toString(),
+        userId,
+      },
+    });
+
+    return res.json({
+      success: true,
+      clientSecret: paymentIntent.client_secret,
+      orderId: order._id,
+       amount,
+    });
+  } catch (error) {
+    console.log(error.message);
+    return errorResponse(res, 500, error.message);
   }
 };
