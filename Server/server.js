@@ -28,18 +28,28 @@ app.post(
   stripeWebhooks
 );
 
+// Allowed origins for CORS
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.CLIENT_URL, // e.g. https://ag-auto-cars.vercel.app
+].filter(Boolean);
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // allow requests with no origin (like Postman, curl, server-to-server)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log("❌ Blocked by CORS:", origin);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+}));
+
 // NORMAL MIDDLEWARE AFTER
 app.use(express.json());
 app.use(cookieParser());
-
-app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://ag-auto-cars.vercel.app",
-    /\.vercel\.app$/   // ✅ allow all vercel preview domains
-  ],
-  credentials: true
-}));
 
 // routes
 app.get("/", (req, res) => {
