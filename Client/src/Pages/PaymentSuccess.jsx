@@ -20,7 +20,7 @@ export default function PaymentSuccess() {
   const [order, setOrder] = useState(null);
   const [orderLoading, setOrderLoading] = useState(false);
 
-  const { currency, axios, user, navigate } = useAppContext();
+  const { currency, axios, user, navigate, setCartItems } = useAppContext();
 
   // Poll a few times for the webhook to land (it can take a second or two)
   const fetchLatestOrder = async (attempt = 0) => {
@@ -61,6 +61,14 @@ export default function PaymentSuccess() {
       });
     });
   }, []);
+
+  // Clear the cart once payment is confirmed successful
+  useEffect(() => {
+    if (status === 'succeeded') {
+      setCartItems({});
+      sessionStorage.removeItem('pendingOrder');
+    }
+  }, [status]);
 
   useEffect(() => {
     if (status === 'succeeded' && user) {

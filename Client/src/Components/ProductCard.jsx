@@ -1,3 +1,4 @@
+// ProductCard.jsx
 import React from "react";
 import { assets } from "../assets/assets";
 import { useAppContext } from "../Context/AppContext";
@@ -57,16 +58,16 @@ const ProductCard = ({ product }) => {
         </p>
 
         {/* Description */}
-       <p
-  className="text-gray-500 text-sm leading-5 overflow-hidden"
-  style={{
-    display: "-webkit-box",
-    WebkitLineClamp: 2,
-    WebkitBoxOrient: "vertical",
-  }}
->
-  {description}
-</p>
+        <p
+          className="text-gray-500 text-[10px] sm:text-xs leading-4 sm:leading-5 overflow-hidden"
+          style={{
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+          }}
+        >
+          {description}
+        </p>
 
         {/* Buttons */}
         <div
