@@ -114,12 +114,17 @@ const syncGuestCart = async () => {
   if (Object.keys(guestCart).length === 0) return;
 
   try {
+    const mergedCart = { ...cartItems };
+    for (const itemId in guestCart) {
+      mergedCart[itemId] = (mergedCart[itemId] || 0) + guestCart[itemId];
+    }
+
     const { data } = await axios.post("/api/cart/update", {
-      cartItems: guestCart,
+      cartItems: mergedCart,
     });
 
     if (data.success) {
-      setCartItems(guestCart);
+      setCartItems(mergedCart);
       localStorage.removeItem("guestCart");
     }
   } catch (error) {
@@ -129,48 +134,48 @@ const syncGuestCart = async () => {
 
   // ================= UPDATE CART =================
   const updateCartItems = async (itemId, quantity) => {
-    let cartData = structuredClone(cartItems);
-    cartData[itemId] = quantity;
+  let cartData = structuredClone(cartItems);
+  cartData[itemId] = quantity;
+  setCartItems(cartData);
 
-    // console.log("✏️ Update Cart:", cartData);
+  if (!user) {
+    localStorage.setItem("guestCart", JSON.stringify(cartData));
+    return;
+  }
 
-    setCartItems(cartData);
-
-    try {
-      await axios.post("/api/cart/update", {
-        cartItems: cartData,
-      });
-    } catch (error) {
-      console.log("❌ Update cart error:", error.message);
-      toast.error(error.message);
-    }
-  };
+  try {
+    await axios.post("/api/cart/update", { cartItems: cartData });
+  } catch (error) {
+    console.log("❌ Update cart error:", error.message);
+    toast.error(error.message);
+  }
+};
 
   // ================= REMOVE FROM CART =================
-  const removeFromCart = async (itemId) => {
-    let cartData = structuredClone(cartItems);
+ const removeFromCart = async (itemId) => {
+  let cartData = structuredClone(cartItems);
 
-    if (cartData[itemId]) {
-      cartData[itemId] -= 1;
-
-      if (cartData[itemId] === 0) {
-        delete cartData[itemId];
-      }
+  if (cartData[itemId]) {
+    cartData[itemId] -= 1;
+    if (cartData[itemId] === 0) {
+      delete cartData[itemId];
     }
+  }
 
-    // console.log("➖ Remove From Cart:", cartData);
+  setCartItems(cartData);
 
-    setCartItems(cartData);
+  if (!user) {
+    localStorage.setItem("guestCart", JSON.stringify(cartData));
+    return;
+  }
 
-    try {
-      await axios.post("/api/cart/update", {
-        cartItems: cartData,
-      });
-    } catch (error) {
-      console.log("❌ Remove cart error:", error.message);
-      toast.error(error.message);
-    }
-  };
+  try {
+    await axios.post("/api/cart/update", { cartItems: cartData });
+  } catch (error) {
+    console.log("❌ Remove cart error:", error.message);
+    toast.error(error.message);
+  }
+};
 
   // ================= CART COUNT =================
   const getCartCount = () => {
