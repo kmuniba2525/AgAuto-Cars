@@ -52,30 +52,47 @@ export default function Checkout() {
   const [clientSecret, setClientSecret] = useState('');
   const [amount, setAmount] = useState(0);
 
-useEffect(() => {
-  const pending = JSON.parse(sessionStorage.getItem("pendingOrder") || "{}");
-  console.log("pendingOrder from sessionStorage:", pending);
+  useEffect(() => {
+    const pending = JSON.parse(sessionStorage.getItem("pendingOrder") || "{}");
+    console.log("pendingOrder from sessionStorage:", pending);
 
-  const { items, address } = pending.payload || {};
+    // ✅ CHANGED: pull guest fields too, not just address
+    const { items, address, guestInfo, guestAddress } = pending.payload || {};
 
-  if (!items || !address) {
-    console.error("Missing items or address in pendingOrder");
-    return;
-  }
+    // ✅ CHANGED: valid if we have items AND either a saved address
+    // (logged-in user) or full guest info + address (guest)
+    const hasValidAddress = address || (guestInfo && guestAddress);
 
-  axios
-    .post(`${import.meta.env.VITE_BACKEND_URL}/api/order/stripe-intent`, {
-      items,
-      address,
-    }, { withCredentials: true })
-    .then((res) => {
-      setClientSecret(res.data.clientSecret);
-      setAmount(res.data.amount || 0);
-    })
-    .catch((err) => {
-      console.error('Payment intent error:', err.response?.data || err.message);
-    });
-}, []);
+    if (!items || !hasValidAddress) {
+      console.error("Missing items or address in pendingOrder");
+      return;
+    }
+
+    axios
+      .post(
+        `${import.meta.env.VITE_BACKEND_URL}/api/order/stripe-intent`,
+        {
+          items,
+          address,
+          guestInfo,
+          guestAddress,
+        },
+        { withCredentials: true }
+      )
+      .then((res) => {
+        setClientSecret(res.data.clientSecret);
+        setAmount(res.data.amount || 0);
+
+        // ✅ NEW: stash the orderId so the payment-success page can look
+        // this exact order up, regardless of whether the person is logged in
+        if (res.data.orderId) {
+          sessionStorage.setItem("lastOrderId", res.data.orderId);
+        }
+      })
+      .catch((err) => {
+        console.error('Payment intent error:', err.response?.data || err.message);
+      });
+  }, []);
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center px-4 py-6">

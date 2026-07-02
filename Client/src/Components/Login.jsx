@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 
 const Login = () => {
-    const { setShowUserLogin, setUser, axios, fetchUser } = useAppContext();
+    const { setShowUserLogin, setUser, axios, fetchUser, syncGuestCart } = useAppContext();
     const { t } = useTranslation();
 
     const [state, setState] = React.useState("login");
@@ -19,8 +19,12 @@ const Login = () => {
             const { data } = await axios.post(`/api/user/${state}`, payload, { withCredentials: true });
 
             if (data.success) {
-                const userData = data.user || data.data?.user;
-                setUser(userData);
+                // Pull the full user record (including server-side cartItems)
+                await fetchUser();
+
+                // Merge any items added before login
+                await syncGuestCart();
+
                 setShowUserLogin(false);
                 toast.success(data.message || "Success");
             } else {

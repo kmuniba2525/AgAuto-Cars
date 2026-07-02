@@ -9,28 +9,30 @@ import {
   getAnalytics,
   placeOrderStripeIntent,
 } from "../controllers/orderController.js";
-import authUser from "../middlewares/authUser.js";
+import authUser, { optionalAuth } from "../middlewares/authUser.js";
 import { authSeller } from "../middlewares/authSeller.js";
-
-
 
 const orderRouter = express.Router();
 
-//  Place Order (COD)
-orderRouter.post("/cod", authUser, placeOrderCOD);
+//  Place Order (COD) — ✅ CHANGED: optionalAuth so guests can order too
+orderRouter.post("/cod", optionalAuth, placeOrderCOD);
 
-//  Get Logged-in User Orders
+//  Get Logged-in User Orders (still requires login — guests have no account to look up)
 orderRouter.get("/user", authUser, getUserOrder);
 
 //  Get All Orders (Admin/Seller)
-orderRouter.get("/seller",  authSeller, getAllOrders);
+orderRouter.get("/seller", authSeller, getAllOrders);
 
-//Placing order Online
-orderRouter.post("/stripe", authUser, placeOrderStripe);
-orderRouter.post('/stripe-intent', authUser, placeOrderStripeIntent);
+// Placing order Online — ✅ CHANGED: optionalAuth so guests can order too
+orderRouter.post("/stripe", optionalAuth, placeOrderStripe);
+orderRouter.post("/stripe-intent", optionalAuth, placeOrderStripeIntent);
 
-orderRouter.put("/status/:id",updateOrderStatus);
-orderRouter.get("/analytics", getAnalytics)
-orderRouter.get("/:id", authUser, getSingleOrder);
+orderRouter.put("/status/:id", updateOrderStatus);
+orderRouter.get("/analytics", getAnalytics);
+
+// ✅ CHANGED: optionalAuth — guests need to fetch their own order by ID
+// (e.g. on the payment-success page). Ownership is still enforced inside
+// getSingleOrder for orders that belong to a registered user.
+orderRouter.get("/:id", optionalAuth, getSingleOrder);
 
 export default orderRouter;

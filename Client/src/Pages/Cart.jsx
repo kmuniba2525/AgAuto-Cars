@@ -16,6 +16,7 @@ const Cart = () => {
     axios,
     user,
     setCartItems,
+    setShowUserLogin,
   } = useAppContext();
 
   const [showAddress, setShowAddress] = useState(false);
@@ -24,6 +25,45 @@ const Cart = () => {
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [paymentOption, setPaymentOption] = useState("COD");
   const [loading, setLoading] = useState(false);
+
+  // ✅ NEW: guest checkout fields — used only when there's no logged-in user.
+  // These are never saved to an Address document, just sent with the order.
+  const [guestInfo, setGuestInfo] = useState({
+    name: "",
+    email: "",
+    phone: "",
+  });
+  const [guestAddress, setGuestAddress] = useState({
+    street: "",
+    city: "",
+    state: "",
+    zipcode: "",
+    country: "",
+  });
+
+  // ✅ NEW: shown after a guest places a COD order, since guests can't
+  // be sent to the login-gated "My Orders" page.
+  const [guestOrderConfirmation, setGuestOrderConfirmation] = useState(null);
+
+  const handleGuestInfoChange = (e) => {
+    const { name, value } = e.target;
+    setGuestInfo((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleGuestAddressChange = (e) => {
+    const { name, value } = e.target;
+    setGuestAddress((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const isGuestFormComplete = () =>
+    guestInfo.name.trim() &&
+    guestInfo.email.trim() &&
+    guestInfo.phone.trim() &&
+    guestAddress.street.trim() &&
+    guestAddress.city.trim() &&
+    guestAddress.state.trim() &&
+    guestAddress.zipcode.trim() &&
+    guestAddress.country.trim();
 
   const getCart = () => {
     const productMap = {};
@@ -62,17 +102,35 @@ const Cart = () => {
 
   const placeOrder = async () => {
     if (cartArray.length === 0) return toast.error("Cart is empty");
-    if (!selectedAddress) return toast.error("Please select an address");
+
+    // ✅ CHANGED: validate differently depending on logged-in vs guest
+    if (user) {
+      if (!selectedAddress) return toast.error("Please select an address");
+    } else {
+      if (!isGuestFormComplete()) {
+        return toast.error("Please fill in your contact and address details");
+      }
+    }
 
     setLoading(true);
 
-    const payload = {
-      items: cartArray.map((item) => ({
-        product: item._id,
-        quantity: item.quantity,
-      })),
-      address: selectedAddress._id,
-    };
+    // ✅ CHANGED: payload shape depends on whether we have a logged-in user
+    const payload = user
+      ? {
+          items: cartArray.map((item) => ({
+            product: item._id,
+            quantity: item.quantity,
+          })),
+          address: selectedAddress._id,
+        }
+      : {
+          items: cartArray.map((item) => ({
+            product: item._id,
+            quantity: item.quantity,
+          })),
+          guestInfo,
+          guestAddress: { ...guestAddress, phone: guestInfo.phone },
+        };
 
     try {
       if (paymentOption === "COD") {
@@ -84,7 +142,13 @@ const Cart = () => {
           toast.success(data.message);
           setCartItems({});
           setCartArray([]);
-          navigate("/my-orders");
+
+          // ✅ CHANGED: guests have no "My Orders" page to go to
+          if (user) {
+            navigate("/my-orders");
+          } else {
+            setGuestOrderConfirmation({ orderId: data.orderId });
+          }
         } else {
           toast.error(data.message);
         }
@@ -112,6 +176,35 @@ const Cart = () => {
   useEffect(() => {
     if (user) getUserAddress();
   }, [user]);
+
+  // ── Guest order confirmation (after COD) ─────────────────────────
+  if (guestOrderConfirmation) {
+    return (
+      <div className="mt-16 text-center px-4">
+        <div className="max-w-md mx-auto bg-[#0d0d0d] border border-white/10 rounded-2xl p-8">
+          <div className="w-14 h-14 mx-auto rounded-full bg-red-600/10 border border-red-600/20 flex items-center justify-center text-red-500 text-2xl">
+            ✓
+          </div>
+          <h2 className="text-xl font-semibold text-white mt-4">
+            Order Placed Successfully
+          </h2>
+          <p className="text-gray-400 text-sm mt-2">
+            Your order ID is{" "}
+            <span className="text-gray-200 font-medium">
+              #{guestOrderConfirmation.orderId?.slice(-8)}
+            </span>
+            . A confirmation has been noted against the phone/email you provided.
+          </p>
+          <button
+            onClick={() => navigate("/products")}
+            className="mt-6 w-full bg-red-600 hover:bg-red-500 text-white font-semibold py-2.5 rounded-lg transition"
+          >
+            Continue Shopping
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // ── Empty cart ─────────────────────────────────────────────────
   if (cartArray.length === 0) {
@@ -255,52 +348,143 @@ const Cart = () => {
             </div>
           </div>
 
-          {/* Delivery address */}
-          <div className="mt-6">
-            <p className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
-              Delivery Address
-            </p>
-            <div className="mt-2 bg-white/[0.03] border border-white/10 rounded-lg p-3">
-              <p className="text-gray-300 text-sm leading-snug break-words">
-                {selectedAddress
-                  ? `${selectedAddress.street || ""}, ${selectedAddress.city || ""}, ${selectedAddress.state || ""}, ${selectedAddress.country || ""}`
-                  : "No address found"}
+          {/* ✅ CHANGED: Delivery address — saved-address picker for logged-in
+              users, inline guest form for everyone else */}
+          {user ? (
+            <div className="mt-6">
+              <p className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+                Delivery Address
               </p>
-              <button
-                onClick={() => setShowAddress(!showAddress)}
-                className="text-red-500 text-xs font-semibold mt-2 hover:text-red-400 transition"
-              >
-                Change address
-              </button>
-            </div>
-
-            {showAddress && (
-              <div className="mt-2 bg-[#161616] border border-white/10 rounded-lg overflow-hidden max-h-48 overflow-y-auto">
-                {addresses.length > 0 ? (
-                  addresses.map((addr) => (
-                    <p
-                      key={addr._id}
-                      onClick={() => {
-                        setSelectedAddress(addr);
-                        setShowAddress(false);
-                      }}
-                      className="px-3 py-2 hover:bg-white/5 cursor-pointer text-sm text-gray-300 border-b border-white/5 last:border-0 transition"
-                    >
-                      {addr.street}, {addr.city}
-                    </p>
-                  ))
-                ) : (
-                  <p className="px-3 py-2 text-gray-500 text-sm">No saved addresses</p>
-                )}
-                <p
-                  onClick={() => navigate("/add-address")}
-                  className="px-3 py-2 text-red-500 cursor-pointer text-sm font-medium hover:bg-white/5 transition"
-                >
-                  + Add new address
+              <div className="mt-2 bg-white/[0.03] border border-white/10 rounded-lg p-3">
+                <p className="text-gray-300 text-sm leading-snug break-words">
+                  {selectedAddress
+                    ? `${selectedAddress.street || ""}, ${selectedAddress.city || ""}, ${selectedAddress.state || ""}, ${selectedAddress.country || ""}`
+                    : "No address found"}
                 </p>
+                <button
+                  onClick={() => setShowAddress(!showAddress)}
+                  className="text-red-500 text-xs font-semibold mt-2 hover:text-red-400 transition"
+                >
+                  Change address
+                </button>
               </div>
-            )}
-          </div>
+
+              {showAddress && (
+                <div className="mt-2 bg-[#161616] border border-white/10 rounded-lg overflow-hidden max-h-48 overflow-y-auto">
+                  {addresses.length > 0 ? (
+                    addresses.map((addr) => (
+                      <p
+                        key={addr._id}
+                        onClick={() => {
+                          setSelectedAddress(addr);
+                          setShowAddress(false);
+                        }}
+                        className="px-3 py-2 hover:bg-white/5 cursor-pointer text-sm text-gray-300 border-b border-white/5 last:border-0 transition"
+                      >
+                        {addr.street}, {addr.city}
+                      </p>
+                    ))
+                  ) : (
+                    <p className="px-3 py-2 text-gray-500 text-sm">No saved addresses</p>
+                  )}
+                  <p
+                    onClick={() => navigate("/add-address")}
+                    className="px-3 py-2 text-red-500 cursor-pointer text-sm font-medium hover:bg-white/5 transition"
+                  >
+                    + Add new address
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="mt-6">
+              <p className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+                Your Details
+              </p>
+              <div className="mt-2 space-y-2">
+                <input
+                  name="name"
+                  value={guestInfo.name}
+                  onChange={handleGuestInfoChange}
+                  placeholder="Full Name"
+                  className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder:text-gray-600 outline-none focus:border-red-600/60 transition"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    name="email"
+                    type="email"
+                    value={guestInfo.email}
+                    onChange={handleGuestInfoChange}
+                    placeholder="Email"
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder:text-gray-600 outline-none focus:border-red-600/60 transition"
+                  />
+                  <input
+                    name="phone"
+                    value={guestInfo.phone}
+                    onChange={handleGuestInfoChange}
+                    placeholder="Phone"
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder:text-gray-600 outline-none focus:border-red-600/60 transition"
+                  />
+                </div>
+              </div>
+
+              <p className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold mt-4">
+                Delivery Address
+              </p>
+              <div className="mt-2 space-y-2">
+                <input
+                  name="street"
+                  value={guestAddress.street}
+                  onChange={handleGuestAddressChange}
+                  placeholder="Street Address"
+                  className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder:text-gray-600 outline-none focus:border-red-600/60 transition"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    name="city"
+                    value={guestAddress.city}
+                    onChange={handleGuestAddressChange}
+                    placeholder="City"
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder:text-gray-600 outline-none focus:border-red-600/60 transition"
+                  />
+                  <input
+                    name="state"
+                    value={guestAddress.state}
+                    onChange={handleGuestAddressChange}
+                    placeholder="State"
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder:text-gray-600 outline-none focus:border-red-600/60 transition"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    name="zipcode"
+                    value={guestAddress.zipcode}
+                    onChange={handleGuestAddressChange}
+                    placeholder="Zip Code"
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder:text-gray-600 outline-none focus:border-red-600/60 transition"
+                  />
+                  <input
+                    name="country"
+                    value={guestAddress.country}
+                    onChange={handleGuestAddressChange}
+                    placeholder="Country"
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder:text-gray-600 outline-none focus:border-red-600/60 transition"
+                  />
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-500 mt-3">
+                Already have an account?{" "}
+                <button
+                  onClick={() => setShowUserLogin(true)}
+                  className="text-red-500 hover:text-red-400 font-medium"
+                >
+                  Log in
+                </button>{" "}
+                to use a saved address.
+              </p>
+            </div>
+          )}
 
           {/* Payment method */}
           <div className="mt-6">

@@ -75,7 +75,7 @@ const Footer = () => {
                 {/* Bottom */}
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8">
                     <p className="text-gray-500 text-sm">
-                        © {new Date().getFullYear()} <span className="text-red-600 font-medium">Autodex</span>. {t('footer.all_rights')}
+                        © {new Date().getFullYear()} <span className="text-red-600 font-medium">AgAuto</span>. {t('footer.all_rights')}
                     </p>
                     <div className="flex gap-6 text-sm">
                         <a href="#" className="text-gray-400 hover:text-red-700 transition">{t('footer.privacy')}</a>

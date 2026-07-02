@@ -5,15 +5,48 @@ import Notification from "../models/Notification.js";
 import { errorResponse, successResponse } from "../utils/response.js";
 import Stripe from "stripe";
 
+// ✅ NEW: shared helper — validates guest info/address, since guests
+// don't have a saved Address document to reference by id.
+const buildGuestFields = (guestInfo, guestAddress) => {
+  if (
+    !guestInfo?.name ||
+    !guestInfo?.email ||
+    !guestInfo?.phone ||
+    !guestAddress?.street ||
+    !guestAddress?.city ||
+    !guestAddress?.state ||
+    !guestAddress?.zipcode ||
+    !guestAddress?.country
+  ) {
+    return null;
+  }
+  return { guestInfo, guestAddress };
+};
+
 // Place Order COD
 export const placeOrderCOD = async (req, res) => {
   try {
-    const { items, address } = req.body;
-    const userId = req.user.id;
+    const { items, address, guestInfo, guestAddress } = req.body;
+    const userId = req.user?.id || null; // ✅ CHANGED: null for guests
 
     // VALIDATION
-    if (!address || !items || items.length === 0) {
+    if (!items || items.length === 0) {
       return errorResponse(res, 400, "Invalid Data");
+    }
+
+    // ✅ NEW: branch validation based on logged-in vs guest
+    let guestFields = null;
+    if (userId) {
+      if (!address) return errorResponse(res, 400, "Invalid Data");
+    } else {
+      guestFields = buildGuestFields(guestInfo, guestAddress);
+      if (!guestFields) {
+        return errorResponse(
+          res,
+          400,
+          "Name, email, phone and full address are required for guest checkout"
+        );
+      }
     }
 
     // GET PRODUCTS
@@ -59,7 +92,9 @@ export const placeOrderCOD = async (req, res) => {
       userId,
       items,
       amount,
-      address,
+      address: userId ? address : undefined, // ✅ CHANGED
+      isGuestOrder: !userId, // ✅ NEW
+      ...(guestFields || {}), // ✅ NEW: spreads guestInfo + guestAddress
       paymentType: "COD",
       isPaid: true,
     });
@@ -109,17 +144,20 @@ export const placeOrderCOD = async (req, res) => {
       type: "order",
     });
 
-    // CLEAR CART
-    await User.findByIdAndUpdate(userId, {
-      cartItems: {},
+    // CLEAR CART — ✅ CHANGED: only for logged-in users, guests have no cart doc
+    if (userId) {
+      await User.findByIdAndUpdate(userId, {
+        cartItems: {},
+      });
+    }
+
+    // ✅ CHANGED: return orderId too — guests have no "My Orders" page to
+    // fall back on, so the frontend needs the ID to show a confirmation.
+    return res.json({
+      success: true,
+      message: "Order Placed Successfully",
+      orderId: order._id,
     });
-
-    return successResponse(
-      res,
-      200,
-      "Order Placed Successfully"
-    );
-
   } catch (error) {
     console.log(error.message);
 
@@ -130,15 +168,30 @@ export const placeOrderCOD = async (req, res) => {
 // Place Order STRIPE
 export const placeOrderStripe = async (req, res) => {
   try {
-    const { items, address } = req.body;
+    const { items, address, guestInfo, guestAddress } = req.body;
 
-    const userId = req.user.id;
+    const userId = req.user?.id || null; // ✅ CHANGED: null for guests
 
     const { origin } = req.headers;
 
     // VALIDATION
-    if (!address || !items || items.length === 0) {
+    if (!items || items.length === 0) {
       return errorResponse(res, 400, "Invalid Data");
+    }
+
+    // ✅ NEW: branch validation based on logged-in vs guest
+    let guestFields = null;
+    if (userId) {
+      if (!address) return errorResponse(res, 400, "Invalid Data");
+    } else {
+      guestFields = buildGuestFields(guestInfo, guestAddress);
+      if (!guestFields) {
+        return errorResponse(
+          res,
+          400,
+          "Name, email, phone and full address are required for guest checkout"
+        );
+      }
     }
 
     // GET PRODUCTS
@@ -191,7 +244,9 @@ export const placeOrderStripe = async (req, res) => {
       userId,
       items,
       amount,
-      address,
+      address: userId ? address : undefined, // ✅ CHANGED
+      isGuestOrder: !userId, // ✅ NEW
+      ...(guestFields || {}), // ✅ NEW
       paymentType: "Online",
     });
 
@@ -241,9 +296,7 @@ export const placeOrderStripe = async (req, res) => {
     });
 
     // STRIPE
-    const stripeInstance = new Stripe(
-      process.env.STRIPE_SECRET_KEY
-    );
+    const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
 
     const line_items = productData.map((item) => {
       const finalPrice = item.price * 1.02;
@@ -263,27 +316,28 @@ export const placeOrderStripe = async (req, res) => {
       };
     });
 
-    const session =
-      await stripeInstance.checkout.sessions.create({
-        line_items,
+    const session = await stripeInstance.checkout.sessions.create({
+      line_items,
 
-        mode: "payment",
+      mode: "payment",
 
-        success_url: `${origin}/loader?next=my-orders`,
+      success_url: `${origin}/loader?next=my-orders`,
 
-        cancel_url: `${origin}/cart`,
+      cancel_url: `${origin}/cart`,
 
-        metadata: {
-          orderId: order._id.toString(),
-          userId,
-        },
-      });
+      // ✅ CHANGED: Stripe metadata values must be strings — "guest" fallback
+      // instead of null so the webhook can safely check for it later.
+      customer_email: userId ? undefined : guestInfo.email,
+      metadata: {
+        orderId: order._id.toString(),
+        userId: userId || "guest",
+      },
+    });
 
     return res.json({
       success: true,
       url: session.url,
     });
-
   } catch (error) {
     console.log(error.message);
 
@@ -305,9 +359,7 @@ export const stripeWebhooks = async (request, response) => {
       process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (error) {
-    return response
-      .status(400)
-      .send(`Webhook Error: ${error.message}`);
+    return response.status(400).send(`Webhook Error: ${error.message}`);
   }
 
   switch (event.type) {
@@ -315,7 +367,10 @@ export const stripeWebhooks = async (request, response) => {
       const session = event.data.object;
       const { orderId, userId } = session.metadata;
       await Order.findByIdAndUpdate(orderId, { isPaid: true });
-      await User.findByIdAndUpdate(userId, { cartItems: {} });
+      // ✅ CHANGED: only clear cart for real logged-in users
+      if (userId && userId !== "guest") {
+        await User.findByIdAndUpdate(userId, { cartItems: {} });
+      }
       break;
     }
     case "checkout.session.async_payment_failed": {
@@ -329,7 +384,10 @@ export const stripeWebhooks = async (request, response) => {
       const { orderId, userId } = paymentIntent.metadata;
       if (orderId) {
         await Order.findByIdAndUpdate(orderId, { isPaid: true });
-        await User.findByIdAndUpdate(userId, { cartItems: {} });
+        // ✅ CHANGED: only clear cart for real logged-in users
+        if (userId && userId !== "guest") {
+          await User.findByIdAndUpdate(userId, { cartItems: {} });
+        }
         const order = await Order.findById(orderId);
         const productIds = order.items.map((item) => item.product);
         const products = await Product.find({ _id: { $in: productIds } });
@@ -391,7 +449,6 @@ export const getUserOrder = async (req, res) => {
 
     const orders = await Order.find({
       userId,
-      
     })
       .populate("items.product address")
       .sort({ createdAt: -1 });
@@ -406,7 +463,6 @@ export const getUserOrder = async (req, res) => {
 //details of every single order
 export const getSingleOrder = async (req, res) => {
   try {
-
     const order = await Order.findById(req.params.id)
       .populate("items.product")
       .populate("address");
@@ -418,11 +474,21 @@ export const getSingleOrder = async (req, res) => {
       });
     }
 
+    // ✅ NEW: if this order belongs to a registered user, only that same
+    // logged-in user can view it. Guest orders have no userId, so anyone
+    // with the (unguessable) order ID can view them — same pattern most
+    // checkout confirmation pages use.
+    if (order.userId && (!req.user || req.user.id !== order.userId.toString())) {
+      return res.json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
     res.json({
       success: true,
       order,
     });
-
   } catch (error) {
     res.json({
       success: false,
@@ -438,8 +504,6 @@ export const getAllOrders = async (req, res) => {
       .populate("items.product")
       .populate("address")
       .sort({ createdAt: -1 });
-
-    // console.log("REQ.USER:", req.user);
 
     return successResponse(res, 200, orders);
   } catch (error) {
@@ -468,21 +532,16 @@ export const updateOrderStatus = async (req, res) => {
   }
 };
 
-
 // To get Analytics
 export const getAnalytics = async (req, res) => {
   try {
-
     const { range } = req.query;
 
     let filter = {};
 
-    // CURRENT DATE
     const now = new Date();
 
-    // TODAY
     if (range === "today") {
-
       const start = new Date();
       start.setHours(0, 0, 0, 0);
 
@@ -493,22 +552,14 @@ export const getAnalytics = async (req, res) => {
         $gte: start,
         $lte: end,
       };
-    }
-
-    // WEEK
-    else if (range === "week") {
-
+    } else if (range === "week") {
       const start = new Date();
       start.setDate(now.getDate() - 7);
 
       filter.createdAt = {
         $gte: start,
       };
-    }
-
-    // MONTH
-    else if (range === "month") {
-
+    } else if (range === "month") {
       const start = new Date();
       start.setMonth(now.getMonth() - 1);
 
@@ -517,15 +568,9 @@ export const getAnalytics = async (req, res) => {
       };
     }
 
-    // FETCH ORDERS
-    const orders = await Order.find(filter)
-      .sort({ createdAt: -1 });
+    const orders = await Order.find(filter).sort({ createdAt: -1 });
 
-    // TOTAL REVENUE
-    const totalRevenue = orders.reduce(
-      (sum, order) => sum + order.amount,
-      0
-    );
+    const totalRevenue = orders.reduce((sum, order) => sum + order.amount, 0);
 
     res.json({
       success: true,
@@ -533,9 +578,7 @@ export const getAnalytics = async (req, res) => {
       totalRevenue,
       orders,
     });
-
   } catch (error) {
-
     console.log(error);
 
     res.json({
@@ -548,11 +591,26 @@ export const getAnalytics = async (req, res) => {
 // Place Order STRIPE — Payment Intent version (for custom Payment Element UI)
 export const placeOrderStripeIntent = async (req, res) => {
   try {
-    const { items, address } = req.body;
-    const userId = req.user.id;
+    const { items, address, guestInfo, guestAddress } = req.body;
+    const userId = req.user?.id || null; // ✅ CHANGED: null for guests
 
-    if (!address || !items || items.length === 0) {
+    if (!items || items.length === 0) {
       return errorResponse(res, 400, "Invalid Data");
+    }
+
+    // ✅ NEW: branch validation based on logged-in vs guest
+    let guestFields = null;
+    if (userId) {
+      if (!address) return errorResponse(res, 400, "Invalid Data");
+    } else {
+      guestFields = buildGuestFields(guestInfo, guestAddress);
+      if (!guestFields) {
+        return errorResponse(
+          res,
+          400,
+          "Name, email, phone and full address are required for guest checkout"
+        );
+      }
     }
 
     const productIds = items.map((item) => item.product);
@@ -570,7 +628,11 @@ export const placeOrderStripeIntent = async (req, res) => {
       if (!product) continue;
 
       if (product.stock < item.quantity) {
-        return errorResponse(res, 400, `${product.name} has insufficient stock`);
+        return errorResponse(
+          res,
+          400,
+          `${product.name} has insufficient stock`
+        );
       }
 
       amount += product.offerPrice * item.quantity;
@@ -583,7 +645,9 @@ export const placeOrderStripeIntent = async (req, res) => {
       userId,
       items,
       amount,
-      address,
+      address: userId ? address : undefined, // ✅ CHANGED
+      isGuestOrder: !userId, // ✅ NEW
+      ...(guestFields || {}), // ✅ NEW
       paymentType: "Online",
       isPaid: false,
     });
@@ -594,9 +658,10 @@ export const placeOrderStripeIntent = async (req, res) => {
       amount: Math.round(amount * 100),
       currency: "eur",
       automatic_payment_methods: { enabled: true },
+      receipt_email: userId ? undefined : guestInfo.email, // ✅ NEW
       metadata: {
         orderId: order._id.toString(),
-        userId,
+        userId: userId || "guest", // ✅ CHANGED
       },
     });
 
@@ -604,7 +669,7 @@ export const placeOrderStripeIntent = async (req, res) => {
       success: true,
       clientSecret: paymentIntent.client_secret,
       orderId: order._id,
-       amount,
+      amount,
     });
   } catch (error) {
     console.log(error.message);

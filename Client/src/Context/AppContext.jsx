@@ -83,31 +83,49 @@ console.log("FETCH USER RESPONSE:", data);
     }
   };
 
-  // ================= ADD TO CART =================
-  const addToCart = async (itemId) => {
-    let cartData = structuredClone(cartItems);
+  // addToCart — allow guests, persist locally
+const addToCart = async (itemId) => {
+  let cartData = structuredClone(cartItems);
+  cartData[itemId] = (cartData[itemId] || 0) + 1;
+  setCartItems(cartData);
 
-    if (cartData[itemId]) {
-      cartData[itemId] += 1;
-    } else {
-      cartData[itemId] = 1;
-    }
-
-    // console.log("➕ Add To Cart:", cartData);
-
-    setCartItems(cartData);
-
-    try {
-      await axios.post("/api/cart/update", {
-        cartItems: cartData,
-      });
-    } catch (error) {
-      console.log("❌ Add cart error:", error.message);
-      toast.error(error.message);
-    }
-
+  if (!user) {
+    localStorage.setItem("guestCart", JSON.stringify(cartData));
     toast.success("Added To Cart 🛒");
-  };
+    return;
+  }
+
+  try {
+    const { data } = await axios.post("/api/cart/update", { cartItems: cartData });
+    if (data.success) {
+      toast.success("Added To Cart 🛒");
+    } else {
+      toast.error(data.message || "Could not add to cart");
+    }
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Could not add to cart");
+  }
+};
+
+// ================= SYNC GUEST CART ON LOGIN =================
+const syncGuestCart = async () => {
+  const guestCart = JSON.parse(localStorage.getItem("guestCart") || "{}");
+
+  if (Object.keys(guestCart).length === 0) return;
+
+  try {
+    const { data } = await axios.post("/api/cart/update", {
+      cartItems: guestCart,
+    });
+
+    if (data.success) {
+      setCartItems(guestCart);
+      localStorage.removeItem("guestCart");
+    }
+  } catch (error) {
+    console.log("❌ Guest cart sync failed:", error.message);
+  }
+};
 
   // ================= UPDATE CART =================
   const updateCartItems = async (itemId, quantity) => {
@@ -221,7 +239,8 @@ useEffect(() => {
     loading,
     fetchProducts,
     fetchUser,
-    setCartItems
+    setCartItems,
+    syncGuestCart,
   };
 
   // ================= LOADING SCREEN =================

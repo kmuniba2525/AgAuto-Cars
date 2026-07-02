@@ -22,7 +22,34 @@ export default function PaymentSuccess() {
 
   const { currency, axios, user, navigate, setCartItems } = useAppContext();
 
-  // Poll a few times for the webhook to land (it can take a second or two)
+  // ✅ CHANGED: fetch by the exact order ID instead of guessing the
+  // "latest" order — this is what makes it work for guests too, since
+  // there's no /api/order/user route they can call.
+  const fetchOrderById = async (orderId, attempt = 0) => {
+    setOrderLoading(true);
+    try {
+      const { data } = await axios.get(`/api/order/${orderId}`, {
+        withCredentials: true,
+      });
+
+      if (data.success && data.order) {
+        setOrder(data.order);
+        setOrderLoading(false);
+        return;
+      }
+    } catch (error) {
+      console.log(error);
+    }
+
+    if (attempt < 4) {
+      setTimeout(() => fetchOrderById(orderId, attempt + 1), 1500);
+    } else {
+      setOrderLoading(false);
+    }
+  };
+
+  // ✅ KEPT as a fallback for logged-in users only, in case sessionStorage
+  // was cleared (e.g. page refresh) and we no longer have the orderId.
   const fetchLatestOrder = async (attempt = 0) => {
     setOrderLoading(true);
     try {
@@ -31,7 +58,6 @@ export default function PaymentSuccess() {
       });
 
       if (data.success && data.message?.length > 0) {
-        // most recent order first — adjust if your API isn't sorted desc
         const latest = data.message[0];
         setOrder(latest);
         setOrderLoading(false);
@@ -70,9 +96,20 @@ export default function PaymentSuccess() {
     }
   }, [status]);
 
+  // ✅ CHANGED: prefer the exact orderId saved during checkout; only fall
+  // back to the "latest order" guess for logged-in users without one
   useEffect(() => {
-    if (status === 'succeeded' && user) {
+    if (status !== 'succeeded') return;
+
+    const orderId = sessionStorage.getItem('lastOrderId');
+
+    if (orderId) {
+      fetchOrderById(orderId);
+      sessionStorage.removeItem('lastOrderId');
+    } else if (user) {
       fetchLatestOrder();
+    } else {
+      setOrderLoading(false);
     }
   }, [status, user]);
 
@@ -86,6 +123,10 @@ export default function PaymentSuccess() {
   };
 
   const current = content[status] ?? content.default;
+
+  // ✅ NEW: works for both a populated address (logged-in) and the
+  // inline guestAddress object (guest orders)
+  const displayAddress = order?.address || order?.guestAddress;
 
   return (
     <div className="min-h-[80vh] bg-[#0A0A0A] px-4 sm:px-6 py-10 sm:py-16">
@@ -164,14 +205,14 @@ export default function PaymentSuccess() {
                   ))}
                 </div>
 
-                {/* Delivery address */}
+                {/* Delivery address — ✅ CHANGED: falls back to guestAddress */}
                 <div className="px-5 sm:px-6 py-4 border-t border-white/10 text-sm">
                   <p className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold mb-1.5">
                     Delivery Address
                   </p>
                   <p className="text-gray-300 leading-snug">
-                    {order.address
-                      ? `${order.address.street || ""}, ${order.address.city || ""}, ${order.address.state || ""}, ${order.address.country || ""}`
+                    {displayAddress
+                      ? `${displayAddress.street || ""}, ${displayAddress.city || ""}, ${displayAddress.state || ""}, ${displayAddress.country || ""}`
                       : "Address not available"}
                   </p>
                 </div>
@@ -180,20 +221,29 @@ export default function PaymentSuccess() {
 
             {!orderLoading && !order && (
               <div className="bg-[#161616] border border-white/10 rounded-2xl px-6 py-10 text-center text-gray-400 text-sm">
-                We couldn't load your order yet — check{" "}
-                <button onClick={() => navigate('/my-orders')} className="text-red-500 hover:text-red-400 font-medium">
-                  My Orders
-                </button>{" "}
-                in a moment.
+                {user ? (
+                  <>
+                    We couldn't load your order yet — check{" "}
+                    <button onClick={() => navigate('/my-orders')} className="text-red-500 hover:text-red-400 font-medium">
+                      My Orders
+                    </button>{" "}
+                    in a moment.
+                  </>
+                ) : (
+                  "We couldn't load your order details, but your payment was confirmed."
+                )}
               </div>
             )}
 
-            <button
-              onClick={() => navigate('/my-orders')}
-              className="w-full mt-6 border border-red-600 text-red-500 font-semibold py-2.5 rounded-lg hover:bg-red-600 hover:text-white transition-all duration-200 text-sm sm:text-base"
-            >
-              View All Orders
-            </button>
+            {/* ✅ CHANGED: "My Orders" only makes sense for logged-in users */}
+            {user && (
+              <button
+                onClick={() => navigate('/my-orders')}
+                className="w-full mt-6 border border-red-600 text-red-500 font-semibold py-2.5 rounded-lg hover:bg-red-600 hover:text-white transition-all duration-200 text-sm sm:text-base"
+              >
+                View All Orders
+              </button>
+            )}
           </>
         )}
       </div>
