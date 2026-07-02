@@ -260,40 +260,52 @@ const Cart = () => {
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="font-semibold text-sm sm:text-base truncate">{product.name}</p>
-                <div className="text-gray-500 text-xs sm:text-sm mt-1">
-                  <p>Weight: {product.weight || "N/A"}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <p>Qty:</p>
-                    <select
-                      value={product.quantity}
-                      onChange={(e) =>
-                        updateCartItems(product._id, Number(e.target.value))
-                      }
-                      className="border rounded px-1 py-0.5"
-                    >
-                      {Array(9)
-                        .fill("")
-                        .map((_, i) => (
-                          <option key={i} value={i + 1}>
-                            {i + 1}
-                          </option>
-                        ))}
-                    </select>
-                  </div>
+  <p className="font-semibold text-sm sm:text-base truncate">{product.name}</p>
+  <div className="text-gray-500 text-xs sm:text-sm mt-1">
+    <p>Weight: {product.weight || "N/A"}</p>
+    <div className="flex items-center gap-2 mt-2">
+      <p>Qty:</p>
+      <div className="flex items-center border border-gray-300 rounded-md overflow-hidden">
+        <button
+          type="button"
+          onClick={() =>
+            product.quantity > 1 &&
+            updateCartItems(product._id, product.quantity - 1)
+          }
+          disabled={product.quantity <= 1}
+          className="w-6 h-6 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors cursor-pointer"
+        >
+          −
+        </button>
+        <span className="w-7 text-center text-sm font-medium text-gray-800 select-none">
+          {product.quantity}
+        </span>
+        <button
+          type="button"
+          onClick={() =>
+            product.quantity < 9 &&
+            updateCartItems(product._id, product.quantity + 1)
+          }
+          disabled={product.quantity >= 9}
+          className="w-6 h-6 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors cursor-pointer"
+        >
+          +
+        </button>
+      </div>
+    </div>
 
-                  {/* Mobile-only: subtotal + remove inline */}
-                  <div className="flex items-center justify-between mt-2 sm:hidden">
-                    <p className="font-medium text-gray-800">
-                      {currency}
-                      {product.offerPrice * product.quantity}
-                    </p>
-                    <button onClick={() => removeFromCart(product._id)}>
-                      <img src={assets.remove_icon} className="w-5 h-5" alt="remove" />
-                    </button>
-                  </div>
-                </div>
-              </div>
+    {/* Mobile-only: subtotal + remove inline */}
+    <div className="flex items-center justify-between mt-2 sm:hidden">
+      <p className="font-medium text-gray-800">
+        {currency}
+        {product.offerPrice * product.quantity}
+      </p>
+      <button onClick={() => removeFromCart(product._id)}>
+        <img src={assets.remove_icon} className="w-5 h-5" alt="remove" />
+      </button>
+    </div>
+  </div>
+</div>
             </div>
 
             {/* Desktop-only: subtotal + remove in grid columns */}
