@@ -79,7 +79,7 @@ const Categories = () => {
               navigate(`/products/${category.path.toLowerCase()}`);
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className="relative flex-none w-[200px] sm:w-[240px] md:w-[270px] h-[260px] sm:h-[300px] md:h-[340px] overflow-hidden cursor-pointer group"
+            className="relative flex-none w-[180px] sm:w-[220px] md:w-[250px] h-[260px] sm:h-[300px] md:h-[340px] overflow-hidden cursor-pointer group"
           >
             {/* Image */}
             <img

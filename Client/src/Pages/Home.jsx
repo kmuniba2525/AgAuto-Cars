@@ -7,6 +7,7 @@ import NewsLetter from '../Components/NewsLetter'
 // import Testimony from '../Components/Testimonials'
 import Testimonial from '../Components/Testimonials'
 import InfoBanner from '../Components/InfoBanner'
+import PaymentMethods from '../Components/PaymentMethods'
 
 const Home = () => {
   return (
@@ -19,6 +20,7 @@ const Home = () => {
 
         <Categories />
         <BestSeller />
+        <PaymentMethods/>
         {/* <NewsLetter /> */}
         <Testimonial/>
         {/* <BottomBanner /> */}
