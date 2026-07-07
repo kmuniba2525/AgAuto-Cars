@@ -3,7 +3,9 @@ import mongoose from 'mongoose';
 const userSchema= new mongoose.Schema({
     name:{type:String, required:true},
     email:{type:String, required:true,unique:true},
-    password:{type:String, required:true},
+    password:{type:String, required:function(){ return this.authProvider === 'local' }},
+    authProvider:{type:String, enum:['local','google'], default:'local'},
+    image:{type:String, default:''},
     cartItems:{type:Object, default:{}},
     
 },{minimize:false});
@@ -11,4 +13,4 @@ const userSchema= new mongoose.Schema({
 
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 
-export default User 
+export default User

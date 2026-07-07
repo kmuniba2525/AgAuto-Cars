@@ -14,6 +14,7 @@
     "@ckeditor/ckeditor5-build-classic": "^41.4.2",
     "@ckeditor/ckeditor5-editor-classic": "^48.0.1",
     "@ckeditor/ckeditor5-react": "^11.1.2",
+    "@react-oauth/google": "^0.13.5",
     "@stripe/react-stripe-js": "^6.6.0",
     "@stripe/stripe-js": "^9.8.0",
     "@tailwindcss/vite": "^4.2.2",

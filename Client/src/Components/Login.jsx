@@ -2,6 +2,7 @@ import React from 'react'
 import { useAppContext } from '../Context/AppContext';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { GoogleLogin } from '@react-oauth/google';
 
 const Login = () => {
     const { setShowUserLogin, setUser, axios, fetchUser, syncGuestCart } = useAppContext();
@@ -12,6 +13,7 @@ const Login = () => {
     const [email, setEmail] = React.useState("");
     const [password, setPassword] = React.useState("");
     const [loading, setLoading] = React.useState(false);
+    const [googleLoading, setGoogleLoading] = React.useState(false);
 
     const onSubmitHandler = async (event) => {
         try {
@@ -36,6 +38,31 @@ const Login = () => {
             toast.error(error.response?.data?.message || error.message);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const onGoogleSuccess = async (credentialResponse) => {
+        try {
+            setGoogleLoading(true);
+            const { data } = await axios.post(
+                `/api/user/google`,
+                { credential: credentialResponse.credential },
+                { withCredentials: true }
+            );
+
+            if (data.success) {
+                await fetchUser();
+                await syncGuestCart();
+
+                setShowUserLogin(false);
+                toast.success(data.message || "Success");
+            } else {
+                toast.error(data.message);
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || error.message);
+        } finally {
+            setGoogleLoading(false);
         }
     };
 
@@ -144,6 +171,26 @@ const Login = () => {
                     >
                         {loading ? "..." : (state === "register" ? t('login.create_account_btn') : t('login.login_btn'))}
                     </button>
+
+                    {/* Divider */}
+                    <div className="flex items-center gap-3 my-1">
+                        <div className="flex-1 h-px bg-gray-200"></div>
+                        <span className="text-xs text-gray-400">or continue with</span>
+                        <div className="flex-1 h-px bg-gray-200"></div>
+                    </div>
+
+                    {/* Google Sign-In */}
+                    <div className="w-full flex justify-center">
+                        <GoogleLogin
+                            onSuccess={onGoogleSuccess}
+                            onError={() => toast.error("Google sign-in failed")}
+                            width="304"
+                            text={state === "register" ? "signup_with" : "signin_with"}
+                        />
+                    </div>
+                    {googleLoading && (
+                        <p className="text-center text-xs text-gray-400">Signing you in...</p>
+                    )}
 
                     {state === "register" ? (
                         <p className="text-center text-xs text-gray-400">
