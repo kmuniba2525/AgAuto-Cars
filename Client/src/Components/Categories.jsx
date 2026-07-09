@@ -22,9 +22,9 @@ const Categories = () => {
       {/* Section Header */}
       <div className="relative mb-10">
         {/* Watermark */}
-        <p className="absolute -top-6 left-0 text-[64px] sm:text-[90px] font-black text-gray-100 leading-none select-none pointer-events-none uppercase tracking-tighter">
+        {/* <p className="absolute -top-6 left-0 text-[64px] sm:text-[90px] font-black text-gray-100 leading-none select-none pointer-events-none uppercase tracking-tighter">
           Shop
-        </p>
+        </p> */}
 
         <div className="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
@@ -40,7 +40,7 @@ const Categories = () => {
           </div>
 
           {/* Scroll Arrows */}
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <button
               onClick={() => scroll("left")}
               className="w-10 h-10 rounded-full border-2 border-gray-200 flex items-center justify-center text-gray-600 hover:bg-primary hover:text-white hover:border-primary transition-all duration-200"
@@ -57,7 +57,7 @@ const Categories = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </button>
-          </div>
+          </div> */}
         </div>
 
         {/* Divider */}
@@ -70,7 +70,7 @@ const Categories = () => {
       {/* Scrollable Cards */}
       <div
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto scroll-smooth scrollbar-hide pb-2"
+        className="flex rounded-sm gap-4 overflow-x-auto scroll-smooth scrollbar-hide pb-2"
       >
         {categories.map((category, index) => (
           <div
@@ -79,7 +79,21 @@ const Categories = () => {
               navigate(`/products/${category.path.toLowerCase()}`);
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className="relative flex-none w-[180px] sm:w-[220px] md:w-[250px] h-[260px] sm:h-[300px] md:h-[340px] overflow-hidden cursor-pointer group"
+            className="
+relative
+flex-none
+w-[180px] sm:w-[220px] md:w-[250px]
+h-[260px] sm:h-[300px] md:h-[340px]
+overflow-hidden
+rounded-[24px]
+border border-gray-200/70
+shadow-sm
+hover:shadow-2xl
+transition-all
+duration-500
+cursor-pointer
+group
+"
           >
             {/* Image */}
             <img

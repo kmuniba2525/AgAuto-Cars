@@ -88,10 +88,6 @@ const PaymentMethods = () => {
     <div className="mt-20 px-4 sm:px-6 lg:px-10">
       {/* Section Header — mirrors BestSeller */}
       <div className="relative mb-10">
-        <p className="absolute -top-6 left-0 text-[64px] sm:text-[90px] font-black text-gray-100 leading-none select-none pointer-events-none uppercase tracking-tighter">
-          Pay Easy
-        </p>
-
         <div className="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
@@ -119,9 +115,29 @@ const PaymentMethods = () => {
       </div>
 
       {/* Payment Method Grid */}
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-3 md:gap-4">
+     <div className="flex md:grid md:grid-cols-7 gap-4 overflow-x-auto scrollbar-hide pb-3 md:overflow-visible snap-x snap-mandatory">
         {methods.map((m) => (
-          <div key={m.name} className="pm-card group relative rounded-2xl border border-gray-100 bg-white py-5 px-2 flex flex-col items-center gap-2 overflow-hidden cursor-default">
+        <div
+  key={m.name}
+  className="pm-card group relative
+  min-w-[150px]
+  sm:min-w-[170px]
+  md:min-w-0
+  rounded-2xl
+  border
+  border-gray-100
+  bg-white
+  py-5
+  px-3
+  flex
+  flex-col
+  items-center
+  gap-2
+  overflow-hidden
+  cursor-default
+  snap-center
+  shrink-0"
+>
             {/* shine sweep */}
             <span className="pm-shine pointer-events-none absolute inset-0" />
 

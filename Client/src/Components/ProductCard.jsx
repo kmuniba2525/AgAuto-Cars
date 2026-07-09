@@ -31,11 +31,11 @@ const ProductCard = ({ product }) => {
     >
       {/* Product Image */}
       {/* Product Image */}
-<div className="overflow-hidden bg-gray-50 p-3 sm:p-4">
+<div className="overflow-hidden bg-gray-50 p-2 sm:p-3 aspect-[4/3] flex items-center justify-center">
   <img
     src={product.image?.[0] || assets.upload_area}
     alt={product.name}
-    className="w-full h-32 sm:h-44 lg:h-52 object-contain hover:scale-105 transition-transform duration-500"
+    className="w-full h-full object-contain scale-110 sm:scale-125 hover:scale-[1.35] transition-transform duration-500"
   />
 </div>
 

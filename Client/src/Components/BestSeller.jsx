@@ -17,14 +17,11 @@ const BestSeller = () => {
     .slice(0, 5);
 
   return (
-    <div className="mt-20 px-4 sm:px-6 text center  lg:px-10">
+    <div className="mt-10 px-4 sm:px-6 text center  lg:px-10 ">
       {/* Section Header */}
       <div className="relative mb-10">
-        {/* Background watermark text */}
-        <p className="absolute -top-6 left-0 text-[64px] sm:text-[90px] font-black text-gray-100 leading-none select-none pointer-events-none uppercase tracking-tighter">
-          Top Picks
-        </p>
-
+      
+      
         <div className="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
             {/* Eyebrow */}
@@ -65,17 +62,18 @@ const BestSeller = () => {
         </div>
       </div>
 
-      {/* Product Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-5">
+      {/* Product Row / Grid */}
+      <div
+        className="flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-3 sm:mx-0 sm:px-0 sm:pb-0 sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 md:gap-5 sm:overflow-visible [&::-webkit-scrollbar]:hidden"
+        style={{ scrollbarWidth: "none" }}
+      >
         {bestSellers.map((product, index) => (
           <div
             key={product._id}
-            className="relative group"
+            className="relative group shrink-0 w-[44%] min-w-[150px] snap-start sm:w-auto sm:min-w-0 sm:shrink"
           >
             {/* Rank Badge */}
-            <div className="absolute -top-2 -left-2 z-10 w-7 h-7 rounded-full bg-primary text-white text-xs font-black flex items-center justify-center shadow-md">
-              {index + 1}
-            </div>
+            
 
             {/* Top Seller badge on first product */}
             {index === 0 && (
