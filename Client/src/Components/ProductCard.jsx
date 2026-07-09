@@ -30,13 +30,14 @@ const ProductCard = ({ product }) => {
       className="flex flex-col bg-white rounded-xl sm:rounded-2xl border border-gray-200/70 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] cursor-pointer hover:shadow-[0_12px_28px_-8px_rgba(0,0,0,0.12)] hover:border-gray-300 transition-all duration-300 w-full overflow-hidden"
     >
       {/* Product Image */}
-      <div className="overflow-hidden">
-        <img
-          src={product.image?.[0] || assets.upload_area}
-          alt={product.name}
-          className="w-full h-28 sm:h-36 lg:h-40 object-cover hover:scale-105 transition-transform duration-500"
-        />
-      </div>
+      {/* Product Image */}
+<div className="overflow-hidden bg-gray-50 p-3 sm:p-4">
+  <img
+    src={product.image?.[0] || assets.upload_area}
+    alt={product.name}
+    className="w-full h-32 sm:h-44 lg:h-52 object-contain hover:scale-105 transition-transform duration-500"
+  />
+</div>
 
       {/* Content */}
       <div className="p-2.5 sm:p-3.5 text-[11px] sm:text-xs flex flex-col flex-1">
