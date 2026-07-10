@@ -56,10 +56,10 @@ const BestSeller = () => {
         </div>
 
         {/* Divider */}
-        <div className="mt-5 flex items-center gap-3">
+        {/* <div className="mt-5 flex items-center gap-3">
           <div className="h-[2px] w-10 bg-accent rounded-full" />
           <div className="h-[1px] flex-1 bg-gray-200 rounded-full" />
-        </div>
+        </div> */}
       </div>
 
       {/* Product Row / Grid */}
@@ -67,7 +67,7 @@ const BestSeller = () => {
         className="flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-3 sm:mx-0 sm:px-0 sm:pb-0 sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 md:gap-5 sm:overflow-visible [&::-webkit-scrollbar]:hidden"
         style={{ scrollbarWidth: "none" }}
       >
-        {bestSellers.map((product, index) => (
+        {bestSellers.map((product) => (
           <div
             key={product._id}
             className="relative group shrink-0 w-[44%] min-w-[150px] snap-start sm:w-auto sm:min-w-0 sm:shrink"
@@ -76,11 +76,11 @@ const BestSeller = () => {
             
 
             {/* Top Seller badge on first product */}
-            {index === 0 && (
+            {/* {index === 0 && (
               <div className="absolute -top-2 -right-2 z-10 bg-accent text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md uppercase tracking-wide">
                 🔥 Top
               </div>
-            )}
+            )} */}
 
             <ProductCard product={product} />
           </div>
