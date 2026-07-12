@@ -9,18 +9,18 @@ import { getLocalizedText } from "../utils/getLocalizedText";
 const PRODUCTS_PER_PAGE = 24;
 
 export const CATEGORIES_RAW = [
-  { key: "categories.primer", path: "Primer" },
-  { key: "categories.clearcoat", path: "Clearcoat" },
-  { key: "categories.thinners", path: "Thinners" },
-  { key: "categories.putty", path: "Putty" },
-  { key: "categories.paint", path: "Paint" },
-  { key: "categories.sanding", path: "Sanding" },
-  { key: "categories.masking", path: "Masking" },
-  { key: "categories.sealant", path: "Sealant" },
-  { key: "categories.safety", path: "Safety" },
-  { key: "categories.carcare", path: "CarCare" },
-  { key: "categories.aerosol", path: "Aerosol" },
-  { key: "categories.workwear", path: "Workwear" },
+  { key: "categories_names.primer", path: "Primer" },
+  { key: "categories_names.clearcoat", path: "Clearcoat" },
+  { key: "categories_names.thinners", path: "Thinners" },
+  { key: "categories_names.putty", path: "Putty" },
+  { key: "categories_names.paint", path: "Paint" },
+  { key: "categories_names.sanding", path: "Sanding" },
+  { key: "categories_names.masking", path: "Masking" },
+  { key: "categories_names.sealant", path: "Sealant" },
+  { key: "categories_names.safety", path: "Safety" },
+  { key: "categories_names.carcare", path: "CarCare" },
+  { key: "categories_names.aerosol", path: "Aerosol" },
+  { key: "categories_names.workwear", path: "Workwear" },
 ];
 
 const AllProducts = () => {
