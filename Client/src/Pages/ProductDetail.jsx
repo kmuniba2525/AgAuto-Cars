@@ -2,19 +2,19 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useAppContext } from "../Context/AppContext";
 import { Link, useParams } from "react-router-dom";
 import ProductCard from "../Components/ProductCard";
+import AddReview from "../Components/AddReview";
 import DOMPurify from "dompurify";
 import { FaStar } from "react-icons/fa";
-import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
+import { getLocalizedText } from "../utils/getLocalizedText";
 
 const ProductDetail = () => {
+  const { t, i18n } = useTranslation();
   const { currency, addToCart, products, navigate, axios, user } =
     useAppContext();
 
   const { id } = useParams();
 
-  const [ratingInput, setRatingInput] = useState(5);
-  const [comment, setComment] = useState("");
-  const [existingReview, setExistingReview] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [thumbnail, setThumbnail] = useState(null);
   const [localProduct, setLocalProduct] = useState(null);
@@ -24,17 +24,11 @@ const ProductDetail = () => {
 
   const reviewsRef = useRef(null);
 
-  // =========================
-  // FIND PRODUCT
-  // =========================
-
   const product = products.find((item) => item._id?.toString() === id);
 
-  // =========================
-  // VARIANTS (litre / size options)
-  // =========================
-  // Falls back to a single "Standard" option built from the base
-  // price/offerPrice/stock fields when the product has no variants array.
+  // ✅ resolve bilingual name/description for the active language
+  const localizedName = getLocalizedText(product?.name, i18n.language);
+  const localizedDescription = getLocalizedText(product?.description, i18n.language);
 
   const variants = useMemo(() => {
     if (!product) return [];
@@ -59,15 +53,7 @@ const ProductDetail = () => {
         )
       : 0;
 
-  // =========================
-  // PRODUCT RATING
-  // =========================
-
   const rating = localProduct?.rating || product?.rating || 0;
-
-  // =========================
-  // LOAD PRODUCT
-  // =========================
 
   useEffect(() => {
     if (product) {
@@ -83,7 +69,6 @@ const ProductDetail = () => {
     }
   }, [products, product]);
 
-  // Reset the selected size/quantity whenever the product (or its variants) change
   useEffect(() => {
     if (variants.length > 0) {
       setSelectedVariant(variants[0]);
@@ -91,101 +76,27 @@ const ProductDetail = () => {
     }
   }, [variants]);
 
-  // =========================
-  // LOAD USER REVIEW
-  // =========================
-
-  useEffect(() => {
-    if (localProduct?.reviews && user) {
-      const userReview = localProduct.reviews.find(
-        (review) => review.user?.toString() === user.id
-      );
-
-      if (userReview) {
-        setExistingReview(userReview);
-        setRatingInput(userReview.rating);
-        setComment(userReview.comment);
-      } else {
-        setExistingReview(null);
-        setRatingInput(5);
-        setComment("");
-      }
-    }
-  }, [localProduct, user]);
-
-  // =========================
-  // SUBMIT REVIEW
-  // =========================
-
-  const submitReview = async () => {
-    try {
-      if (!user) {
-        return toast.error("Please login first");
-      }
-
-      if (!comment.trim()) {
-        return toast.error("Comment is required");
-      }
-
-      const { data } = await axios.post(
-        "/api/product/review",
-        {
-          productId: product._id,
-          rating: ratingInput,
-          comment,
-        },
-        { withCredentials: true }
-      );
-
-      if (data.success) {
-        toast.success(data.message);
-
-        if (data.product) {
-          setLocalProduct(data.product);
-
-          const userReview = data.product.reviews.find(
-            (review) => review.user?.toString() === user.id
-          );
-
-          setExistingReview(userReview);
-        }
-      } else {
-        toast.error(data.message);
-      }
-    } catch (error) {
-      console.log(error);
-      toast.error(error.response?.data?.message || error.message);
-    }
-  };
-
   const scrollToReviews = () => {
     reviewsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // =========================
-  // LOADING
-  // =========================
-
   if (!product || !selectedVariant) {
-    return <p className="p-6">Loading...</p>;
+    return <p className="p-6">{t("product_detail.loading")}</p>;
   }
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-8">
-      {/* ========================= */}
       {/* BREADCRUMB */}
-      {/* ========================= */}
-
       <p className="text-xs text-gray-400 font-medium tracking-wide mb-6">
         <Link to="/" className="hover:text-gray-700 transition-colors">
-          Home
+          {t("product_detail.home")}
         </Link>
         {" / "}
         <Link
           to="/products"
           className="hover:text-gray-700 transition-colors"
         >
-          Products
+          {t("product_detail.products")}
         </Link>
         {" / "}
         <Link
@@ -195,16 +106,11 @@ const ProductDetail = () => {
           {product.category}
         </Link>
         {" / "}
-        <span className="text-gray-600">{product.name}</span>
+        <span className="text-gray-600">{localizedName}</span>
       </p>
 
-      {/* ========================= */}
       {/* PRODUCT SECTION */}
-      {/* ========================= */}
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        {/* LEFT — IMAGE + THUMBNAILS BELOW */}
-
         <div className="lg:sticky lg:top-24 lg:self-start">
           <div className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
             {discountPercent > 0 && (
@@ -215,7 +121,7 @@ const ProductDetail = () => {
 
             <img
               src={thumbnail || product.image?.[0]}
-              alt={product.name}
+              alt={localizedName}
               className="w-full h-full object-cover"
             />
           </div>
@@ -243,19 +149,16 @@ const ProductDetail = () => {
           )}
         </div>
 
-        {/* RIGHT — INFO */}
-
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
             {product.category}
           </p>
 
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-snug">
-            {product.name}
+            {localizedName}
           </h1>
 
           {/* RATING */}
-
           <div className="flex items-center gap-2 mt-2">
             <div className="flex items-center gap-0.5">
               {[1, 2, 3, 4, 5].map((star) => (
@@ -274,12 +177,11 @@ const ProductDetail = () => {
               onClick={scrollToReviews}
               className="text-xs text-gray-500 hover:text-accent transition-colors underline underline-offset-2"
             >
-              {localProduct?.numReviews || 0} reviews
+              {t("product_detail.reviews_count", { count: localProduct?.numReviews || 0 })}
             </button>
           </div>
 
           {/* PRICE */}
-
           <div className="flex items-baseline gap-3 mt-4">
             {selectedVariant.price > selectedVariant.offerPrice && (
               <span className="text-gray-400 line-through text-base">
@@ -300,10 +202,9 @@ const ProductDetail = () => {
             )}
           </div>
 
-          <p className="text-xs text-gray-400 mt-1">Inclusive of all taxes</p>
+          <p className="text-xs text-gray-400 mt-1">{t("product_detail.inclusive_taxes")}</p>
 
           {/* AVAILABILITY */}
-
           <div className="flex items-center gap-2 mt-3 text-sm font-medium">
             <span
               className={`w-2 h-2 rounded-full ${
@@ -318,32 +219,26 @@ const ProductDetail = () => {
               }
             >
               {selectedVariant.stock > 0
-                ? "In stock, ready to ship"
-                : "Out of stock"}
+                ? t("product_detail.in_stock")
+                : t("product_detail.out_of_stock")}
             </span>
           </div>
 
           <hr className="my-5 border-gray-100" />
 
           {/* DESCRIPTION */}
-
           <div
             className="text-sm text-gray-600 leading-relaxed"
             dangerouslySetInnerHTML={{
-              __html: DOMPurify.sanitize(
-                typeof product.description === "string"
-                  ? product.description
-                  : ""
-              ),
+              __html: DOMPurify.sanitize(localizedDescription),
             }}
           />
 
           {/* SIZE + QUANTITY */}
-
           <div className="mt-6 flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <label className="block text-sm font-semibold text-gray-900 mb-1.5">
-                Size
+                {t("product_detail.size")}
               </label>
 
               <div className="relative">
@@ -366,7 +261,7 @@ const ProductDetail = () => {
                     >
                       {v.label}
                       {v.stock <= 0
-                        ? " — Out of stock"
+                        ? ` ${t("product_detail.out_of_stock_option")}`
                         : ` — ${currency}${v.offerPrice}`}
                     </option>
                   ))}
@@ -390,7 +285,7 @@ const ProductDetail = () => {
 
             <div>
               <label className="block text-sm font-semibold text-gray-900 mb-1.5">
-                Quantity
+                {t("product_detail.quantity")}
               </label>
 
               <div className="inline-flex items-center border border-gray-300 rounded-lg overflow-hidden h-[46px]">
@@ -418,18 +313,13 @@ const ProductDetail = () => {
           </div>
 
           {/* BUTTONS */}
-          {/* NOTE: addToCart currently only takes a product id in your
-              AppContext. If you want the cart to remember which size /
-              quantity was picked, extend addToCart(productId, quantity, variantLabel)
-              in AppContext + your cart schema — happy to wire that up too. */}
-
           <div className="flex flex-col sm:flex-row gap-3 mt-6">
             <button
               onClick={() => addToCart(product._id)}
               disabled={selectedVariant.stock <= 0}
               className="flex-1 py-3.5 rounded-lg font-semibold bg-primary text-white hover:bg-primary-dull transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Add to Cart
+              {t("product_detail.add_to_cart")}
             </button>
 
             <button
@@ -440,39 +330,34 @@ const ProductDetail = () => {
               disabled={selectedVariant.stock <= 0}
               className="flex-1 py-3.5 rounded-lg font-semibold border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Buy Now
+              {t("product_detail.buy_now")}
             </button>
           </div>
 
           {/* DELIVERY NOTE */}
-
           <div className="flex items-center gap-2 mt-4 text-xs text-gray-500">
             <TruckIcon />
-            <span>In-stock items ship within 2–5 business days</span>
+            <span>{t("product_detail.delivery_note")}</span>
           </div>
 
           {/* TRUST ROW */}
-
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-5 pt-5 border-t border-gray-100 text-xs text-gray-500">
             <span className="flex items-center gap-1.5">
-              <LockIcon /> Secure Payment
+              <LockIcon /> {t("product_detail.secure_payment")}
             </span>
             <span className="flex items-center gap-1.5">
-              <ReturnIcon /> Easy Returns
+              <ReturnIcon /> {t("product_detail.easy_returns")}
             </span>
           </div>
         </div>
       </div>
 
-      {/* ========================= */}
       {/* RELATED PRODUCTS */}
-      {/* ========================= */}
-
       {relatedProducts.filter((item) => item.inStock).length > 0 && (
         <div className="mt-20">
           <div className="flex items-center gap-4 mb-6">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 whitespace-nowrap">
-              You may also like
+              {t("product_detail.you_may_also_like")}
             </h2>
             <div className="flex-1 h-px bg-gray-200" />
           </div>
@@ -493,68 +378,27 @@ const ProductDetail = () => {
               }}
               className="mt-10 px-10 py-3 rounded-full border-2 border-gray-900 text-gray-900 font-bold text-sm hover:bg-gray-900 hover:text-white transition-colors"
             >
-              See More
+              {t("product_detail.see_more")}
             </button>
           </div>
         </div>
       )}
 
-      {/* ========================= */}
       {/* REVIEWS */}
-      {/* ========================= */}
-
       <div ref={reviewsRef} className="mt-20 max-w-3xl scroll-mt-24">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6">
-          Customer Reviews
+          {t("product_detail.customer_reviews")}
         </h2>
 
-        {/* REVIEW FORM */}
-
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-5">
-          <h3 className="text-base font-bold mb-3 text-gray-900">
-            {existingReview ? "Update Your Review" : "Write a Review"}
-          </h3>
-
-          {existingReview && (
-            <p className="text-sm text-accent mb-3">
-              You already reviewed this product. You can edit it anytime.
-            </p>
-          )}
-
-          <div className="flex items-center gap-2 mb-4">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <FaStar
-                key={star}
-                onClick={() => setRatingInput(star)}
-                className={`cursor-pointer text-xl transition-transform ${
-                  star <= ratingInput
-                    ? "text-accent scale-110"
-                    : "text-gray-300 hover:text-accent/50"
-                }`}
-              />
-            ))}
-            <span className="text-sm text-gray-500 ml-2">
-              {ratingInput} / 5
-            </span>
-          </div>
-
-          <textarea
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Share your experience..."
-            className="border border-gray-200 focus:border-primary outline-none rounded-lg w-full p-3 h-28 resize-none text-sm"
-          />
-
-          <button
-            onClick={submitReview}
-            className="bg-primary hover:bg-primary-dull text-white px-5 py-2.5 rounded-lg mt-4 text-sm font-semibold transition-colors"
-          >
-            {existingReview ? "Update Review" : "Submit Review"}
-          </button>
-        </div>
+        {/* REVIEW FORM — now its own component */}
+        <AddReview
+          product={localProduct}
+          user={user}
+          axios={axios}
+          onReviewSubmitted={(updatedProduct) => setLocalProduct(updatedProduct)}
+        />
 
         {/* REVIEWS LIST */}
-
         <div className="mt-8 space-y-4">
           {Array.isArray(localProduct?.reviews) &&
           localProduct.reviews.length > 0 ? (
@@ -606,7 +450,7 @@ const ProductDetail = () => {
                 </div>
               ))
           ) : (
-            <p className="text-gray-400 text-sm mt-4">No reviews yet</p>
+            <p className="text-gray-400 text-sm mt-4">{t("product_detail.no_reviews_yet")}</p>
           )}
         </div>
       </div>
@@ -614,44 +458,17 @@ const ProductDetail = () => {
   );
 };
 
-// =========================
-// SMALL HELPER ICONS
-// =========================
-
 const LockIcon = () => (
   <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none">
-    <rect
-      x="5"
-      y="10"
-      width="14"
-      height="10"
-      rx="2"
-      stroke="currentColor"
-      strokeWidth="1.5"
-    />
-    <path
-      d="M8 10V7a4 4 0 018 0v3"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      fill="none"
-    />
+    <rect x="5" y="10" width="14" height="10" rx="2" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M8 10V7a4 4 0 018 0v3" stroke="currentColor" strokeWidth="1.5" fill="none" />
   </svg>
 );
 
 const TruckIcon = () => (
   <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none">
-    <path
-      d="M3 7h11v8H3V7z"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinejoin="round"
-    />
-    <path
-      d="M14 10h4l3 3v2h-7v-5z"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinejoin="round"
-    />
+    <path d="M3 7h11v8H3V7z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    <path d="M14 10h4l3 3v2h-7v-5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
     <circle cx="7" cy="17" r="1.6" stroke="currentColor" strokeWidth="1.5" />
     <circle cx="17" cy="17" r="1.6" stroke="currentColor" strokeWidth="1.5" />
   </svg>
@@ -659,19 +476,8 @@ const TruckIcon = () => (
 
 const ReturnIcon = () => (
   <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none">
-    <path
-      d="M4 9a8 8 0 1114 5.3"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-    />
-    <path
-      d="M4 4v5h5"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
+    <path d="M4 9a8 8 0 1114 5.3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M4 4v5h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 

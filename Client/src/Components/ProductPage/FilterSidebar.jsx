@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 const FilterSidebar = ({
   products,
@@ -13,13 +14,21 @@ const FilterSidebar = ({
   filteredProducts,
   onClose,
 }) => {
+  const { t } = useTranslation();
+
+  const availabilityOptions = [
+    { value: "all", label: t("filter_sidebar.all_products") },
+    { value: "inStock", label: t("filter_sidebar.in_stock") },
+    { value: "outOfStock", label: t("filter_sidebar.out_of_stock") },
+  ];
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="p-4 sm:p-5 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-gray-50 to-white shrink-0">
         <div>
-          <p className="text-base sm:text-lg font-semibold text-gray-900">Filters</p>
-          <p className="text-xs text-gray-500 mt-0.5">Refine your search</p>
+          <p className="text-base sm:text-lg font-semibold text-gray-900">{t("filter_sidebar.filters")}</p>
+          <p className="text-xs text-gray-500 mt-0.5">{t("filter_sidebar.refine_search")}</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -28,7 +37,7 @@ const FilterSidebar = ({
               onClick={clearFilters}
               className="text-xs font-semibold text-primary border border-primary/30 rounded-full px-3 py-1.5 hover:bg-primary hover:text-white hover:border-primary transition-colors"
             >
-              Reset All
+              {t("filter_sidebar.reset_all")}
             </button>
           )}
           {onClose && (
@@ -47,14 +56,10 @@ const FilterSidebar = ({
         {/* Availability */}
         <div>
           <p className="text-xs font-semibold text-gray-900 mb-3 tracking-wide uppercase">
-            Availability
+            {t("filter_sidebar.availability")}
           </p>
           <div className="space-y-1">
-            {[
-              { value: "all", label: "All Products" },
-              { value: "inStock", label: "In Stock" },
-              { value: "outOfStock", label: "Out of Stock" },
-            ].map((option) => (
+            {availabilityOptions.map((option) => (
               <label
                 key={option.value}
                 className="flex items-center gap-3 cursor-pointer rounded-xl px-3 py-2.5 hover:bg-gray-50 transition-colors"
@@ -85,14 +90,14 @@ const FilterSidebar = ({
         <div className="border-t border-gray-100 pt-5">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs font-semibold uppercase tracking-wide">
-              Categories
+              {t("filter_sidebar.categories")}
             </p>
             {selectedCategories.length > 0 && (
               <button
                 onClick={clearAllCategories}
                 className="text-xs text-primary hover:underline"
               >
-                Clear ({selectedCategories.length})
+                {t("filter_sidebar.clear_count", { count: selectedCategories.length })}
               </button>
             )}
           </div>
@@ -162,7 +167,7 @@ const FilterSidebar = ({
             onClick={onClose}
             className="w-full py-3 bg-primary text-white rounded-2xl text-sm font-semibold hover:opacity-90 transition-opacity"
           >
-            Show {filteredProducts.length} Products
+            {t("filter_sidebar.show_products", { count: filteredProducts.length })}
           </button>
         </div>
       )}

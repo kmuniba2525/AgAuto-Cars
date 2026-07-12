@@ -1,6 +1,7 @@
 import React from "react";
 import ProductCard from "../ProductCard";
 import Pagination from "./Pagination";
+import { useTranslation } from "react-i18next";
 
 const ProductGrid = ({
   paginatedProducts,
@@ -9,6 +10,8 @@ const ProductGrid = ({
   setCurrentPage,
   clearFilters,
 }) => {
+  const { t } = useTranslation();
+
   // No Products Found
   if (paginatedProducts.length === 0) {
     return (
@@ -28,18 +31,18 @@ const ProductGrid = ({
         </div>
 
         <p className="text-lg sm:text-xl font-serif text-gray-900">
-          No Products Found
+          {t("product_grid.no_products_found")}
         </p>
 
         <p className="text-gray-500 mt-2 text-sm px-6">
-          Try changing your selected filters.
+          {t("product_grid.try_changing_filters")}
         </p>
 
         <button
           onClick={clearFilters}
           className="mt-5 px-5 py-2.5 bg-primary text-white rounded-full text-sm font-medium hover:opacity-90 transition-opacity shadow-md shadow-primary/20"
         >
-          Clear Filters
+          {t("product_grid.clear_filters")}
         </button>
       </div>
     );
@@ -48,7 +51,7 @@ const ProductGrid = ({
   return (
     <>
       {/* Products */}
-     <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
         {paginatedProducts.map((product) => (
           <div
             key={product._id}

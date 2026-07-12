@@ -16,12 +16,13 @@ import Cart from "./Pages/Cart";
 import AddAddress from "./Pages/AddAddress";
 import MyOrder from "./Pages/MyOrders";
 import TrackOrder from "./Pages/TrackOrder";
-import Checkout from "./Pages/Checkout";               // 👈 new
-import PaymentSuccess from "./Pages/PaymentSuccess";   // 👈 new
+import Checkout from "./Pages/Checkout";               
+import PaymentSuccess from "./Pages/PaymentSuccess";   
 
 import SellerLogin from "./Components/Seller/SellerLogin";
 import SellerLayout from "./Pages/Seller/SellerLayout";
 import AddProduct from "./Pages/Seller/AddProduct";
+import EditProduct from "./Pages/Seller/EditProduct";
 import ProductList from "./Pages/Seller/ProductList";
 import Orders from "./Pages/Seller/Orders";
 import Analytics from "./Pages/Seller/Analytics";
@@ -87,6 +88,7 @@ const App = () => {
           element={isSeller ? <SellerLayout /> : <SellerLogin />}
         >
           <Route index element={isSeller ? <AddProduct /> : null} />
+          <Route path="edit-product/:id" element={<EditProduct/>} />
           <Route path="product-list" element={<ProductList />} />
           <Route path="orders" element={<Orders />} />
           <Route path="analytics" element={<Analytics />} />

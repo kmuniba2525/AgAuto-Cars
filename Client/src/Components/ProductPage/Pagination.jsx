@@ -1,10 +1,13 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 const Pagination = ({
   currentPage,
   totalPages,
   setCurrentPage,
 }) => {
+  const { t } = useTranslation();
+
   if (totalPages <= 1) return null;
 
   return (
@@ -17,7 +20,7 @@ const Pagination = ({
         disabled={currentPage === 1}
         className="px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-full text-xs sm:text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:border-primary hover:text-primary transition-colors"
       >
-        ← Prev
+        {t("pagination.prev")}
       </button>
 
       {/* Page Numbers */}
@@ -45,7 +48,7 @@ const Pagination = ({
         disabled={currentPage === totalPages}
         className="px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-200 rounded-full text-xs sm:text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed hover:border-primary hover:text-primary transition-colors"
       >
-        Next →
+        {t("pagination.next")}
       </button>
     </div>
   );

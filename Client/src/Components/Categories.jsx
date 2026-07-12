@@ -34,7 +34,7 @@ const Categories = () => {
                 Browse
               </p>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 leading-tight">
+            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 leading-tight">
               {t("categories.title")}
             </h2>
           </div>

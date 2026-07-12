@@ -3,25 +3,28 @@ import { useAppContext } from "../Context/AppContext";
 import FilterSidebar from "../Components/ProductPage/FilterSidebar";
 import SortBar from "../Components/ProductPage/SortBar";
 import ProductGrid from "../Components/ProductPage/ProductGrid";
+import { useTranslation } from "react-i18next";
+import { getLocalizedText } from "../utils/getLocalizedText";
 
 const PRODUCTS_PER_PAGE = 24;
 
-export const CATEGORIES = [
-  { text: "Primer & Grundfärg", path: "Primer" },
-  { text: "Clearcoat", path: "Clearcoat" },
-  { text: "Thinners & Degreaser", path: "Thinners" },
-  { text: "Putty & Filler", path: "Putty" },
-  { text: "Paint & Basecoat", path: "Paint" },
-  { text: "Sanding & Abrasives", path: "Sanding" },
-  { text: "Masking & Tape", path: "Masking" },
-  { text: "Body Sealant", path: "Sealant" },
-  { text: "Gloves & Safety", path: "Safety" },
-  { text: "Ceramic & Car Care", path: "CarCare" },
-  { text: "Aerosol Spray", path: "Aerosol" },
-  { text: "Workwear", path: "Workwear" },
+export const CATEGORIES_RAW = [
+  { key: "categories.primer", path: "Primer" },
+  { key: "categories.clearcoat", path: "Clearcoat" },
+  { key: "categories.thinners", path: "Thinners" },
+  { key: "categories.putty", path: "Putty" },
+  { key: "categories.paint", path: "Paint" },
+  { key: "categories.sanding", path: "Sanding" },
+  { key: "categories.masking", path: "Masking" },
+  { key: "categories.sealant", path: "Sealant" },
+  { key: "categories.safety", path: "Safety" },
+  { key: "categories.carcare", path: "CarCare" },
+  { key: "categories.aerosol", path: "Aerosol" },
+  { key: "categories.workwear", path: "Workwear" },
 ];
 
 const AllProducts = () => {
+  const { t, i18n } = useTranslation();
   const { products, searchQuery } = useAppContext();
 
   const [availability, setAvailability] = useState("all");
@@ -29,6 +32,11 @@ const AllProducts = () => {
   const [sortBy, setSortBy] = useState("default");
   const [currentPage, setCurrentPage] = useState(1);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+
+  const CATEGORIES = useMemo(
+    () => CATEGORIES_RAW.map((c) => ({ text: t(c.key), path: c.path })),
+    [t]
+  );
 
   const toggleCategory = (path) => {
     setSelectedCategories((prev) =>
@@ -43,10 +51,16 @@ const AllProducts = () => {
   const filteredProducts = useMemo(() => {
     let result = [...products];
 
+    // ✅ CHANGED: name is now { en, pt } — search across both languages
+    // regardless of the active UI language, so users find products even
+    // if they type in the "other" language than the one they're browsing in.
     if (searchQuery?.trim()) {
-      result = result.filter((product) =>
-        product.name?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      const query = searchQuery.toLowerCase();
+      result = result.filter((product) => {
+        const nameEn = (product.name?.en || (typeof product.name === "string" ? product.name : "")).toLowerCase();
+        const namePt = (product.name?.pt || "").toLowerCase();
+        return nameEn.includes(query) || namePt.includes(query);
+      });
     }
 
     if (availability === "inStock") {
@@ -66,6 +80,8 @@ const AllProducts = () => {
       );
     }
 
+    // ✅ CHANGED: name sorting now uses the localized display name for the
+    // active language, via the shared getLocalizedText helper.
     if (sortBy === "priceLow") {
       result.sort((a, b) => Number(a.price) - Number(b.price));
     }
@@ -73,10 +89,14 @@ const AllProducts = () => {
       result.sort((a, b) => Number(b.price) - Number(a.price));
     }
     if (sortBy === "nameAZ") {
-      result.sort((a, b) => a.name.localeCompare(b.name));
+      result.sort((a, b) =>
+        getLocalizedText(a.name, i18n.language).localeCompare(getLocalizedText(b.name, i18n.language))
+      );
     }
     if (sortBy === "nameZA") {
-      result.sort((a, b) => b.name.localeCompare(a.name));
+      result.sort((a, b) =>
+        getLocalizedText(b.name, i18n.language).localeCompare(getLocalizedText(a.name, i18n.language))
+      );
     }
     if (sortBy === "newest") {
       result.sort(
@@ -85,7 +105,7 @@ const AllProducts = () => {
     }
 
     return result;
-  }, [products, searchQuery, availability, selectedCategories, sortBy]);
+  }, [products, searchQuery, availability, selectedCategories, sortBy, i18n.language]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -148,19 +168,19 @@ const AllProducts = () => {
 
           <p className="relative text-xs font-semibold tracking-[3px] text-primary uppercase flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />
-            Explore Collection
+            {t("all_products.explore_collection")}
           </p>
 
           <div className="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mt-2 sm:mt-3">
             <div>
               <h1 className="font-serif text-[28px] sm:text-4xl lg:text-[3rem] leading-tight tracking-tight text-gray-900">
-                All Products
+                {t("all_products.title")}
               </h1>
 
               <div className="h-[3px] w-12 sm:w-16 mt-2 sm:mt-3 rounded-full bg-gradient-to-r from-primary to-primary/20" />
 
               <p className="text-gray-500 mt-2 sm:mt-3 text-sm sm:text-[15px]">
-                Find the products that match your style and needs.
+                {t("all_products.subtitle")}
               </p>
             </div>
           </div>
@@ -188,17 +208,17 @@ const AllProducts = () => {
           {/* Main Content */}
           <main className="flex-1 min-w-0">
             <SortBar
-  filteredProducts={filteredProducts}
-  sortBy={sortBy}
-  setSortBy={setSortBy}
-  hasActiveFilters={hasActiveFilters}
-  selectedCategories={selectedCategories}
-  availability={availability}
-  setMobileFilterOpen={setMobileFilterOpen}
-  categories={CATEGORIES}        
-  toggleCategory={toggleCategory} 
-  clearFilters={clearFilters}     
-/>
+              filteredProducts={filteredProducts}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              hasActiveFilters={hasActiveFilters}
+              selectedCategories={selectedCategories}
+              availability={availability}
+              setMobileFilterOpen={setMobileFilterOpen}
+              categories={CATEGORIES}
+              toggleCategory={toggleCategory}
+              clearFilters={clearFilters}
+            />
 
             <ProductGrid
               paginatedProducts={paginatedProducts}

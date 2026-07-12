@@ -3,9 +3,10 @@ import { useAppContext } from '../Context/AppContext'
 import { useParams } from 'react-router-dom';
 import { categories } from '../assets/assets';
 import ProductCard from '../Components/ProductCard';
+import { useTranslation } from 'react-i18next';
 
 const ProductCategory = () => {
-
+    const { t } = useTranslation();
     const {products}=useAppContext();
     const {category}=useParams();
 
@@ -28,7 +29,7 @@ const ProductCategory = () => {
             </div>
         ):(
             <div className='flex items-center justify-center h-[60vh]'>
-                <p className='text-2xl font-medium text-primary'>No Products Found in this Category</p>
+                <p className='text-2xl font-medium text-primary'>{t('product_category.no_products_found')}</p>
             </div>
         )
             

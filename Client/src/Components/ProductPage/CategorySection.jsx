@@ -1,6 +1,7 @@
 import React from "react";
 import ProductCard from "../ProductCard";
 import Pagination from "./Pagination";
+import { useTranslation } from "react-i18next";
 
 const CategorySection = ({
   paginatedCategories,
@@ -10,6 +11,8 @@ const CategorySection = ({
   totalCategoryPages,
   setCategoryPage,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <>
       <div className="space-y-12 sm:space-y-16">
@@ -27,7 +30,7 @@ const CategorySection = ({
               <div className="flex items-center justify-between mb-5 sm:mb-6">
                 <div>
                   <p className="text-xs tracking-[2px] uppercase text-primary font-semibold">
-                    Collection
+                    {t("category_section.collection")}
                   </p>
 
                   <h2 className="font-serif text-xl sm:text-2xl text-gray-900 mt-1">
@@ -41,7 +44,7 @@ const CategorySection = ({
                   }
                   className="group text-xs sm:text-sm font-semibold rounded-full px-4 py-2 shadow-sm hover:shadow-md text-primary border border-primary/30 hover:bg-primary hover:text-white hover:border-primary transition-colors flex items-center gap-1"
                 >
-                  View All
+                  {t("category_section.view_all")}
 
                   <span className="transition-transform group-hover:translate-x-0.5">
                     →

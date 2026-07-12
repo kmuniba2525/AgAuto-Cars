@@ -3,6 +3,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import axios from 'axios';
 import CheckoutForm from '../Components/CheckoutForm';
+import { useTranslation } from 'react-i18next';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
@@ -49,6 +50,7 @@ const appearance = {
 };
 
 export default function Checkout() {
+  const { t } = useTranslation();
   const [clientSecret, setClientSecret] = useState('');
   const [amount, setAmount] = useState(0);
 
@@ -56,11 +58,8 @@ export default function Checkout() {
     const pending = JSON.parse(sessionStorage.getItem("pendingOrder") || "{}");
     console.log("pendingOrder from sessionStorage:", pending);
 
-    // ✅ CHANGED: pull guest fields too, not just address
     const { items, address, guestInfo, guestAddress } = pending.payload || {};
 
-    // ✅ CHANGED: valid if we have items AND either a saved address
-    // (logged-in user) or full guest info + address (guest)
     const hasValidAddress = address || (guestInfo && guestAddress);
 
     if (!items || !hasValidAddress) {
@@ -83,8 +82,6 @@ export default function Checkout() {
         setClientSecret(res.data.clientSecret);
         setAmount(res.data.amount || 0);
 
-        // ✅ NEW: stash the orderId so the payment-success page can look
-        // this exact order up, regardless of whether the person is logged in
         if (res.data.orderId) {
           sessionStorage.setItem("lastOrderId", res.data.orderId);
         }
@@ -99,7 +96,7 @@ export default function Checkout() {
       <div className="w-full max-w-sm">
         <div className="mb-3">
           <h2 className="text-zinc-100 text-base font-medium leading-tight">
-            Complete your payment
+            {t('checkout.complete_payment')}
           </h2>
           <p className="text-zinc-100 text-2xl font-medium mt-0.5">
             €{amount.toFixed(2)}

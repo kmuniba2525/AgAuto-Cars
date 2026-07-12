@@ -10,6 +10,7 @@ import {
   productById,
   productList,
   addReview,
+  updateProduct,
 } from "../controllers/productController.js";
 
 const productRouter = express.Router();
@@ -20,6 +21,7 @@ productRouter.post(
   upload.array("image", 4),
   addProduct
 );
+productRouter.put("/edit/:id", upload.array("image", 4), authSeller, updateProduct);
 
 productRouter.get("/list", productList);
 

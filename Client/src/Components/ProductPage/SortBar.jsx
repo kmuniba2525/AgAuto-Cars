@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 const SortBar = ({
   filteredProducts,
@@ -12,6 +13,8 @@ const SortBar = ({
   toggleCategory,
   clearFilters,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="mb-6 space-y-3">
       {/* Main Sort Bar */}
@@ -24,12 +27,12 @@ const SortBar = ({
               onChange={(e) => setSortBy(e.target.value)}
               className="appearance-none pl-3 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition-all cursor-pointer hover:border-gray-300"
             >
-              <option value="default">Sort: Default</option>
-              <option value="priceLow">Price: Low → High</option>
-              <option value="priceHigh">Price: High → Low</option>
-              <option value="nameAZ">Name: A → Z</option>
-              <option value="nameZA">Name: Z → A</option>
-              <option value="newest">Newest First</option>
+              <option value="default">{t("sort_bar.sort_default")}</option>
+              <option value="priceLow">{t("sort_bar.price_low_high")}</option>
+              <option value="priceHigh">{t("sort_bar.price_high_low")}</option>
+              <option value="nameAZ">{t("sort_bar.name_az")}</option>
+              <option value="nameZA">{t("sort_bar.name_za")}</option>
+              <option value="newest">{t("sort_bar.newest_first")}</option>
             </select>
 
             <svg
@@ -49,7 +52,7 @@ const SortBar = ({
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 4h18M7 10h10M11 16h2" />
           </svg>
-          Filters
+          {t("sort_bar.filters")}
           {hasActiveFilters && (
             <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">
               {selectedCategories.length + (availability !== "all" ? 1 : 0)}
@@ -81,7 +84,7 @@ const SortBar = ({
             onClick={clearFilters}
             className="text-xs sm:text-sm text-gray-500 hover:text-gray-800 underline underline-offset-2 transition-colors shrink-0"
           >
-            Clear all
+            {t("sort_bar.clear_all")}
           </button>
         </div>
       )}

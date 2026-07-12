@@ -29,9 +29,6 @@ const reviewSchema = new mongoose.Schema(
 // ======================
 // LITRE / SIZE VARIANTS
 // ======================
-// One entry per purchasable size, e.g. { label: "1L", price: 1200, offerPrice: 999, stock: 20 }
-// A product with no variants falls back to the base price/offerPrice/stock fields below,
-// so nothing already in your DB breaks.
 const variantSchema = new mongoose.Schema(
   {
     label: {
@@ -56,26 +53,41 @@ const variantSchema = new mongoose.Schema(
     },
 
     sku: {
-      type: String, // optional — useful once you start tracking supplier codes
+      type: String,
     },
+  },
+  { _id: false }
+);
+
+// ======================
+// BILINGUAL TEXT FIELDS
+// ======================
+// Used for name + description so the same product document serves both
+// English and Portuguese storefronts without duplicating the whole product.
+const bilingualTextSchema = new mongoose.Schema(
+  {
+    en: { type: String, required: true },
+    pt: { type: String, required: true },
   },
   { _id: false }
 );
 
 const productsSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
+    // ✅ CHANGED: name and description are now { en, pt } objects instead
+    // of plain strings.
+    name: { type: bilingualTextSchema, required: true },
 
-    description: { type: String, required: true },
+    description: { type: bilingualTextSchema, required: true },
 
-    // Base price/stock — used as the fallback "Standard" variant for
-    // products that don't have multiple sizes.
     price: { type: Number, required: true },
 
     offerPrice: { type: Number, required: true },
 
     image: { type: Array, required: true },
 
+    // Category stays a plain string key (e.g. "Primer") — it's translated
+    // on the frontend via i18n's categories.* keys, not stored bilingually.
     category: { type: String, required: true },
 
     inStock: { type: Boolean, required: true },
@@ -86,17 +98,10 @@ const productsSchema = new mongoose.Schema(
       default: 0,
     },
 
-    // ======================
-    // LITRE / SIZE VARIANTS
-    // ======================
     variants: {
       type: [variantSchema],
       default: [],
     },
-
-    // ======================
-    // REVIEW SYSTEM
-    // ======================
 
     reviews: {
       type: [reviewSchema],

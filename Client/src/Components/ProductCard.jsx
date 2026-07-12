@@ -3,6 +3,7 @@ import React from "react";
 import { assets } from "../assets/assets";
 import { useAppContext } from "../Context/AppContext";
 import { useTranslation } from "react-i18next";
+import { getLocalizedText } from "../utils/getLocalizedText";
 
 const ProductCard = ({ product }) => {
   const {
@@ -13,12 +14,16 @@ const ProductCard = ({ product }) => {
     navigate,
   } = useAppContext();
 
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   if (!product) return null;
 
-  const description = product.description
-    ? product.description.replace(/<[^>]*>/g, "")
+  // ✅ CHANGED: resolve bilingual name/description for the active language
+  const localizedName = getLocalizedText(product.name, i18n.language);
+  const localizedDescriptionRaw = getLocalizedText(product.description, i18n.language);
+
+  const description = localizedDescriptionRaw
+    ? localizedDescriptionRaw.replace(/<[^>]*>/g, "")
     : "";
 
   return (
@@ -30,14 +35,13 @@ const ProductCard = ({ product }) => {
       className="flex flex-col bg-white rounded-xl sm:rounded-2xl border border-gray-200/70 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] cursor-pointer hover:shadow-[0_12px_28px_-8px_rgba(0,0,0,0.12)] hover:border-gray-300 transition-all duration-300 w-full overflow-hidden"
     >
       {/* Product Image */}
-      {/* Product Image */}
-<div className="overflow-hidden bg-gray-50 p-2 sm:p-3 aspect-[4/3] flex items-center justify-center">
-  <img
-    src={product.image?.[0] || assets.upload_area}
-    alt={product.name}
-    className="w-full h-full object-contain scale-110 sm:scale-125 hover:scale-[1.35] transition-transform duration-500"
-  />
-</div>
+      <div className="overflow-hidden bg-gray-50 p-2 sm:p-3 aspect-[4/3] flex items-center justify-center">
+        <img
+          src={product.image?.[0] || assets.upload_area}
+          alt={localizedName}
+          className="w-full h-full object-contain scale-110 sm:scale-125 hover:scale-[1.35] transition-transform duration-500"
+        />
+      </div>
 
       {/* Content */}
       <div className="p-2.5 sm:p-3.5 text-[11px] sm:text-xs flex flex-col flex-1">
@@ -55,7 +59,7 @@ const ProductCard = ({ product }) => {
 
         {/* Product Name */}
         <p className="text-gray-800 text-xs sm:text-sm font-medium mt-1 sm:mt-1.5 mb-1 line-clamp-1">
-          {product.name}
+          {localizedName}
         </p>
 
         {/* Description */}
