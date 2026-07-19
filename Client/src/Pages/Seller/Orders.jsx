@@ -7,11 +7,16 @@ import {
   ChefHat,
   Truck,
   Home,
+  Printer,
 } from "lucide-react";
+import { getLocalizedText } from "../../utils/getLocalizedText";
+import { getOrderCustomer } from "../../utils/getOrderCustomer";
+import Invoice from "../../Components/Seller/Invoice";
 
 function Orders() {
   const { currency, axios } = useAppContext();
   const [orders, setOrders] = useState([]);
+  const [printOrder, setPrintOrder] = useState(null);
 
   const orderSteps = [
     "Order Placed",
@@ -65,7 +70,8 @@ function Orders() {
   }, []);
 
   return (
-    <div className="no-scrollbar flex-1 h-[95vh] overflow-y-auto bg-[#f8fafc]">
+    <>
+    <div className="no-scrollbar flex-1 h-[95vh] overflow-y-auto bg-[#f8fafc] print:hidden">
       <div className="md:p-10 p-4 space-y-6">
 
         <div>
@@ -84,6 +90,7 @@ function Orders() {
         ) : (
           orders.map((order, index) => {
             const currentStep = orderSteps.indexOf(order?.status);
+            const customer = getOrderCustomer(order);
 
             return (
               <div
@@ -114,7 +121,8 @@ function Orders() {
                               key={idx}
                               className="text-lg font-semibold text-gray-800"
                             >
-                              {item?.product?.name || "Product"}
+                              {getLocalizedText(item?.product?.name, "en") ||
+                                "Product"}
                               <span className="text-primary ml-1">
                                 x {item?.quantity || 0}
                               </span>
@@ -127,17 +135,24 @@ function Orders() {
 
                       <div className="mt-5 space-y-1 text-gray-600">
                         <p className="font-semibold text-gray-800">
-                          {order?.address?.firstName}
+                          {customer.name}
+                          {customer.isGuest && (
+                            <span className="ml-2 text-xs font-normal text-gray-400">
+                              (Guest)
+                            </span>
+                          )}
                         </p>
                         <p>
-                          {order?.address?.street}, {order?.address?.city}
+                          {customer.street}
+                          {customer.street && customer.city ? ", " : ""}
+                          {customer.city}
                         </p>
                         <p>
-                          {order?.address?.state},{" "}
-                          {order?.address?.zipcode},{" "}
-                          {order?.address?.country}
+                          {[customer.state, customer.zipcode, customer.country]
+                            .filter(Boolean)
+                            .join(", ")}
                         </p>
-                        <p>{order?.address?.phone}</p>
+                        <p>{customer.phone}</p>
                       </div>
                     </div>
                   </div>
@@ -194,7 +209,7 @@ function Orders() {
                   ].map((step, stepIndex) => (
                     <div
                       key={stepIndex}
-                      className="flex-1 flex flex-col items-center relative z-10"
+                      className="flex-1 flex flex-col items-center relative "
                     >
 
                       {stepIndex !== 3 && (
@@ -244,6 +259,14 @@ function Orders() {
                   <button className="px-5 py-2.5 rounded-lg bg-primary text-white">
                     Track Order
                   </button>
+
+                  <button
+                    onClick={() => setPrintOrder(order)}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                  >
+                    <Printer size={16} />
+                    Print Invoice
+                  </button>
                 </div>
 
               </div>
@@ -252,6 +275,11 @@ function Orders() {
         )}
       </div>
     </div>
+
+    {printOrder && (
+      <Invoice order={printOrder} onClose={() => setPrintOrder(null)} />
+    )}
+    </>
   );
 }
 

@@ -7,6 +7,7 @@ import {
   updateOrderStatus,
   getSingleOrder,
   getAnalytics,
+  getAdvancedAnalytics,
   placeOrderStripeIntent,
 } from "../controllers/orderController.js";
 import authUser, { optionalAuth } from "../middlewares/authUser.js";
@@ -28,7 +29,11 @@ orderRouter.post("/stripe", optionalAuth, placeOrderStripe);
 orderRouter.post("/stripe-intent", optionalAuth, placeOrderStripeIntent);
 
 orderRouter.put("/status/:id", updateOrderStatus);
-orderRouter.get("/analytics", getAnalytics);
+
+// ✅ CHANGED: both were previously unprotected — any client could read
+// store revenue. Now seller-only, same as /seller.
+orderRouter.get("/analytics", authSeller, getAnalytics);
+orderRouter.get("/analytics/advanced", authSeller, getAdvancedAnalytics);
 
 // ✅ CHANGED: optionalAuth — guests need to fetch their own order by ID
 // (e.g. on the payment-success page). Ownership is still enforced inside

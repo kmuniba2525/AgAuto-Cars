@@ -588,6 +588,355 @@ export const getAnalytics = async (req, res) => {
   }
 };
 
+// ================= ADVANCED ANALYTICS (Seller Dashboard) =================
+// Single endpoint that returns everything the analytics page needs:
+// KPIs + growth vs previous period, revenue/orders trend, status/payment/
+// guest breakdowns, top products, category revenue split, top customers,
+// new-vs-returning customers, low stock alerts, and revenue by country.
+const LOW_STOCK_THRESHOLD = 5;
+
+const getDateRange = (range, customStart, customEnd) => {
+  const now = new Date();
+  let start;
+  let end = now;
+
+  if (range === "custom" && customStart && customEnd) {
+    start = new Date(customStart);
+    end = new Date(customEnd);
+    end.setHours(23, 59, 59, 999);
+  } else if (range === "today") {
+    start = new Date();
+    start.setHours(0, 0, 0, 0);
+  } else if (range === "week") {
+    start = new Date();
+    start.setDate(now.getDate() - 7);
+  } else if (range === "quarter") {
+    start = new Date();
+    start.setMonth(now.getMonth() - 3);
+  } else if (range === "year") {
+    start = new Date();
+    start.setFullYear(now.getFullYear() - 1);
+  } else if (range === "all") {
+    start = new Date(2000, 0, 1);
+  } else {
+    // default: "month"
+    start = new Date();
+    start.setMonth(now.getMonth() - 1);
+  }
+
+  return { start, end };
+};
+
+export const getAdvancedAnalytics = async (req, res) => {
+  try {
+    const { range = "month", startDate, endDate } = req.query;
+    const { start, end } = getDateRange(range, startDate, endDate);
+
+    // Comparable previous period (same length) so we can show growth %.
+    const durationMs = Math.max(end.getTime() - start.getTime(), 1);
+    const prevEnd = new Date(start.getTime() - 1);
+    const prevStart = new Date(prevEnd.getTime() - durationMs);
+
+    const dateMatch = { createdAt: { $gte: start, $lte: end } };
+    const prevDateMatch = { createdAt: { $gte: prevStart, $lte: prevEnd } };
+
+    // Daily buckets for short windows, monthly buckets once the range
+    // gets long enough that a daily chart would just be noise.
+    const dayCount = durationMs / (1000 * 60 * 60 * 24);
+    const trendFormat = dayCount > 90 ? "%Y-%m" : "%Y-%m-%d";
+
+    const [
+      currentSummary,
+      prevSummary,
+      revenueTrend,
+      statusBreakdown,
+      paymentBreakdown,
+      customerTypeBreakdown,
+      topProductsRaw,
+      categoryBreakdownRaw,
+      topCustomersRaw,
+      lowStockProducts,
+      geoBreakdownRaw,
+    ] = await Promise.all([
+      Order.aggregate([
+        { $match: dateMatch },
+        {
+          $group: {
+            _id: null,
+            totalOrders: { $sum: 1 },
+            totalRevenue: { $sum: "$amount" },
+            paidOrders: { $sum: { $cond: ["$isPaid", 1, 0] } },
+          },
+        },
+      ]),
+      Order.aggregate([
+        { $match: prevDateMatch },
+        {
+          $group: {
+            _id: null,
+            totalOrders: { $sum: 1 },
+            totalRevenue: { $sum: "$amount" },
+          },
+        },
+      ]),
+      Order.aggregate([
+        { $match: dateMatch },
+        {
+          $group: {
+            _id: { $dateToString: { format: trendFormat, date: "$createdAt" } },
+            revenue: { $sum: "$amount" },
+            orders: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+      Order.aggregate([
+        { $match: dateMatch },
+        { $group: { _id: "$status", count: { $sum: 1 } } },
+      ]),
+      Order.aggregate([
+        { $match: dateMatch },
+        {
+          $group: {
+            _id: "$paymentType",
+            count: { $sum: 1 },
+            revenue: { $sum: "$amount" },
+          },
+        },
+      ]),
+      Order.aggregate([
+        { $match: dateMatch },
+        {
+          $group: {
+            _id: "$isGuestOrder",
+            count: { $sum: 1 },
+            revenue: { $sum: "$amount" },
+          },
+        },
+      ]),
+      // Top products by units sold. Revenue is estimated using each
+      // product's CURRENT offerPrice, since line items only store
+      // quantity, not a price snapshot at purchase time.
+      Order.aggregate([
+        { $match: dateMatch },
+        { $unwind: "$items" },
+        {
+          $group: {
+            _id: "$items.product",
+            quantitySold: { $sum: "$items.quantity" },
+            orderCount: { $sum: 1 },
+          },
+        },
+        { $sort: { quantitySold: -1 } },
+        { $limit: 8 },
+        {
+          $lookup: {
+            from: "products",
+            localField: "_id",
+            foreignField: "_id",
+            as: "product",
+          },
+        },
+        { $unwind: { path: "$product", preserveNullAndEmptyArrays: true } },
+      ]),
+      Order.aggregate([
+        { $match: dateMatch },
+        { $unwind: "$items" },
+        {
+          $lookup: {
+            from: "products",
+            localField: "items.product",
+            foreignField: "_id",
+            as: "product",
+          },
+        },
+        { $unwind: { path: "$product", preserveNullAndEmptyArrays: true } },
+        {
+          $group: {
+            _id: { $ifNull: ["$product.category", "Unknown"] },
+            quantitySold: { $sum: "$items.quantity" },
+            revenue: {
+              $sum: {
+                $multiply: [
+                  "$items.quantity",
+                  { $ifNull: ["$product.offerPrice", 0] },
+                ],
+              },
+            },
+          },
+        },
+        { $sort: { revenue: -1 } },
+      ]),
+      Order.aggregate([
+        { $match: { ...dateMatch, userId: { $ne: null } } },
+        {
+          $group: {
+            _id: "$userId",
+            totalSpent: { $sum: "$amount" },
+            orderCount: { $sum: 1 },
+          },
+        },
+        { $sort: { totalSpent: -1 } },
+        { $limit: 5 },
+        {
+          $lookup: {
+            from: "users",
+            localField: "_id",
+            foreignField: "_id",
+            as: "user",
+          },
+        },
+        { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+      ]),
+      Product.find({ stock: { $lte: LOW_STOCK_THRESHOLD } })
+        .select("name category stock image")
+        .sort({ stock: 1 })
+        .limit(10),
+      Order.aggregate([
+        { $match: dateMatch },
+        {
+          $lookup: {
+            from: "addresses",
+            localField: "address",
+            foreignField: "_id",
+            as: "addr",
+          },
+        },
+        { $unwind: { path: "$addr", preserveNullAndEmptyArrays: true } },
+        {
+          $project: {
+            country: { $ifNull: ["$addr.country", "$guestAddress.country"] },
+            amount: 1,
+          },
+        },
+        {
+          $group: {
+            _id: { $ifNull: ["$country", "Unknown"] },
+            orders: { $sum: 1 },
+            revenue: { $sum: "$amount" },
+          },
+        },
+        { $sort: { revenue: -1 } },
+        { $limit: 8 },
+      ]),
+    ]);
+
+    // New vs returning customers: "new" = their first-ever order (across
+    // all time, not just this window) falls inside this window.
+    const distinctCustomers = await Order.aggregate([
+      { $match: { ...dateMatch, userId: { $ne: null } } },
+      { $group: { _id: "$userId" } },
+    ]);
+    const customerIds = distinctCustomers.map((d) => d._id);
+
+    let newCustomers = 0;
+    let returningCustomers = 0;
+
+    if (customerIds.length > 0) {
+      const firstOrderDates = await Order.aggregate([
+        { $match: { userId: { $in: customerIds } } },
+        { $group: { _id: "$userId", firstOrder: { $min: "$createdAt" } } },
+      ]);
+
+      firstOrderDates.forEach((c) => {
+        if (c.firstOrder >= start) newCustomers += 1;
+        else returningCustomers += 1;
+      });
+    }
+
+    const totalRevenue = currentSummary[0]?.totalRevenue || 0;
+    const totalOrders = currentSummary[0]?.totalOrders || 0;
+    const paidOrders = currentSummary[0]?.paidOrders || 0;
+    const prevRevenue = prevSummary[0]?.totalRevenue || 0;
+    const prevOrders = prevSummary[0]?.totalOrders || 0;
+
+    const revenueGrowth =
+      prevRevenue > 0
+        ? Math.round(((totalRevenue - prevRevenue) / prevRevenue) * 1000) / 10
+        : null;
+
+    const orderGrowth =
+      prevOrders > 0
+        ? Math.round(((totalOrders - prevOrders) / prevOrders) * 1000) / 10
+        : null;
+
+    const topProducts = topProductsRaw.map((p) => ({
+      productId: p._id,
+      name: p.product?.name?.en || "Deleted product",
+      category: p.product?.category || "Unknown",
+      image: p.product?.image?.[0] || null,
+      quantitySold: p.quantitySold,
+      revenue: p.quantitySold * (p.product?.offerPrice || 0),
+    }));
+
+    const topCustomers = topCustomersRaw.map((c) => ({
+      userId: c._id,
+      name: c.user?.name || "Unknown",
+      email: c.user?.email || "",
+      totalSpent: c.totalSpent,
+      orderCount: c.orderCount,
+    }));
+
+    res.json({
+      success: true,
+      range,
+      period: { start, end },
+      kpis: {
+        totalRevenue,
+        totalOrders,
+        avgOrderValue: totalOrders ? Math.round(totalRevenue / totalOrders) : 0,
+        paidOrders,
+        unpaidOrders: totalOrders - paidOrders,
+        revenueGrowth,
+        orderGrowth,
+        newCustomers,
+        returningCustomers,
+      },
+      revenueTrend: revenueTrend.map((r) => ({
+        date: r._id,
+        revenue: r.revenue,
+        orders: r.orders,
+      })),
+      statusBreakdown: statusBreakdown.map((s) => ({
+        status: s._id,
+        count: s.count,
+      })),
+      paymentBreakdown: paymentBreakdown.map((p) => ({
+        type: p._id,
+        count: p.count,
+        revenue: p.revenue,
+      })),
+      customerType: customerTypeBreakdown.map((c) => ({
+        isGuest: c._id,
+        count: c.count,
+        revenue: c.revenue,
+      })),
+      topProducts,
+      categoryBreakdown: categoryBreakdownRaw.map((c) => ({
+        category: c._id,
+        quantitySold: c.quantitySold,
+        revenue: c.revenue,
+      })),
+      topCustomers,
+      lowStockProducts: lowStockProducts.map((p) => ({
+        id: p._id,
+        name: p.name?.en || p.name,
+        category: p.category,
+        stock: p.stock,
+        image: p.image?.[0] || null,
+      })),
+      geoBreakdown: geoBreakdownRaw.map((g) => ({
+        country: g._id,
+        orders: g.orders,
+        revenue: g.revenue,
+      })),
+    });
+  } catch (error) {
+    console.log(error);
+    return errorResponse(res, 500, error.message);
+  }
+};
+
 // Place Order STRIPE — Payment Intent version (for custom Payment Element UI)
 export const placeOrderStripeIntent = async (req, res) => {
   try {
