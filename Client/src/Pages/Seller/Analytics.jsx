@@ -71,17 +71,17 @@ const formatDateLabel = (value) => {
 };
 
 const KpiCard = ({ icon: Icon, label, value, growth, accent }) => (
-  <div className="bg-white p-4 rounded-xl shadow flex flex-col gap-2">
+  <div className="bg-white p-3 sm:p-4 rounded-xl shadow flex flex-col gap-2">
     <div className="flex items-center justify-between">
-      <p className="text-gray-500 text-sm">{label}</p>
+      <p className="text-gray-500 text-xs sm:text-sm">{label}</p>
       <div
-        className={`w-9 h-9 rounded-full flex items-center justify-center ${accent}`}
+        className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0 ${accent}`}
       >
         <Icon className="w-4 h-4 text-white" />
       </div>
     </div>
 
-    <h2 className="text-2xl font-bold">{value}</h2>
+    <h2 className="text-xl sm:text-2xl font-bold break-words">{value}</h2>
 
     {growth !== undefined && growth !== null && (
       <div
@@ -103,8 +103,8 @@ const KpiCard = ({ icon: Icon, label, value, growth, accent }) => (
 );
 
 const Section = ({ title, children, className = "" }) => (
-  <div className={`bg-white rounded-xl shadow p-4 ${className}`}>
-    <h2 className="text-lg font-semibold mb-4">{title}</h2>
+  <div className={`bg-white rounded-xl shadow p-3 sm:p-4 ${className}`}>
+    <h2 className="text-base sm:text-lg font-semibold mb-4">{title}</h2>
     {children}
   </div>
 );
@@ -189,17 +189,17 @@ const Analytics = () => {
   const fmtMoney = (n) => `${currency}${Math.round(n || 0).toLocaleString()}`;
 
   return (
-    <div className="flex-1 h-[95vh] overflow-y-scroll p-6 bg-gray-50">
+    <div className="flex-1 h-[95vh] overflow-y-scroll p-4 sm:p-6 bg-gray-50">
       {/* HEADER */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <h1 className="text-2xl font-bold">📊 Analytics Dashboard</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold">📊 Analytics Dashboard</h1>
 
         <div className="flex flex-wrap items-center gap-2">
           {RANGES.map((r) => (
             <button
               key={r.key}
               onClick={() => handleRangeClick(r.key)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition ${
                 range === r.key
                   ? "bg-black text-white"
                   : "bg-white border hover:bg-gray-50"
@@ -211,7 +211,7 @@ const Analytics = () => {
 
           <button
             onClick={() => setShowCustom((s) => !s)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+            className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition ${
               range === "custom"
                 ? "bg-black text-white"
                 : "bg-white border hover:bg-gray-50"
@@ -223,28 +223,28 @@ const Analytics = () => {
       </div>
 
       {showCustom && (
-        <div className="flex flex-wrap items-end gap-3 bg-white p-4 rounded-xl shadow mb-6">
-          <div className="flex flex-col">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-end gap-3 bg-white p-4 rounded-xl shadow mb-6">
+          <div className="flex flex-col w-full sm:w-auto">
             <label className="text-xs text-gray-500 mb-1">Start date</label>
             <input
               type="date"
               value={customStart}
               onChange={(e) => setCustomStart(e.target.value)}
-              className="border rounded-lg px-3 py-2 text-sm"
+              className="border rounded-lg px-3 py-2 text-sm w-full sm:w-auto"
             />
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col w-full sm:w-auto">
             <label className="text-xs text-gray-500 mb-1">End date</label>
             <input
               type="date"
               value={customEnd}
               onChange={(e) => setCustomEnd(e.target.value)}
-              className="border rounded-lg px-3 py-2 text-sm"
+              className="border rounded-lg px-3 py-2 text-sm w-full sm:w-auto"
             />
           </div>
           <button
             onClick={handleCustomApply}
-            className="bg-black text-white text-sm px-4 py-2 rounded-lg"
+            className="bg-black text-white text-sm px-4 py-2 rounded-lg w-full sm:w-auto"
           >
             Apply
           </button>
@@ -256,7 +256,7 @@ const Analytics = () => {
       ) : (
         <>
           {/* KPI CARDS */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
             <KpiCard
               icon={Wallet}
               label="Total Revenue"
@@ -287,20 +287,20 @@ const Analytics = () => {
 
           <div className="grid sm:grid-cols-2 gap-4 mb-6">
             <div className="bg-white p-4 rounded-xl shadow flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center shrink-0">
                 <UserPlus className="w-5 h-5 text-white" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-gray-500 text-sm">New Customers</p>
                 <h2 className="text-xl font-bold">{kpis.newCustomers ?? 0}</h2>
               </div>
             </div>
 
             <div className="bg-white p-4 rounded-xl shadow flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center shrink-0">
                 <Repeat className="w-5 h-5 text-white" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-gray-500 text-sm">Returning Customers</p>
                 <h2 className="text-xl font-bold">
                   {kpis.returningCustomers ?? 0}
@@ -314,20 +314,22 @@ const Analytics = () => {
             {trendData.length === 0 ? (
               <p className="text-gray-500 text-sm">No data for this period.</p>
             ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <ComposedChart data={trendData}>
+              <ResponsiveContainer width="100%" height={280} className="sm:!h-[300px]">
+                <ComposedChart data={trendData} margin={{ left: -10, right: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="label" tick={{ fontSize: 12 }} />
+                  <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                   <YAxis
                     yAxisId="left"
-                    tick={{ fontSize: 12 }}
+                    tick={{ fontSize: 11 }}
                     tickFormatter={(v) => `${currency}${v}`}
+                    width={55}
                   />
                   <YAxis
                     yAxisId="right"
                     orientation="right"
-                    tick={{ fontSize: 12 }}
+                    tick={{ fontSize: 11 }}
                     allowDecimals={false}
+                    width={35}
                   />
                   <Tooltip
                     formatter={(value, name) =>
@@ -359,7 +361,7 @@ const Analytics = () => {
           </Section>
 
           {/* TOP PRODUCTS + CATEGORY BREAKDOWN */}
-          <div className="grid lg:grid-cols-2 gap-6 mb-6">
+          <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
             <Section title="Top Selling Products">
               {topProducts.length === 0 ? (
                 <p className="text-gray-500 text-sm">No sales in this period.</p>
@@ -368,15 +370,15 @@ const Analytics = () => {
                   <BarChart
                     data={topProducts}
                     layout="vertical"
-                    margin={{ left: 40 }}
+                    margin={{ left: 10 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                    <XAxis type="number" tick={{ fontSize: 12 }} />
+                    <XAxis type="number" tick={{ fontSize: 11 }} />
                     <YAxis
                       dataKey="name"
                       type="category"
-                      width={110}
-                      tick={{ fontSize: 11 }}
+                      width={90}
+                      tick={{ fontSize: 10 }}
                     />
                     <Tooltip />
                     <Bar
@@ -400,8 +402,8 @@ const Analytics = () => {
                       data={categoryData}
                       dataKey="revenue"
                       nameKey="category"
-                      innerRadius={60}
-                      outerRadius={100}
+                      innerRadius={55}
+                      outerRadius={90}
                       paddingAngle={2}
                     >
                       {categoryData.map((entry, i) => (
@@ -412,7 +414,7 @@ const Analytics = () => {
                       ))}
                     </Pie>
                     <Tooltip formatter={(v) => fmtMoney(v)} />
-                    <Legend />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
                   </PieChart>
                 </ResponsiveContainer>
               )}
@@ -420,7 +422,7 @@ const Analytics = () => {
           </div>
 
           {/* STATUS + PAYMENT BREAKDOWN */}
-          <div className="grid lg:grid-cols-2 gap-6 mb-6">
+          <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
             <Section title="Order Status Breakdown">
               {statusData.length === 0 ? (
                 <p className="text-gray-500 text-sm">No orders in this period.</p>
@@ -431,7 +433,7 @@ const Analytics = () => {
                       data={statusData}
                       dataKey="count"
                       nameKey="status"
-                      outerRadius={100}
+                      outerRadius={90}
                       label={(d) => `${d.status}: ${d.count}`}
                     >
                       {statusData.map((entry) => (
@@ -457,7 +459,7 @@ const Analytics = () => {
                       data={paymentData}
                       dataKey="count"
                       nameKey="type"
-                      outerRadius={100}
+                      outerRadius={90}
                       label={(d) => `${d.type}: ${d.count}`}
                     >
                       {paymentData.map((entry, i) => (
@@ -475,7 +477,7 @@ const Analytics = () => {
           </div>
 
           {/* TOP CUSTOMERS + LOW STOCK */}
-          <div className="grid lg:grid-cols-2 gap-6 mb-6">
+          <div className="grid lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
             <Section title="Top Customers">
               {topCustomers.length === 0 ? (
                 <p className="text-gray-500 text-sm">
@@ -486,13 +488,13 @@ const Analytics = () => {
                   {topCustomers.map((c) => (
                     <div
                       key={c.userId}
-                      className="flex justify-between items-center border-b pb-2 last:border-0"
+                      className="flex justify-between items-center gap-3 border-b pb-2 last:border-0"
                     >
-                      <div>
-                        <p className="font-medium text-sm">{c.name}</p>
-                        <p className="text-xs text-gray-500">{c.email}</p>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate">{c.name}</p>
+                        <p className="text-xs text-gray-500 truncate">{c.email}</p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right shrink-0">
                         <p className="font-semibold text-sm">
                           {fmtMoney(c.totalSpent)}
                         </p>
@@ -516,24 +518,24 @@ const Analytics = () => {
                   {lowStock.map((p) => (
                     <div
                       key={p.id}
-                      className="flex items-center justify-between border-b pb-2 last:border-0"
+                      className="flex items-center justify-between gap-3 border-b pb-2 last:border-0"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
                         {p.image && (
                           <img
                             src={p.image}
                             alt=""
-                            className="w-8 h-8 rounded object-cover"
+                            className="w-8 h-8 rounded object-cover shrink-0"
                           />
                         )}
-                        <div>
-                          <p className="font-medium text-sm">{p.name}</p>
-                          <p className="text-xs text-gray-500">{p.category}</p>
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm truncate">{p.name}</p>
+                          <p className="text-xs text-gray-500 truncate">{p.category}</p>
                         </div>
                       </div>
 
                       <span
-                        className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full ${
+                        className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full shrink-0 ${
                           p.stock === 0
                             ? "bg-red-100 text-red-600"
                             : "bg-amber-100 text-amber-700"
@@ -554,16 +556,16 @@ const Analytics = () => {
             {geo.length === 0 ? (
               <p className="text-gray-500 text-sm">No data for this period.</p>
             ) : (
-              <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                 {geo.map((g) => (
                   <div
                     key={g.country}
                     className="border rounded-lg p-3 flex items-center gap-3"
                   >
                     <Globe2 className="w-5 h-5 text-gray-400 shrink-0" />
-                    <div>
-                      <p className="font-medium text-sm">{g.country}</p>
-                      <p className="text-xs text-gray-500">
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm truncate">{g.country}</p>
+                      <p className="text-xs text-gray-500 truncate">
                         {g.orders} orders · {fmtMoney(g.revenue)}
                       </p>
                     </div>

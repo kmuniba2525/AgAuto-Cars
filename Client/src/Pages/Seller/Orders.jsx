@@ -75,17 +75,17 @@ function Orders() {
       <div className="md:p-10 p-4 space-y-6">
 
         <div>
-          <h2 className="text-3xl font-bold text-gray-800">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">
             Orders Dashboard
           </h2>
-          <p className="text-gray-500 mt-1">
+          <p className="text-gray-500 mt-1 text-sm sm:text-base">
             Manage and track customer orders
           </p>
         </div>
 
         {orders.length === 0 ? (
-          <div className="bg-white rounded-3xl p-10 shadow-sm border text-center">
-            <p className="text-gray-500 text-lg">No orders found</p>
+          <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border text-center">
+            <p className="text-gray-500 text-base sm:text-lg">No orders found</p>
           </div>
         ) : (
           orders.map((order, index) => {
@@ -95,31 +95,31 @@ function Orders() {
             return (
               <div
                 key={order._id || index}
-                className="bg-white rounded-[30px] p-6 md:p-8 border border-gray-100 shadow-md"
+                className="bg-white rounded-[24px] sm:rounded-[30px] p-4 sm:p-6 md:p-8 border border-gray-100 shadow-md"
               >
 
                 {/* TOP SECTION */}
-                <div className="flex xl:flex-row items-start gap-8">
+                <div className="flex flex-col xl:flex-row items-start gap-6 xl:gap-8">
 
                   {/* LEFT */}
-                  <div className="flex gap-5 flex-1">
+                  <div className="flex gap-4 sm:gap-5 flex-1 w-full">
 
-                    <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
                       <img
-                        className="w-10 opacity-70"
+                        className="w-8 sm:w-10 opacity-70"
                         src={assets.box_icon}
                         alt="boxIcon"
                       />
                     </div>
 
-                    <div>
+                    <div className="min-w-0">
 
                       <div className="space-y-1">
                         {order.items?.length ? (
                           order.items.map((item, idx) => (
                             <p
                               key={idx}
-                              className="text-lg font-semibold text-gray-800"
+                              className="text-base sm:text-lg font-semibold text-gray-800 break-words"
                             >
                               {getLocalizedText(item?.product?.name, "en") ||
                                 "Product"}
@@ -133,7 +133,7 @@ function Orders() {
                         )}
                       </div>
 
-                      <div className="mt-5 space-y-1 text-gray-600">
+                      <div className="mt-4 sm:mt-5 space-y-1 text-sm sm:text-base text-gray-600">
                         <p className="font-semibold text-gray-800">
                           {customer.name}
                           {customer.isGuest && (
@@ -158,20 +158,20 @@ function Orders() {
                   </div>
 
                   {/* RIGHT */}
-                  <div className="flex flex-col md:items-end">
+                  <div className="flex flex-col w-full xl:w-auto items-start xl:items-end gap-2">
 
-                    <div className="text-left md:text-right">
-                      <h1 className="text-4xl font-bold text-primary">
+                    <div className="text-left xl:text-right">
+                      <h1 className="text-3xl sm:text-4xl font-bold text-primary">
                         {currency}
                         {order?.amount}
                       </h1>
-                      <p className="text-gray-500 mt-1">
+                      <p className="text-gray-500 mt-1 text-sm sm:text-base">
                         {order?.paymentType}
                       </p>
                     </div>
 
                     <span
-                      className={`px-5 py-2 rounded-full text-sm font-medium ${
+                      className={`px-4 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium ${
                         order?.status === "Delivered"
                           ? "bg-green-100 text-green-700"
                           : order?.status === "Shipped"
@@ -184,7 +184,7 @@ function Orders() {
                       {order?.status}
                     </span>
 
-                    <div className="text-sm text-gray-500 text-left md:text-right mt-2">
+                    <div className="text-xs sm:text-sm text-gray-500 text-left xl:text-right mt-2">
                       <p>
                         Date:{" "}
                         {order?.createdAt
@@ -199,22 +199,22 @@ function Orders() {
                 </div>
 
                 {/* PROGRESS TRACKER */}
-                <div className="mt-10 flex items-center justify-between relative">
+                <div className="mt-8 sm:mt-10 flex items-center justify-between relative overflow-x-auto no-scrollbar">
 
                   {[
-                    { title: "Order Placed", icon: <PackageCheck size={20} /> },
-                    { title: "Preparing", icon: <ChefHat size={20} /> },
-                    { title: "Shipped", icon: <Truck size={20} /> },
-                    { title: "Delivered", icon: <Home size={20} /> },
+                    { title: "Order Placed", icon: <PackageCheck size={16} className="sm:w-5 sm:h-5" /> },
+                    { title: "Preparing", icon: <ChefHat size={16} className="sm:w-5 sm:h-5" /> },
+                    { title: "Shipped", icon: <Truck size={16} className="sm:w-5 sm:h-5" /> },
+                    { title: "Delivered", icon: <Home size={16} className="sm:w-5 sm:h-5" /> },
                   ].map((step, stepIndex) => (
                     <div
                       key={stepIndex}
-                      className="flex-1 flex flex-col items-center relative "
+                      className="flex-1 flex flex-col items-center relative min-w-[70px]"
                     >
 
                       {stepIndex !== 3 && (
                         <div
-                          className={`absolute top-5 left-[55%] h-1 w-full ${
+                          className={`absolute top-4 sm:top-5 left-[55%] h-1 w-full ${
                             currentStep > stepIndex
                               ? "bg-primary"
                               : "bg-gray-200"
@@ -223,7 +223,7 @@ function Orders() {
                       )}
 
                       <div
-                        className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                        className={`w-9 h-9 sm:w-12 sm:h-12 rounded-full flex items-center justify-center ${
                           currentStep >= stepIndex
                             ? "bg-primary text-white"
                             : "bg-gray-200 text-gray-500"
@@ -232,7 +232,7 @@ function Orders() {
                         {step.icon}
                       </div>
 
-                      <p className="mt-3 text-sm font-medium">
+                      <p className="mt-2 sm:mt-3 text-[11px] sm:text-sm font-medium text-center">
                         {step.title}
                       </p>
                     </div>
@@ -240,14 +240,14 @@ function Orders() {
                 </div>
 
                 {/* ACTIONS */}
-                <div className="flex items-center justify-center gap-3 mt-8">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 mt-8">
 
                   <select
                     value={order?.status}
                     onChange={(e) =>
                       updateOrderStatus(order._id, e.target.value)
                     }
-                    className="px-4 py-2.5 rounded-lg border"
+                    className="w-full sm:w-auto px-4 py-2.5 rounded-lg border"
                   >
                     {orderSteps.map((status, idx) => (
                       <option key={idx} value={status}>
@@ -256,13 +256,13 @@ function Orders() {
                     ))}
                   </select>
 
-                  <button className="px-5 py-2.5 rounded-lg bg-primary text-white">
+                  <button className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-primary text-white">
                     Track Order
                   </button>
 
                   <button
                     onClick={() => setPrintOrder(order)}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
                   >
                     <Printer size={16} />
                     Print Invoice
