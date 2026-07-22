@@ -68,6 +68,7 @@ const bilingualTextSchema = new mongoose.Schema(
   {
     en: { type: String, required: true },
     pt: { type: String, required: true },
+    sv: { type: String, required: false }, // optional so existing products don't break; falls back to en via getLocalizedText
   },
   { _id: false }
 );

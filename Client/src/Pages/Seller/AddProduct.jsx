@@ -15,19 +15,30 @@ const emptyVariant = () => ({
   sku: "",
 });
 
+// ✅ NEW: single source of truth for supported languages.
+// Add/remove a language by editing this array only — everything else
+// (tabs, validation, payload building) reads from it.
+const LANGUAGES = [
+  { code: "en", label: "English", required: true, namePattern: /^[A-Za-z\s\-]*$/, namePlaceholder: "Enter Alphabets Only" },
+  { code: "pt", label: "Portuguese", required: true, namePattern: null, namePlaceholder: "Digite apenas letras" },
+  { code: "sv", label: "Swedish", required: false, namePattern: null, namePlaceholder: "Ange produktnamn på svenska" },
+];
+
 const AddProduct = () => {
   const [files, setFiles] = useState([]);
 
-  // ✅ CHANGED: name and description are now { en, pt } objects instead
-  // of single strings.
-  const [nameEn, setNameEn] = useState("");
-  const [namePt, setNamePt] = useState("");
-  const [descriptionEn, setDescriptionEn] = useState("");
-  const [descriptionPt, setDescriptionPt] = useState("");
+  // ✅ CHANGED: name/description collapsed from 6 separate useState fields
+  // into two objects keyed by language code — { en, pt, sv }.
+  const [name, setName] = useState({ en: "", pt: "", sv: "" });
+  const [description, setDescription] = useState({ en: "", pt: "", sv: "" });
+
+  // ✅ NEW: which language tab is currently visible for Name / Description.
+  const [activeNameLang, setActiveNameLang] = useState("en");
+  const [activeDescLang, setActiveDescLang] = useState("en");
 
   const [category, setCategory] = useState("");
   const [loadingAI, setLoadingAI] = useState(false);
-  const [error, setError] = useState("");
+  const [nameError, setNameError] = useState("");
 
   const [variants, setVariants] = useState([emptyVariant()]);
 
@@ -47,6 +58,20 @@ const AddProduct = () => {
     );
   };
 
+  const updateName = (lang, value) => {
+    const langDef = LANGUAGES.find((l) => l.code === lang);
+    if (langDef?.namePattern && !langDef.namePattern.test(value)) {
+      setNameError("Please enter alphabets only");
+      return;
+    }
+    setNameError("");
+    setName((prev) => ({ ...prev, [lang]: value }));
+  };
+
+  const updateDescription = (lang, value) => {
+    setDescription((prev) => ({ ...prev, [lang]: value }));
+  };
+
   // =========================
   // ADD PRODUCT
   // =========================
@@ -54,13 +79,24 @@ const AddProduct = () => {
     try {
       event.preventDefault();
 
-      // ✅ NEW: both languages required before submit
-      if (!nameEn.trim() || !namePt.trim()) {
-        return toast.error("Please enter the product name in both English and Portuguese");
+      const requiredLangs = LANGUAGES.filter((l) => l.required);
+
+      const missingName = requiredLangs.find((l) => !name[l.code]?.trim());
+      if (missingName) {
+        setActiveNameLang(missingName.code);
+        return toast.error(
+          `Please enter the product name in ${missingName.label}`
+        );
       }
 
-      if (!descriptionEn.trim() || !descriptionPt.trim()) {
-        return toast.error("Please enter the description in both English and Portuguese");
+      const missingDesc = requiredLangs.find(
+        (l) => !description[l.code]?.trim()
+      );
+      if (missingDesc) {
+        setActiveDescLang(missingDesc.code);
+        return toast.error(
+          `Please enter the description in ${missingDesc.label}`
+        );
       }
 
       // ---- Validate variants ----
@@ -89,16 +125,20 @@ const AddProduct = () => {
         ...(v.sku.trim() ? { sku: v.sku.trim() } : {}),
       }));
 
-      const totalStock = cleanedVariants.reduce(
-        (sum, v) => sum + v.stock,
-        0
-      );
+      const totalStock = cleanedVariants.reduce((sum, v) => sum + v.stock, 0);
 
-      // ✅ CHANGED: name/description now sent as { en, pt } objects,
-      // matching the updated backend + schema.
+      // ✅ Build { en, pt, sv } payload from the collapsed state objects,
+      // trimming and only including optional languages if filled in.
+      const buildLocalized = (obj) =>
+        LANGUAGES.reduce((acc, l) => {
+          const val = (obj[l.code] || "").trim();
+          if (l.required || val) acc[l.code] = val;
+          return acc;
+        }, {});
+
       const productData = {
-        name: { en: nameEn.trim(), pt: namePt.trim() },
-        description: { en: descriptionEn, pt: descriptionPt },
+        name: buildLocalized(name),
+        description: buildLocalized(description),
         category,
         price: cleanedVariants[0].price,
         offerPrice: cleanedVariants[0].offerPrice,
@@ -122,10 +162,10 @@ const AddProduct = () => {
         toast.success(data.message);
 
         // reset form
-        setNameEn("");
-        setNamePt("");
-        setDescriptionEn("");
-        setDescriptionPt("");
+        setName({ en: "", pt: "", sv: "" });
+        setDescription({ en: "", pt: "", sv: "" });
+        setActiveNameLang("en");
+        setActiveDescLang("en");
         setCategory("");
         setVariants([emptyVariant()]);
         setFiles([]);
@@ -141,24 +181,25 @@ const AddProduct = () => {
   // =========================
   // GENERATE AI DESCRIPTION
   // =========================
-  // ✅ CHANGED: uses the English name as the basis for both, and the
-  // backend now returns { en, pt } — fills both editors in one click.
   const generateDescription = async () => {
     try {
-      if (!nameEn) return toast.error("Enter English product name first");
+      if (!name.en) return toast.error("Enter English product name first");
       if (!category) return toast.error("Select category first");
 
       setLoadingAI(true);
 
       const { data } = await axios.post(
         "/api/product/generate-description",
-        { name: nameEn, category }
+        { name: name.en, category }
       );
 
       if (data.success) {
-        setDescriptionEn(data.description.en);
-        setDescriptionPt(data.description.pt);
-        toast.success("Descriptions generated for both languages!");
+        setDescription({
+          en: data.description.en,
+          pt: data.description.pt,
+          sv: data.description.sv || "",
+        });
+        toast.success("Descriptions generated for all languages!");
       } else {
         toast.error(data.message);
       }
@@ -169,6 +210,34 @@ const AddProduct = () => {
       setLoadingAI(false);
     }
   };
+
+  // ✅ NEW: reusable language tab-switcher, used for both Name and Description.
+  const LangTabs = ({ active, onChange, filledMap }) => (
+    <div className="flex gap-1 bg-gray-100 rounded p-1 w-fit">
+      {LANGUAGES.map((l) => (
+        <button
+          key={l.code}
+          type="button"
+          onClick={() => onChange(l.code)}
+          className={`px-3 py-1 text-xs font-medium rounded transition ${
+            active === l.code
+              ? "bg-white shadow text-primary"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          {l.label}
+          {l.required && !filledMap[l.code]?.trim() && (
+            <span className="text-red-400 ml-1">*</span>
+          )}
+          {!l.required && filledMap[l.code]?.trim() && (
+            <span className="text-green-500 ml-1">✓</span>
+          )}
+        </button>
+      ))}
+    </div>
+  );
+
+  const activeNameDef = LANGUAGES.find((l) => l.code === activeNameLang);
 
   return (
     <div className="no-scrollbar flex-1 h-[95vh] overflow-y-scroll flex flex-col justify-between">
@@ -211,43 +280,32 @@ const AddProduct = () => {
           </div>
         </div>
 
-        {/* PRODUCT NAME — ENGLISH */}
-        <div className="flex flex-col gap-1">
-          <label className="text-base font-medium">
-            Product Name <span className="text-xs font-normal text-gray-400">(English)</span>
-          </label>
-          <input
-            type="text"
-            required
-            value={nameEn}
-            placeholder="Enter Alphabets Only"
-            className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-400 focus:border-primary"
-            onChange={(e) => {
-              const value = e.target.value;
-              if (/^[A-Za-z\s\-]*$/.test(value)) {
-                setNameEn(value);
-                setError("");
-              } else {
-                setError("Please enter alphabets Only");
-              }
-            }}
-          />
-          {error && <p className="text-xs text-red-500">{error}</p>}
-        </div>
+        {/* PRODUCT NAME — single field, language tabs */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <label className="text-base font-medium">Product Name</label>
+            <LangTabs
+              active={activeNameLang}
+              onChange={setActiveNameLang}
+              filledMap={name}
+            />
+          </div>
 
-        {/* PRODUCT NAME — PORTUGUESE */}
-        <div className="flex flex-col gap-1">
-          <label className="text-base font-medium">
-            Nome do Produto <span className="text-xs font-normal text-gray-400">(Portuguese)</span>
-          </label>
           <input
             type="text"
-            required
-            value={namePt}
-            placeholder="Digite apenas letras"
+            required={activeNameDef.required}
+            value={name[activeNameLang]}
+            placeholder={activeNameDef.namePlaceholder}
             className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-400 focus:border-primary"
-            onChange={(e) => setNamePt(e.target.value)}
+            onChange={(e) => updateName(activeNameLang, e.target.value)}
           />
+          {nameError && <p className="text-xs text-red-500">{nameError}</p>}
+          {activeNameLang === "sv" && (
+            <p className="text-xs text-gray-400">
+              Optional — leave blank to show the English name to Swedish
+              customers for now.
+            </p>
+          )}
         </div>
 
         {/* CATEGORY */}
@@ -267,49 +325,47 @@ const AddProduct = () => {
           </select>
         </div>
 
-        {/* DESCRIPTION — ENGLISH */}
+        {/* DESCRIPTION — single editor, language tabs */}
         <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <label className="text-base font-medium">
-              Product Description <span className="text-xs font-normal text-gray-400">(English)</span>
+              Product Description
             </label>
+            <LangTabs
+              active={activeDescLang}
+              onChange={setActiveDescLang}
+              filledMap={description}
+            />
+          </div>
 
+          <div className="border rounded">
+            {/* key forces CKEditor to remount with the right initial data
+                when switching languages, since it's an uncontrolled editor */}
+            <CKEditor
+              key={activeDescLang}
+              editor={ClassicEditor}
+              data={description[activeDescLang]}
+              onChange={(event, editor) =>
+                updateDescription(activeDescLang, editor.getData())
+              }
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-gray-400">
+              {activeDescLang === "sv"
+                ? "Optional — leave blank to show the English description to Swedish customers for now."
+                : "AI can generate all three languages at once — review each before publishing."}
+            </p>
             <button
               type="button"
               onClick={generateDescription}
               disabled={loadingAI}
-              className="text-blue-600 text-sm hover:underline"
+              className="text-blue-600 text-sm hover:underline whitespace-nowrap"
             >
-              {loadingAI ? "Generating..." : "✨ Generate with AI (both languages)"}
+              {loadingAI ? "Generating..." : "✨ Generate with AI"}
             </button>
           </div>
-
-          <div className="border rounded">
-            <CKEditor
-              editor={ClassicEditor}
-              data={descriptionEn}
-              onChange={(event, editor) => setDescriptionEn(editor.getData())}
-            />
-          </div>
-        </div>
-
-        {/* DESCRIPTION — PORTUGUESE */}
-        <div className="flex flex-col gap-3">
-          <label className="text-base font-medium">
-            Descrição do Produto <span className="text-xs font-normal text-gray-400">(Portuguese)</span>
-          </label>
-
-          <div className="border rounded">
-            <CKEditor
-              editor={ClassicEditor}
-              data={descriptionPt}
-              onChange={(event, editor) => setDescriptionPt(editor.getData())}
-            />
-          </div>
-
-          <p className="text-xs text-gray-400">
-            The AI generate button fills in both languages at once — review and edit the Portuguese version before publishing, since machine translation can miss local terminology.
-          </p>
         </div>
 
         {/* SIZES / LITRE VARIANTS */}

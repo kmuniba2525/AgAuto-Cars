@@ -106,7 +106,7 @@ const Navbar = () => {
                                 <line x1="2" y1="12" x2="22" y2="12" />
                                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                             </svg>
-                            <span className="text-red-500">{i18n.language === 'pt' ? 'PT' : 'EN'}</span>
+                            <span className="text-red-500">{i18n.language === 'pt' ? 'PT' : i18n.language === 'sv' ? 'SV' : 'EN'}</span>
                             <span className="text-[10px] text-gray-400">▾</span>
                         </button>
 
@@ -125,6 +125,12 @@ const Navbar = () => {
                                 className={`px-3 py-2 hover:bg-[#2a2a2a] cursor-pointer flex items-center gap-2 ${i18n.language === 'pt' ? 'text-red-500 font-semibold' : ''}`}
                             >
                                 🇧🇷 PT
+                            </li>
+                            <li
+                                onClick={() => changeLang('sv')}
+                                className={`px-3 py-2 hover:bg-[#2a2a2a] cursor-pointer flex items-center gap-2 ${i18n.language === 'sv' ? 'text-red-500 font-semibold' : ''}`}
+                            >
+                                🇸🇪 SV
                             </li>
                         </ul>
                     </div>
@@ -216,6 +222,12 @@ const Navbar = () => {
                                 className={`px-3 py-1 rounded text-xs font-semibold border ${i18n.language === 'pt' ? 'bg-red-600 border-red-600 text-white' : 'border-gray-700 text-gray-400'}`}
                             >
                                 🇧🇷 PT
+                            </button>
+                            <button
+                                onClick={() => changeLang('sv')}
+                                className={`px-3 py-1 rounded text-xs font-semibold border ${i18n.language === 'sv' ? 'bg-red-600 border-red-600 text-white' : 'border-gray-700 text-gray-400'}`}
+                            >
+                                🇸🇪 SV
                             </button>
                         </div>
 

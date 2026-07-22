@@ -24,6 +24,9 @@ const LanguageDialog = ({ onClose }) => {
           <button style={styles.btn} onClick={() => selectLanguage('pt')}>
             🇧🇷 Português
           </button>
+          <button style={styles.btn} onClick={() => selectLanguage('sv')}>
+            🇸🇪 Svenska
+          </button>
         </div>
       </div>
     </div>

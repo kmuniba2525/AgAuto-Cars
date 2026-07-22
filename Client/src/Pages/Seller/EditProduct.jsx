@@ -26,8 +26,10 @@ const EditProduct = () => {
 
   const [nameEn, setNameEn] = useState("");
   const [namePt, setNamePt] = useState("");
+  const [nameSv, setNameSv] = useState("");
   const [descriptionEn, setDescriptionEn] = useState("");
   const [descriptionPt, setDescriptionPt] = useState("");
+  const [descriptionSv, setDescriptionSv] = useState("");
   const [category, setCategory] = useState("");
   const [variants, setVariants] = useState([emptyVariant()]);
 
@@ -52,15 +54,18 @@ const EditProduct = () => {
             return;
           }
 
-          // ✅ Handle both migrated ({en, pt}) and legacy (string) shapes,
+          // ✅ Handle both migrated ({en, pt, sv}) and legacy (string) shapes,
           // same safety net as getLocalizedText on the customer side.
+          // Swedish is optional, so it may simply be missing on older products.
           const name = product.name;
           setNameEn(typeof name === "string" ? name : name?.en || "");
           setNamePt(typeof name === "string" ? name : name?.pt || "");
+          setNameSv(typeof name === "string" ? "" : name?.sv || "");
 
           const description = product.description;
           setDescriptionEn(typeof description === "string" ? description : description?.en || "");
           setDescriptionPt(typeof description === "string" ? description : description?.pt || "");
+          setDescriptionSv(typeof description === "string" ? "" : description?.sv || "");
 
           setCategory(product.category || "");
           setExistingImages(product.image || []);
@@ -140,8 +145,16 @@ const EditProduct = () => {
       const totalStock = cleanedVariants.reduce((sum, v) => sum + v.stock, 0);
 
       const productData = {
-        name: { en: nameEn.trim(), pt: namePt.trim() },
-        description: { en: descriptionEn, pt: descriptionPt },
+        name: {
+          en: nameEn.trim(),
+          pt: namePt.trim(),
+          ...(nameSv.trim() ? { sv: nameSv.trim() } : {}),
+        },
+        description: {
+          en: descriptionEn,
+          pt: descriptionPt,
+          ...(descriptionSv.trim() ? { sv: descriptionSv } : {}),
+        },
         category,
         price: cleanedVariants[0].price,
         offerPrice: cleanedVariants[0].offerPrice,
@@ -256,6 +269,23 @@ const EditProduct = () => {
           />
         </div>
 
+        {/* NAME — SV (optional) */}
+        <div className="flex flex-col gap-1">
+          <label className="text-base font-medium">
+            Produktnamn <span className="text-xs font-normal text-gray-400">(Swedish, optional)</span>
+          </label>
+          <input
+            type="text"
+            value={nameSv}
+            placeholder="Ange produktnamn på svenska"
+            className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-400 focus:border-primary"
+            onChange={(e) => setNameSv(e.target.value)}
+          />
+          <p className="text-xs text-gray-400">
+            Leave blank to show the English name to Swedish customers for now.
+          </p>
+        </div>
+
         {/* CATEGORY */}
         <div className="flex flex-col gap-1">
           <label className="text-base font-medium">Category</label>
@@ -299,6 +329,23 @@ const EditProduct = () => {
               onChange={(event, editor) => setDescriptionPt(editor.getData())}
             />
           </div>
+        </div>
+
+        {/* DESCRIPTION — SV (optional) */}
+        <div className="flex flex-col gap-3">
+          <label className="text-base font-medium">
+            Produktbeskrivning <span className="text-xs font-normal text-gray-400">(Swedish, optional)</span>
+          </label>
+          <div className="border rounded">
+            <CKEditor
+              editor={ClassicEditor}
+              data={descriptionSv}
+              onChange={(event, editor) => setDescriptionSv(editor.getData())}
+            />
+          </div>
+          <p className="text-xs text-gray-400">
+            Leave blank to show the English description to Swedish customers for now.
+          </p>
         </div>
 
         {/* VARIANTS */}

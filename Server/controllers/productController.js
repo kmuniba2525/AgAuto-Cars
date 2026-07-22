@@ -7,6 +7,30 @@ import OpenAI from "openai";
 import removeMarkdown from "remove-markdown";
 import Notification from "../models/Notification.js";
 
+const sanitizeOptions = {
+  allowedTags: ["b", "i", "em", "strong", "ul", "ol", "li", "p", "br"],
+  allowedAttributes: {},
+};
+
+// ✅ NEW: shared helper — builds a { en, pt, sv? } object, sanitizing HTML
+// fields when a sanitizer is passed. Swedish is included only if present,
+// so it's never dropped when it exists and never fabricated when it doesn't.
+const buildBilingualField = (field, { sanitize = false } = {}) => {
+  const clean = (val) =>
+    sanitize ? sanitizeHtml(val, sanitizeOptions) : val.trim();
+
+  const result = {
+    en: clean(field.en),
+    pt: clean(field.pt),
+  };
+
+  if (field.sv?.trim()) {
+    result.sv = clean(field.sv);
+  }
+
+  return result;
+};
+
 // =========================
 // ADD PRODUCT
 // =========================
@@ -18,8 +42,8 @@ export const addProduct = async (req, res) => {
 
     let productData = JSON.parse(req.body.productData);
 
-    // ✅ CHANGED: name and description now come in as { en, pt } objects.
-    // Validate both languages are present before touching anything else.
+    // ✅ name and description come in as { en, pt, sv? } objects.
+    // Validate both required languages are present before touching anything else.
     if (
       !productData.name ||
       !productData.name.en?.trim() ||
@@ -36,16 +60,11 @@ export const addProduct = async (req, res) => {
       return errorResponse(res, 400, "Description is required in both English and Portuguese");
     }
 
-    // sanitize CKEditor HTML — now applied to each language separately
-    const sanitizeOptions = {
-      allowedTags: ["b", "i", "em", "strong", "ul", "ol", "li", "p", "br"],
-      allowedAttributes: {},
-    };
-
-    productData.description = {
-      en: sanitizeHtml(productData.description.en, sanitizeOptions),
-      pt: sanitizeHtml(productData.description.pt, sanitizeOptions),
-    };
+    // ✅ FIXED: sanitize each language but keep sv if it was sent — the old
+    // code rebuilt this object with only en/pt keys, silently dropping sv.
+    productData.description = buildBilingualField(productData.description, {
+      sanitize: true,
+    });
 
     if (
       productData.description.en.trim() === "" ||
@@ -54,10 +73,8 @@ export const addProduct = async (req, res) => {
       return errorResponse(res, 400, "Description is required in both languages");
     }
 
-    productData.name = {
-      en: productData.name.en.trim(),
-      pt: productData.name.pt.trim(),
-    };
+    // ✅ FIXED: same issue existed here — sv was being dropped on trim.
+    productData.name = buildBilingualField(productData.name);
 
     const images = req.files;
 
@@ -156,9 +173,9 @@ export const changeStock = async (req, res) => {
 
     await product.save();
 
-    // ✅ CHANGED: product.name is now an object — notifications are
-    // internal/admin-facing, so we use the English name consistently
-    // rather than trying to localize a system alert.
+    // product.name is an object — notifications are internal/admin-facing,
+    // so we use the English name consistently rather than trying to
+    // localize a system alert.
     const productNameEn = product.name?.en || "Product";
 
     if (Number(stock) > 0 && Number(stock) <= 5) {
@@ -200,9 +217,9 @@ export const changeStock = async (req, res) => {
 // =========================
 // GENERATE AI DESCRIPTION
 // =========================
-// ✅ CHANGED: now generates both English and Portuguese descriptions in
-// one call, returned as { en, pt } so AddProduct.jsx can drop both
-// straight into the two CKEditor instances.
+// Generates English, Portuguese, and Swedish descriptions in one call,
+// returned as { en, pt, sv } so AddProduct.jsx can drop all three
+// straight into the CKEditor instances.
 export const generateDescription = async (req, res) => {
   try {
     if (!process.env.GROQ_API_KEY) {
@@ -241,7 +258,7 @@ Return product description in clean HTML with sections:
 -Do NOT return long paragraphs.
     `;
 
-    const [enCompletion, ptCompletion] = await Promise.all([
+    const [enCompletion, ptCompletion, svCompletion] = await Promise.all([
       client.chat.completions.create({
         model: "llama-3.1-8b-instant",
         messages: [
@@ -264,6 +281,17 @@ Return product description in clean HTML with sections:
           { role: "user", content: buildPrompt("European Portuguese") },
         ],
       }),
+      client.chat.completions.create({
+        model: "llama-3.1-8b-instant",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are an ecommerce product description writer. Always return clean, professional HTML without markdown symbols like ** or --. Keep response under 350 words. Write in natural Swedish (Sverige).",
+          },
+          { role: "user", content: buildPrompt("Swedish") },
+        ],
+      }),
     ]);
 
     const cleanUp = (raw) => {
@@ -273,12 +301,14 @@ Return product description in clean HTML with sections:
 
     const descriptionEn = cleanUp(enCompletion.choices[0].message.content);
     const descriptionPt = cleanUp(ptCompletion.choices[0].message.content);
+    const descriptionSv = cleanUp(svCompletion.choices[0].message.content);
 
     res.json({
       success: true,
       description: {
         en: descriptionEn,
         pt: descriptionPt,
+        sv: descriptionSv,
       },
     });
   } catch (error) {
@@ -384,7 +414,7 @@ export const updateProduct = async (req, res) => {
       return errorResponse(res, 404, "Product not found");
     }
 
-    // ✅ Validate bilingual name/description, same as addProduct
+    // Validate bilingual name/description, same as addProduct
     if (
       !productData.name ||
       !productData.name.en?.trim() ||
@@ -401,22 +431,15 @@ export const updateProduct = async (req, res) => {
       return errorResponse(res, 400, "Description is required in both English and Portuguese");
     }
 
-    const sanitizeOptions = {
-      allowedTags: ["b", "i", "em", "strong", "ul", "ol", "li", "p", "br"],
-      allowedAttributes: {},
-    };
+    // ✅ FIXED: same sv-dropping bug as addProduct — now preserved via
+    // buildBilingualField instead of a hand-rolled { en, pt } literal.
+    productData.description = buildBilingualField(productData.description, {
+      sanitize: true,
+    });
 
-    productData.description = {
-      en: sanitizeHtml(productData.description.en, sanitizeOptions),
-      pt: sanitizeHtml(productData.description.pt, sanitizeOptions),
-    };
+    productData.name = buildBilingualField(productData.name);
 
-    productData.name = {
-      en: productData.name.en.trim(),
-      pt: productData.name.pt.trim(),
-    };
-
-    // ✅ Optional new images — only re-upload if new files were provided,
+    // Optional new images — only re-upload if new files were provided,
     // otherwise keep the product's existing images untouched.
     const images = req.files;
     let imageURL = product.image;
