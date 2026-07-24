@@ -7,7 +7,7 @@ import DOMPurify from "dompurify";
 import { FaStar } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 import { getLocalizedText } from "../utils/getLocalizedText";
-
+import { formatCurrency } from "../utils/formatCurrency";
 const ProductDetail = () => {
   const { t, i18n } = useTranslation();
   const { currency, addToCart, products, navigate, axios, user } =
@@ -185,14 +185,12 @@ const ProductDetail = () => {
           <div className="flex items-baseline gap-3 mt-4">
             {selectedVariant.price > selectedVariant.offerPrice && (
               <span className="text-gray-400 line-through text-base">
-                {currency}
-                {selectedVariant.price}
+                {formatCurrency(selectedVariant.price, currency)}
               </span>
             )}
 
             <span className="text-2xl sm:text-3xl font-bold text-gray-900">
-              {currency}
-              {selectedVariant.offerPrice}
+             {formatCurrency(selectedVariant.offerPrice, currency)}
             </span>
 
             {discountPercent > 0 && (
@@ -262,7 +260,7 @@ const ProductDetail = () => {
                       {v.label}
                       {v.stock <= 0
                         ? ` ${t("product_detail.out_of_stock_option")}`
-                        : ` — ${currency}${v.offerPrice}`}
+                        : ` — ${formatCurrency(v.offerPrice, currency)}`}
                     </option>
                   ))}
                 </select>

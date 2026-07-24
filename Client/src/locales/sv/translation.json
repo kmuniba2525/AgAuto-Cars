@@ -289,7 +289,7 @@
     "loading": "Laddar...",
     "ordered_items": "Beställda Artiklar",
     "quantity": "Antal: {{count}}",
-    "price": "Pris: {{currency}}{{amount}}",
+    "price": "Pris: {{amount}} {{currency}}",
     "steps": {
       "order_placed": "Order Lagd",
       "preparing": "Förbereder",

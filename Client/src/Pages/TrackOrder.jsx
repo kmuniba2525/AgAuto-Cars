@@ -10,7 +10,7 @@ import { useParams } from "react-router-dom";
 import { useAppContext } from "../Context/AppContext";
 import { useTranslation } from "react-i18next";
 import { getLocalizedText } from "../utils/getLocalizedText";
-
+import { formatCurrency } from "../utils/formatCurrency";
 const TrackOrder = () => {
   const { t, i18n } = useTranslation();
   const { id } = useParams();
@@ -125,8 +125,7 @@ const TrackOrder = () => {
               <div className="flex justify-between">
                 <span className="text-gray-500">{t("track_order.total")}</span>
                 <span className="font-bold text-lg sm:text-xl">
-                  {currency}
-                  {order.amount}
+                  {formatCurrency(order.amount, currency)}
                 </span>
               </div>
             </div>

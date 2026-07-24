@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useAppContext } from "../../Context/AppContext";
 import toast from "react-hot-toast";
+import { formatCurrency } from "../../utils/formatCurrency";
 import {
   TrendingUp,
   TrendingDown,
@@ -186,8 +187,7 @@ const Analytics = () => {
   const geo = data?.geoBreakdown || [];
   const kpis = data?.kpis || {};
 
-  const fmtMoney = (n) => `${currency}${Math.round(n || 0).toLocaleString()}`;
-
+  const fmtMoney = (n) => formatCurrency(Math.round(n || 0), currency);
   return (
     <div className="flex-1 h-[95vh] overflow-y-scroll p-4 sm:p-6 bg-gray-50">
       {/* HEADER */}
@@ -321,7 +321,7 @@ const Analytics = () => {
                   <YAxis
                     yAxisId="left"
                     tick={{ fontSize: 11 }}
-                    tickFormatter={(v) => `${currency}${v}`}
+                    tickFormatter={(v) => formatCurrency(v, currency)}
                     width={55}
                   />
                   <YAxis

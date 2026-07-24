@@ -4,7 +4,7 @@ import { assets } from "../assets/assets";
 import { useAppContext } from "../Context/AppContext";
 import { useTranslation } from "react-i18next";
 import { getLocalizedText } from "../utils/getLocalizedText";
-
+import { formatCurrency } from "../utils/formatCurrency";
 const ProductCard = ({ product }) => {
   const {
     currency,
@@ -48,11 +48,11 @@ const ProductCard = ({ product }) => {
         {/* Price */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           <p className="text-gray-900 font-semibold text-xs sm:text-[13px]">
-            {currency}{product.offerPrice}
+            {formatCurrency(product.offerPrice, currency)}
           </p>
           {product.price > product.offerPrice && (
             <p className="text-gray-400 line-through text-[10px] sm:text-[11px]">
-              {currency}{product.price}
+              {formatCurrency(product.price, currency)}
             </p>
           )}
         </div>

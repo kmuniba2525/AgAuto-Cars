@@ -6,7 +6,7 @@ import { getLocalizedText } from "../../utils/getLocalizedText";
 import { getOrderCustomer } from "../../utils/getOrderCustomer";
 import { SUPPORTED_LANGUAGES, getLocaleForLang, detectDefaultLanguage } from "../../utils/invoiceI18n";
 import { Printer, X, Globe, Phone, Mail, MapPin } from "lucide-react";
-
+import { formatCurrency } from "../../utils/formatCurrency";
 // A printable invoice for a single order. Rendered as an on-screen preview
 // modal; when the seller clicks "Print", window.print() fires.
 //
@@ -122,7 +122,7 @@ const Invoice = ({ order, onClose }) => {
   // "1,234" in en-US), with the existing `currency` symbol kept as-is
   // rather than switched per language — swap in Intl's `style: "currency"`
   // instead if you want the symbol/code to change per language too.
-  const fmt = (n) => `${currency}${new Intl.NumberFormat(locale).format(Number(n || 0))}`;
+const fmt = (n) => formatCurrency(Number(n || 0), currency);
 
   const isPending = !order.isPaid;
 

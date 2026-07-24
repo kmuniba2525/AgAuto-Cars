@@ -289,7 +289,7 @@
   "loading": "Carregando...",
   "ordered_items": "Itens do Pedido",
   "quantity": "Quantidade: {{count}}",
-  "price": "Preço: {{currency}}{{amount}}",
+  "price": "Preço: {{amount}} {{currency}}",
   "steps": {
     "order_placed": "Pedido Realizado",
     "preparing": "Preparando",

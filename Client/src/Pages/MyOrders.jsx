@@ -3,7 +3,7 @@ import { useAppContext } from '../Context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getLocalizedText } from '../utils/getLocalizedText';
-
+import { formatCurrency } from "../utils/formatCurrency";
 const statusStyles = {
   Delivered: "bg-emerald-50 text-emerald-700 border-emerald-200",
   Shipped: "bg-blue-50 text-blue-700 border-blue-200",
@@ -82,7 +82,7 @@ const MyOrder = () => {
                 {t('my_order.payment')} <span className="text-gray-700 font-medium">{order.paymentType}</span>
               </span>
               <span className='text-gray-900 font-semibold'>
-                {currency}{order.amount}
+                {formatCurrency(order.amount, currency)}
               </span>
             </div>
 
@@ -130,7 +130,7 @@ const MyOrder = () => {
                       </span>
 
                       <p className='text-primary text-sm sm:text-base font-semibold'>
-                        {currency}{(item.product?.offerPrice || 0) * (item.quantity || 1)}
+                        {formatCurrency((item.product?.offerPrice || 0) * (item.quantity || 1), currency)}
                       </p>
 
                       <button

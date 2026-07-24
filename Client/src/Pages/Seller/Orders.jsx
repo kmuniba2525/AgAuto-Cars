@@ -12,7 +12,7 @@ import {
 import { getLocalizedText } from "../../utils/getLocalizedText";
 import { getOrderCustomer } from "../../utils/getOrderCustomer";
 import Invoice from "../../Components/Seller/Invoice";
-
+import { formatCurrency } from "../../utils/formatCurrency";
 function Orders() {
   const { currency, axios } = useAppContext();
   const [orders, setOrders] = useState([]);
@@ -162,8 +162,7 @@ function Orders() {
 
                     <div className="text-left xl:text-right">
                       <h1 className="text-3xl sm:text-4xl font-bold text-primary">
-                        {currency}
-                        {order?.amount}
+                        {formatCurrency(order?.amount, currency)}
                       </h1>
                       <p className="text-gray-500 mt-1 text-sm sm:text-base">
                         {order?.paymentType}

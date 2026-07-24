@@ -4,7 +4,7 @@ import { assets } from "../assets/assets";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { getLocalizedText } from "../utils/getLocalizedText";
-
+import { formatCurrency } from "../utils/formatCurrency";
 const Cart = () => {
   const { t, i18n } = useTranslation();
   const {
@@ -298,8 +298,7 @@ const Cart = () => {
                     {/* Mobile-only: subtotal + remove inline */}
                     <div className="flex items-center justify-between mt-2 sm:hidden">
                       <p className="font-medium text-gray-800">
-                        {currency}
-                        {product.offerPrice * product.quantity}
+                        {formatCurrency(product.offerPrice * product.quantity, currency)}
                       </p>
                       <button onClick={() => removeFromCart(product._id)}>
                         <img src={assets.remove_icon} className="w-5 h-5" alt="remove" />
@@ -311,8 +310,7 @@ const Cart = () => {
 
               {/* Desktop-only: subtotal + remove in grid columns */}
               <p className="hidden sm:block text-center text-sm">
-                {currency}
-                {product.offerPrice * product.quantity}
+                {formatCurrency(product.offerPrice * product.quantity, currency)}
               </p>
 
               <button
@@ -347,7 +345,7 @@ const Cart = () => {
           <div className="space-y-2.5 text-sm">
             <div className="flex justify-between text-gray-400">
               <span>{t("cart.subtotal")}</span>
-              <span className="text-gray-200">{currency}{getCartAmount()}</span>
+              <span className="text-gray-200">{formatCurrency(getCartAmount(), currency)}</span>
             </div>
             <div className="flex justify-between text-gray-400">
               <span>{t("cart.shipping")}</span>
@@ -356,7 +354,7 @@ const Cart = () => {
             <div className="flex justify-between items-center pt-3 mt-2 border-t border-white/10">
               <span className="text-white font-semibold">{t("cart.total")}</span>
               <span className="text-lg sm:text-xl font-bold text-white">
-                {currency}{getCartAmount()}
+                {formatCurrency(getCartAmount(), currency)}
               </span>
             </div>
           </div>

@@ -5,7 +5,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { useAppContext } from '../Context/AppContext';
 import { useTranslation } from 'react-i18next';
 import { getLocalizedText } from '../utils/getLocalizedText';
-
+import { formatCurrency } from "../utils/formatCurrency";
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 const statusStyles = {
@@ -152,7 +152,7 @@ export default function PaymentSuccess() {
                     {t('payment_success.payment')} <span className="text-gray-200 font-medium">{order.paymentType}</span>
                   </span>
                   <span className="text-white font-semibold">
-                    {currency}{order.amount}
+                   {formatCurrency(order.amount, currency)}
                   </span>
                 </div>
 
@@ -194,7 +194,7 @@ export default function PaymentSuccess() {
                             {t(`payment_success.status.${order.status}`, order.status)}
                           </span>
                           <p className="text-red-500 text-sm sm:text-base font-semibold">
-                            {currency}{(item.product?.offerPrice || 0) * (item.quantity || 1)}
+                            {formatCurrency((item.product?.offerPrice || 0) * (item.quantity || 1), currency)}
                           </p>
                         </div>
                       </div>
