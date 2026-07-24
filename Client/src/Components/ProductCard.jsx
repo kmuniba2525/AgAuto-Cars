@@ -35,16 +35,16 @@ const ProductCard = ({ product }) => {
       className="flex flex-col bg-white rounded-xl sm:rounded-2xl border border-gray-200/70 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] cursor-pointer hover:shadow-[0_12px_28px_-8px_rgba(0,0,0,0.12)] hover:border-gray-300 transition-all duration-300 w-full overflow-hidden"
     >
       {/* Product Image */}
-      <div className="overflow-hidden bg-gray-50 p-2 sm:p-3 aspect-[4/3] flex items-center justify-center">
-        <img
-          src={product.image?.[0] || assets.upload_area}
-          alt={localizedName}
-          className="w-full h-full object-contain scale-110 sm:scale-125 hover:scale-[1.35] transition-transform duration-500"
-        />
-      </div>
+      <div className="overflow-hidden bg-gradient-to-b from-gray-50 to-white h-50 sm:h-60 flex items-center justify-center">
+    <img
+        src={product.image?.[0] || assets.upload_area}
+        alt={localizedName}
+        className="max-w-[85%] max-h-[80%] object-contain scale-[1.25] hover:scale-[1.45] transition-all duration-500"
+    />
+</div>
 
       {/* Content */}
-      <div className="p-2.5 sm:p-3.5 text-[11px] sm:text-xs flex flex-col flex-1">
+      <div className="p-2 sm:p-3.5 text-[11px] sm:text-xs flex flex-col flex-1">
         {/* Price */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           <p className="text-gray-900 font-semibold text-xs sm:text-[13px]">

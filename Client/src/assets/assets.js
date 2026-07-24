@@ -45,7 +45,7 @@ import Snacks from './Snacks.png';                                   // Gloves
 import HouseHold from './Household.jpg';                             // Ceramic Shield
 import Spices from './Spices.jpg';                                   // Acrylic Spray
 import PersonalCare from './PersonalCare.png';                       // Workwear
-
+import InvoiceLogo from './InvoiceLogo.png'; // Invoice logo
 export const assets = {
   Logo,
   search_icon,
@@ -80,6 +80,7 @@ export const assets = {
   chat_icon,
   chart_icon,
   Logo2,
+  InvoiceLogo
 };
 
 export const categories = [

@@ -60,6 +60,11 @@ const orderSchema = new mongoose.Schema(
       enum: ["Order Placed", "Preparing", "Shipped", "Delivered"],
       default: "Order Placed",
     },
+    language: {
+  type: String,
+  enum: ["en", "pt", "sv"], // extend as you add more
+  default: "en",
+},
 
     paymentType: { type: String, required: true },
 

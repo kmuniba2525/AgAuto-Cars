@@ -23,10 +23,17 @@ const buildGuestFields = (guestInfo, guestAddress) => {
   return { guestInfo, guestAddress };
 };
 
+// ✅ NEW: only accept language codes the app actually supports — anything
+// else (missing field, garbage from a stale client, etc.) silently falls
+// back to "en" rather than saving invalid data on the order.
+const SUPPORTED_ORDER_LANGUAGES = ["en", "pt", "sv"];
+const resolveOrderLanguage = (language) =>
+  SUPPORTED_ORDER_LANGUAGES.includes(language) ? language : "en";
+
 // Place Order COD
 export const placeOrderCOD = async (req, res) => {
   try {
-    const { items, address, guestInfo, guestAddress } = req.body;
+    const { items, address, guestInfo, guestAddress, language } = req.body; // ✅ CHANGED: + language
     const userId = req.user?.id || null; // ✅ CHANGED: null for guests
 
     // VALIDATION
@@ -97,6 +104,7 @@ export const placeOrderCOD = async (req, res) => {
       ...(guestFields || {}), // ✅ NEW: spreads guestInfo + guestAddress
       paymentType: "COD",
       isPaid: true,
+      language: resolveOrderLanguage(language), // ✅ NEW: invoice language
     });
 
     // REDUCE STOCK
@@ -168,7 +176,7 @@ export const placeOrderCOD = async (req, res) => {
 // Place Order STRIPE
 export const placeOrderStripe = async (req, res) => {
   try {
-    const { items, address, guestInfo, guestAddress } = req.body;
+    const { items, address, guestInfo, guestAddress, language } = req.body; // ✅ CHANGED: + language
 
     const userId = req.user?.id || null; // ✅ CHANGED: null for guests
 
@@ -248,6 +256,7 @@ export const placeOrderStripe = async (req, res) => {
       isGuestOrder: !userId, // ✅ NEW
       ...(guestFields || {}), // ✅ NEW
       paymentType: "Online",
+      language: resolveOrderLanguage(language), // ✅ NEW: invoice language
     });
 
     // REDUCE STOCK
@@ -940,7 +949,7 @@ export const getAdvancedAnalytics = async (req, res) => {
 // Place Order STRIPE — Payment Intent version (for custom Payment Element UI)
 export const placeOrderStripeIntent = async (req, res) => {
   try {
-    const { items, address, guestInfo, guestAddress } = req.body;
+    const { items, address, guestInfo, guestAddress, language } = req.body; // ✅ CHANGED: + language
     const userId = req.user?.id || null; // ✅ CHANGED: null for guests
 
     if (!items || items.length === 0) {
@@ -999,6 +1008,7 @@ export const placeOrderStripeIntent = async (req, res) => {
       ...(guestFields || {}), // ✅ NEW
       paymentType: "Online",
       isPaid: false,
+      language: resolveOrderLanguage(language), // ✅ NEW: invoice language
     });
 
     const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);

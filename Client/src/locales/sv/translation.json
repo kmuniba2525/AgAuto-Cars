@@ -296,5 +296,27 @@
       "shipped": "Skickad",
       "delivered": "Levererad"
     }
-  }
+  },
+  "invoice":{
+  "invoicePreview": "Fakturaförhandsgranskning",
+  "print": "Skriv ut",
+  "invoice": "FAKTURA",
+  "tagline": "Bildelar & Produkter",
+  "billTo": "Faktureras till",
+  "guest": "Gäst",
+  "status": "Status",
+  "payment": "Betalning",
+  "paid": "Betald",
+  "pending": "Väntande",
+  "item": "Artikel",
+  "qty": "Antal",
+  "unitPrice": "Á-pris",
+  "total": "Totalt",
+  "itemsSubtotal": "Delsumma",
+  "totalCharged": "Totalt debiterat",
+  "noItems": "Inga artiklar på den här ordern",
+  "priceNote": "Á-priserna visar aktuella katalogpriser och kan skilja sig något från priset vid köptillfället.",
+  "thankYou": "Tack för att du handlar hos AG Auto Cars.",
+  "language": "Språk"
+}
 }

@@ -296,6 +296,28 @@
     "shipped": "Enviado",
     "delivered": "Entregue"
   }
+},
+"invoice":{
+  "invoicePreview": "Pré-visualização da Fatura",
+  "print": "Imprimir",
+  "invoice": "FATURA",
+  "tagline": "Peças e Produtos Automóveis",
+  "billTo": "Faturar a",
+  "guest": "Convidado",
+  "status": "Estado",
+  "payment": "Pagamento",
+  "paid": "Pago",
+  "pending": "Pendente",
+  "item": "Artigo",
+  "qty": "Qtd",
+  "unitPrice": "Preço Unit.",
+  "total": "Total",
+  "itemsSubtotal": "Subtotal",
+  "totalCharged": "Total Cobrado",
+  "noItems": "Nenhum artigo nesta encomenda",
+  "priceNote": "Os preços unitários refletem os preços atuais do catálogo e podem diferir ligeiramente do preço no momento da compra.",
+  "thankYou": "Obrigado por comprar na AG Auto Cars.",
+  "language": "Idioma"
 }
 
 }
