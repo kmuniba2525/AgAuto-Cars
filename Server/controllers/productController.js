@@ -12,20 +12,38 @@ const sanitizeOptions = {
   allowedAttributes: {},
 };
 
-// ✅ NEW: shared helper — builds a { en, pt, sv? } object, sanitizing HTML
-// fields when a sanitizer is passed. Swedish is included only if present,
-// so it's never dropped when it exists and never fabricated when it doesn't.
+// ✅ shared helper — builds a { en, sv?, fi?, da?, no?, pt? } object, sanitizing
+// HTML fields when a sanitizer is passed. Every non-English language is
+// included only if present, so it's never dropped when it exists and never
+// fabricated when it doesn't. Portuguese is handled the same optional way
+// now — commented-out call sites below simply stop sending it.
 const buildBilingualField = (field, { sanitize = false } = {}) => {
   const clean = (val) =>
     sanitize ? sanitizeHtml(val, sanitizeOptions) : val.trim();
 
   const result = {
     en: clean(field.en),
-    pt: clean(field.pt),
   };
+
+  // pt no longer required, kept optional so legacy payloads don't break
+  if (field.pt?.trim()) {
+    result.pt = clean(field.pt);
+  }
 
   if (field.sv?.trim()) {
     result.sv = clean(field.sv);
+  }
+
+  if (field.fi?.trim()) {
+    result.fi = clean(field.fi);
+  }
+
+  if (field.da?.trim()) {
+    result.da = clean(field.da);
+  }
+
+  if (field.no?.trim()) {
+    result.no = clean(field.no);
   }
 
   return result;
@@ -42,22 +60,23 @@ export const addProduct = async (req, res) => {
 
     let productData = JSON.parse(req.body.productData);
 
-    // ✅ name and description come in as { en, pt, sv? } objects.
-    // Validate both required languages are present before touching anything else.
+    // ✅ name and description come in as { en, sv?, fi?, da?, no?, pt? } objects.
+    // Only English is required now — pt's required check is commented out
+    // for now (Portuguese support paused).
     if (
       !productData.name ||
-      !productData.name.en?.trim() ||
-      !productData.name.pt?.trim()
+      !productData.name.en?.trim()
+      // || !productData.name.pt?.trim() // commented out for now — Portuguese support paused
     ) {
-      return errorResponse(res, 400, "Product name is required in both English and Portuguese");
+      return errorResponse(res, 400, "Product name is required in English");
     }
 
     if (
       !productData.description ||
-      !productData.description.en ||
-      !productData.description.pt
+      !productData.description.en
+      // || !productData.description.pt // commented out for now — Portuguese support paused
     ) {
-      return errorResponse(res, 400, "Description is required in both English and Portuguese");
+      return errorResponse(res, 400, "Description is required in English");
     }
 
     // ✅ FIXED: sanitize each language but keep sv if it was sent — the old
@@ -66,11 +85,8 @@ export const addProduct = async (req, res) => {
       sanitize: true,
     });
 
-    if (
-      productData.description.en.trim() === "" ||
-      productData.description.pt.trim() === ""
-    ) {
-      return errorResponse(res, 400, "Description is required in both languages");
+    if (productData.description.en.trim() === "") {
+      return errorResponse(res, 400, "Description is required in English");
     }
 
     // ✅ FIXED: same issue existed here — sv was being dropped on trim.
@@ -217,9 +233,10 @@ export const changeStock = async (req, res) => {
 // =========================
 // GENERATE AI DESCRIPTION
 // =========================
-// Generates English, Portuguese, and Swedish descriptions in one call,
-// returned as { en, pt, sv } so AddProduct.jsx can drop all three
-// straight into the CKEditor instances.
+// Generates English, Swedish, Finnish, Danish, and Norwegian descriptions
+// in one call, returned as { en, sv, fi, da, no } so AddProduct.jsx can
+// drop them straight into the CKEditor instances.
+// Portuguese generation is commented out for now — Portuguese support paused.
 export const generateDescription = async (req, res) => {
   try {
     if (!process.env.GROQ_API_KEY) {
@@ -258,7 +275,7 @@ Return product description in clean HTML with sections:
 -Do NOT return long paragraphs.
     `;
 
-    const [enCompletion, ptCompletion, svCompletion] = await Promise.all([
+    const [enCompletion, svCompletion, fiCompletion, daCompletion, noCompletion] = await Promise.all([
       client.chat.completions.create({
         model: "llama-3.1-8b-instant",
         messages: [
@@ -270,17 +287,20 @@ Return product description in clean HTML with sections:
           { role: "user", content: buildPrompt("English") },
         ],
       }),
-      client.chat.completions.create({
-        model: "llama-3.1-8b-instant",
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are an ecommerce product description writer. Always return clean, professional HTML without markdown symbols like ** or --. Keep response under 350 words. Write in natural European Portuguese (Portugal), not Brazilian Portuguese.",
-          },
-          { role: "user", content: buildPrompt("European Portuguese") },
-        ],
-      }),
+      // ✅ ptCompletion commented out for now — Portuguese support paused.
+      // Uncomment this block (and add it back into Promise.all above, and
+      // to the destructuring + descriptionPt/response below) to restore it:
+      // client.chat.completions.create({
+      //   model: "llama-3.1-8b-instant",
+      //   messages: [
+      //     {
+      //       role: "system",
+      //       content:
+      //         "You are an ecommerce product description writer. Always return clean, professional HTML without markdown symbols like ** or --. Keep response under 350 words. Write in natural European Portuguese (Portugal), not Brazilian Portuguese.",
+      //     },
+      //     { role: "user", content: buildPrompt("European Portuguese") },
+      //   ],
+      // }),
       client.chat.completions.create({
         model: "llama-3.1-8b-instant",
         messages: [
@@ -292,6 +312,39 @@ Return product description in clean HTML with sections:
           { role: "user", content: buildPrompt("Swedish") },
         ],
       }),
+      client.chat.completions.create({
+        model: "llama-3.1-8b-instant",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are an ecommerce product description writer. Always return clean, professional HTML without markdown symbols like ** or --. Keep response under 350 words. Write in natural Finnish (Suomi).",
+          },
+          { role: "user", content: buildPrompt("Finnish") },
+        ],
+      }),
+      client.chat.completions.create({
+        model: "llama-3.1-8b-instant",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are an ecommerce product description writer. Always return clean, professional HTML without markdown symbols like ** or --. Keep response under 350 words. Write in natural Danish (Danmark).",
+          },
+          { role: "user", content: buildPrompt("Danish") },
+        ],
+      }),
+      client.chat.completions.create({
+        model: "llama-3.1-8b-instant",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are an ecommerce product description writer. Always return clean, professional HTML without markdown symbols like ** or --. Keep response under 350 words. Write in natural Norwegian Bokmål (Norge).",
+          },
+          { role: "user", content: buildPrompt("Norwegian") },
+        ],
+      }),
     ]);
 
     const cleanUp = (raw) => {
@@ -300,15 +353,21 @@ Return product description in clean HTML with sections:
     };
 
     const descriptionEn = cleanUp(enCompletion.choices[0].message.content);
-    const descriptionPt = cleanUp(ptCompletion.choices[0].message.content);
+    // const descriptionPt = cleanUp(ptCompletion.choices[0].message.content); // commented out for now
     const descriptionSv = cleanUp(svCompletion.choices[0].message.content);
+    const descriptionFi = cleanUp(fiCompletion.choices[0].message.content);
+    const descriptionDa = cleanUp(daCompletion.choices[0].message.content);
+    const descriptionNo = cleanUp(noCompletion.choices[0].message.content);
 
     res.json({
       success: true,
       description: {
         en: descriptionEn,
-        pt: descriptionPt,
+        // pt: descriptionPt, // commented out for now — Portuguese support paused
         sv: descriptionSv,
+        fi: descriptionFi,
+        da: descriptionDa,
+        no: descriptionNo,
       },
     });
   } catch (error) {
@@ -414,21 +473,22 @@ export const updateProduct = async (req, res) => {
       return errorResponse(res, 404, "Product not found");
     }
 
-    // Validate bilingual name/description, same as addProduct
+    // Validate English name/description, same as addProduct — pt's
+    // required check is commented out for now (Portuguese support paused)
     if (
       !productData.name ||
-      !productData.name.en?.trim() ||
-      !productData.name.pt?.trim()
+      !productData.name.en?.trim()
+      // || !productData.name.pt?.trim() // commented out for now — Portuguese support paused
     ) {
-      return errorResponse(res, 400, "Product name is required in both English and Portuguese");
+      return errorResponse(res, 400, "Product name is required in English");
     }
 
     if (
       !productData.description ||
-      !productData.description.en ||
-      !productData.description.pt
+      !productData.description.en
+      // || !productData.description.pt // commented out for now — Portuguese support paused
     ) {
-      return errorResponse(res, 400, "Description is required in both English and Portuguese");
+      return errorResponse(res, 400, "Description is required in English");
     }
 
     // ✅ FIXED: same sv-dropping bug as addProduct — now preserved via

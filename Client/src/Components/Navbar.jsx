@@ -106,7 +106,14 @@ const Navbar = () => {
                                 <line x1="2" y1="12" x2="22" y2="12" />
                                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                             </svg>
-                            <span className="text-red-500">{i18n.language === 'pt' ? 'PT' : i18n.language === 'sv' ? 'SV' : 'EN'}</span>
+                            <span className="text-red-500">
+                                {/* pt commented out for now — Portuguese support paused */}
+                                {i18n.language === 'sv' ? 'SV'
+                                    : i18n.language === 'fi' ? 'FI'
+                                    : i18n.language === 'da' ? 'DA'
+                                    : i18n.language === 'no' ? 'NO'
+                                    : 'EN'}
+                            </span>
                             <span className="text-[10px] text-gray-400">▾</span>
                         </button>
 
@@ -120,17 +127,37 @@ const Navbar = () => {
                             >
                                 🇬🇧 EN
                             </li>
+                            {/* Portuguese commented out for now — Portuguese support paused
                             <li
                                 onClick={() => changeLang('pt')}
                                 className={`px-3 py-2 hover:bg-[#2a2a2a] cursor-pointer flex items-center gap-2 ${i18n.language === 'pt' ? 'text-red-500 font-semibold' : ''}`}
                             >
                                 🇧🇷 PT
                             </li>
+                            */}
                             <li
                                 onClick={() => changeLang('sv')}
                                 className={`px-3 py-2 hover:bg-[#2a2a2a] cursor-pointer flex items-center gap-2 ${i18n.language === 'sv' ? 'text-red-500 font-semibold' : ''}`}
                             >
                                 🇸🇪 SV
+                            </li>
+                            <li
+                                onClick={() => changeLang('fi')}
+                                className={`px-3 py-2 hover:bg-[#2a2a2a] cursor-pointer flex items-center gap-2 ${i18n.language === 'fi' ? 'text-red-500 font-semibold' : ''}`}
+                            >
+                                🇫🇮 FI
+                            </li>
+                            <li
+                                onClick={() => changeLang('da')}
+                                className={`px-3 py-2 hover:bg-[#2a2a2a] cursor-pointer flex items-center gap-2 ${i18n.language === 'da' ? 'text-red-500 font-semibold' : ''}`}
+                            >
+                                🇩🇰 DA
+                            </li>
+                            <li
+                                onClick={() => changeLang('no')}
+                                className={`px-3 py-2 hover:bg-[#2a2a2a] cursor-pointer flex items-center gap-2 ${i18n.language === 'no' ? 'text-red-500 font-semibold' : ''}`}
+                            >
+                                🇳🇴 NO
                             </li>
                         </ul>
                     </div>
@@ -217,17 +244,37 @@ const Navbar = () => {
                             >
                                 🇬🇧 EN
                             </button>
+                            {/* Portuguese commented out for now — Portuguese support paused
                             <button
                                 onClick={() => changeLang('pt')}
                                 className={`px-3 py-1 rounded text-xs font-semibold border ${i18n.language === 'pt' ? 'bg-red-600 border-red-600 text-white' : 'border-gray-700 text-gray-400'}`}
                             >
                                 🇧🇷 PT
                             </button>
+                            */}
                             <button
                                 onClick={() => changeLang('sv')}
                                 className={`px-3 py-1 rounded text-xs font-semibold border ${i18n.language === 'sv' ? 'bg-red-600 border-red-600 text-white' : 'border-gray-700 text-gray-400'}`}
                             >
                                 🇸🇪 SV
+                            </button>
+                            <button
+                                onClick={() => changeLang('fi')}
+                                className={`px-3 py-1 rounded text-xs font-semibold border ${i18n.language === 'fi' ? 'bg-red-600 border-red-600 text-white' : 'border-gray-700 text-gray-400'}`}
+                            >
+                                🇫🇮 FI
+                            </button>
+                            <button
+                                onClick={() => changeLang('da')}
+                                className={`px-3 py-1 rounded text-xs font-semibold border ${i18n.language === 'da' ? 'bg-red-600 border-red-600 text-white' : 'border-gray-700 text-gray-400'}`}
+                            >
+                                🇩🇰 DA
+                            </button>
+                            <button
+                                onClick={() => changeLang('no')}
+                                className={`px-3 py-1 rounded text-xs font-semibold border ${i18n.language === 'no' ? 'bg-red-600 border-red-600 text-white' : 'border-gray-700 text-gray-400'}`}
+                            >
+                                🇳🇴 NO
                             </button>
                         </div>
 

@@ -62,7 +62,10 @@ const orderSchema = new mongoose.Schema(
     },
     language: {
   type: String,
-  enum: ["en", "pt", "sv"], // extend as you add more
+  // pt kept in the enum so existing orders tagged "pt" still pass
+  // validation on save — it's just no longer offered as a new choice
+  // (see SUPPORTED_ORDER_LANGUAGES in orderController.js)
+  enum: ["en", "pt", "sv", "fi", "da", "no"], // extend as you add more
   default: "en",
 },
 

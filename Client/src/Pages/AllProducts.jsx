@@ -51,15 +51,26 @@ const AllProducts = () => {
   const filteredProducts = useMemo(() => {
     let result = [...products];
 
-    // ✅ CHANGED: name is now { en, pt } — search across both languages
-    // regardless of the active UI language, so users find products even
-    // if they type in the "other" language than the one they're browsing in.
+    // ✅ CHANGED: name is now { en, sv, fi, da, no } — search across all
+    // supported languages regardless of the active UI language, so users
+    // find products even if they type in a language other than the one
+    // they're browsing in. (pt commented out for now — Portuguese support paused)
     if (searchQuery?.trim()) {
       const query = searchQuery.toLowerCase();
       result = result.filter((product) => {
         const nameEn = (product.name?.en || (typeof product.name === "string" ? product.name : "")).toLowerCase();
-        const namePt = (product.name?.pt || "").toLowerCase();
-        return nameEn.includes(query) || namePt.includes(query);
+        const nameSv = (product.name?.sv || "").toLowerCase();
+        const nameFi = (product.name?.fi || "").toLowerCase();
+        const nameDa = (product.name?.da || "").toLowerCase();
+        const nameNo = (product.name?.no || "").toLowerCase();
+        // const namePt = (product.name?.pt || "").toLowerCase(); // commented out for now
+        return (
+          nameEn.includes(query) ||
+          nameSv.includes(query) ||
+          nameFi.includes(query) ||
+          nameDa.includes(query) ||
+          nameNo.includes(query)
+        );
       });
     }
 

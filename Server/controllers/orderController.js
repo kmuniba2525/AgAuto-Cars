@@ -23,10 +23,21 @@ const buildGuestFields = (guestInfo, guestAddress) => {
   return { guestInfo, guestAddress };
 };
 
-// ✅ NEW: only accept language codes the app actually supports — anything
-// else (missing field, garbage from a stale client, etc.) silently falls
-// back to "en" rather than saving invalid data on the order.
-const SUPPORTED_ORDER_LANGUAGES = ["en", "pt", "sv"];
+// ✅ only accept language codes the app actually offers at checkout —
+// anything else (missing field, garbage from a stale client, etc.) silently
+// falls back to "en" rather than saving invalid data on the order.
+// "pt" is commented out for now — Portuguese support paused. Note: the
+// Order schema's enum (Server/models/Order.js) still lists "pt" so any
+// existing orders tagged "pt" keep passing validation; only new orders are
+// blocked from selecting it here.
+const SUPPORTED_ORDER_LANGUAGES = [
+  "en",
+  // "pt", // commented out for now — Portuguese support paused
+  "sv",
+  "fi",
+  "da",
+  "no",
+];
 const resolveOrderLanguage = (language) =>
   SUPPORTED_ORDER_LANGUAGES.includes(language) ? language : "en";
 

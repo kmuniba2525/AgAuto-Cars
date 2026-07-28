@@ -7,8 +7,11 @@
 
 export const SUPPORTED_LANGUAGES = [
   { code: "en", label: "English", locale: "en-US" },
-  { code: "pt", label: "Português", locale: "pt-PT" },
+  // { code: "pt", label: "Português", locale: "pt-PT" }, // commented out for now — Portuguese support paused
   { code: "sv", label: "Svenska", locale: "sv-SE" },
+  { code: "fi", label: "Suomi", locale: "fi-FI" },
+  { code: "da", label: "Dansk", locale: "da-DK" },
+  { code: "no", label: "Norsk", locale: "nb-NO" },
 ];
 
 export function getLocaleForLang(langCode) {

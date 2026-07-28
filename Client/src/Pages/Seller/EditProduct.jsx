@@ -15,6 +15,20 @@ const emptyVariant = () => ({
   sku: "",
 });
 
+// Single source of truth for supported languages — matches AddProduct.jsx.
+// Add/remove a language by editing this array only.
+const LANGUAGES = [
+  { code: "en", label: "English", required: true, placeholder: "" },
+  // { code: "pt", label: "Portuguese", required: true, nativeLabel: "Nome do Produto / Descrição do Produto" }, // commented out for now — Portuguese support paused
+  { code: "sv", label: "Swedish", required: false, placeholder: "Ange produktnamn på svenska" },
+  { code: "fi", label: "Finnish", required: false, placeholder: "Anna tuotteen nimi suomeksi" },
+  { code: "da", label: "Danish", required: false, placeholder: "Indtast produktnavn på dansk" },
+  { code: "no", label: "Norwegian", required: false, placeholder: "Skriv inn produktnavn på norsk" },
+];
+
+const emptyLocalized = () =>
+  LANGUAGES.reduce((acc, l) => ({ ...acc, [l.code]: "" }), {});
+
 const EditProduct = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -24,14 +38,21 @@ const EditProduct = () => {
   const [files, setFiles] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
 
-  const [nameEn, setNameEn] = useState("");
-  const [namePt, setNamePt] = useState("");
-  const [nameSv, setNameSv] = useState("");
-  const [descriptionEn, setDescriptionEn] = useState("");
-  const [descriptionPt, setDescriptionPt] = useState("");
-  const [descriptionSv, setDescriptionSv] = useState("");
+  // ✅ CHANGED: collapsed from 6 separate useState fields (nameEn, namePt, nameSv...)
+  // into two objects keyed by language code — { en, sv, fi, da, no } — same
+  // pattern as AddProduct.jsx, so adding a language only touches LANGUAGES above.
+  const [name, setName] = useState(emptyLocalized());
+  const [description, setDescription] = useState(emptyLocalized());
   const [category, setCategory] = useState("");
   const [variants, setVariants] = useState([emptyVariant()]);
+
+  const updateName = (lang, value) => {
+    setName((prev) => ({ ...prev, [lang]: value }));
+  };
+
+  const updateDescription = (lang, value) => {
+    setDescription((prev) => ({ ...prev, [lang]: value }));
+  };
 
   // =========================
   // LOAD EXISTING PRODUCT
@@ -42,10 +63,10 @@ const EditProduct = () => {
         const { data } = await axios.get(`/api/product/${id}`);
 
         if (data.success) {
-          // ✅ FIXED: your successResponse(res, statusCode, message, data)
-          // helper spreads its 3rd argument as `message`, and productById
-          // calls successResponse(res, 200, product) — so the actual
-          // product object lives at data.message, not data.data/data.product.
+          // ✅ your successResponse(res, statusCode, message, data) helper
+          // spreads its 3rd argument as `message`, and productById calls
+          // successResponse(res, 200, product) — so the product object
+          // lives at data.message, not data.data/data.product.
           const product = data.message;
 
           if (!product) {
@@ -54,18 +75,34 @@ const EditProduct = () => {
             return;
           }
 
-          // ✅ Handle both migrated ({en, pt, sv}) and legacy (string) shapes,
+          // ✅ Handle both migrated ({en, sv, ...}) and legacy (string) shapes,
           // same safety net as getLocalizedText on the customer side.
-          // Swedish is optional, so it may simply be missing on older products.
-          const name = product.name;
-          setNameEn(typeof name === "string" ? name : name?.en || "");
-          setNamePt(typeof name === "string" ? name : name?.pt || "");
-          setNameSv(typeof name === "string" ? "" : name?.sv || "");
+          // Every language other than English is optional, so it may simply
+          // be missing on older products.
+          const productName = product.name;
+          const productDescription = product.description;
 
-          const description = product.description;
-          setDescriptionEn(typeof description === "string" ? description : description?.en || "");
-          setDescriptionPt(typeof description === "string" ? description : description?.pt || "");
-          setDescriptionSv(typeof description === "string" ? "" : description?.sv || "");
+          setName(
+            LANGUAGES.reduce((acc, l) => {
+              if (typeof productName === "string") {
+                acc[l.code] = l.code === "en" ? productName : "";
+              } else {
+                acc[l.code] = productName?.[l.code] || "";
+              }
+              return acc;
+            }, {})
+          );
+
+          setDescription(
+            LANGUAGES.reduce((acc, l) => {
+              if (typeof productDescription === "string") {
+                acc[l.code] = l.code === "en" ? productDescription : "";
+              } else {
+                acc[l.code] = productDescription?.[l.code] || "";
+              }
+              return acc;
+            }, {})
+          );
 
           setCategory(product.category || "");
           setExistingImages(product.image || []);
@@ -113,12 +150,16 @@ const EditProduct = () => {
     try {
       event.preventDefault();
 
-      if (!nameEn.trim() || !namePt.trim()) {
-        return toast.error("Please enter the product name in both English and Portuguese");
+      const requiredLangs = LANGUAGES.filter((l) => l.required);
+
+      const missingName = requiredLangs.find((l) => !name[l.code]?.trim());
+      if (missingName) {
+        return toast.error(`Please enter the product name in ${missingName.label}`);
       }
 
-      if (!descriptionEn.trim() || !descriptionPt.trim()) {
-        return toast.error("Please enter the description in both English and Portuguese");
+      const missingDesc = requiredLangs.find((l) => !description[l.code]?.trim());
+      if (missingDesc) {
+        return toast.error(`Please enter the description in ${missingDesc.label}`);
       }
 
       if (variants.length === 0) {
@@ -144,17 +185,18 @@ const EditProduct = () => {
 
       const totalStock = cleanedVariants.reduce((sum, v) => sum + v.stock, 0);
 
+      // ✅ Build { en, sv, fi, da, no } payload, trimming and only including
+      // optional languages if filled in — required ones always included.
+      const buildLocalized = (obj) =>
+        LANGUAGES.reduce((acc, l) => {
+          const val = (obj[l.code] || "").trim();
+          if (l.required || val) acc[l.code] = val;
+          return acc;
+        }, {});
+
       const productData = {
-        name: {
-          en: nameEn.trim(),
-          pt: namePt.trim(),
-          ...(nameSv.trim() ? { sv: nameSv.trim() } : {}),
-        },
-        description: {
-          en: descriptionEn,
-          pt: descriptionPt,
-          ...(descriptionSv.trim() ? { sv: descriptionSv } : {}),
-        },
+        name: buildLocalized(name),
+        description: buildLocalized(description),
         category,
         price: cleanedVariants[0].price,
         offerPrice: cleanedVariants[0].offerPrice,
@@ -241,50 +283,30 @@ const EditProduct = () => {
           </div>
         </div>
 
-        {/* NAME — EN */}
-        <div className="flex flex-col gap-1">
-          <label className="text-base font-medium">
-            Product Name <span className="text-xs font-normal text-gray-400">(English)</span>
-          </label>
-          <input
-            type="text"
-            required
-            value={nameEn}
-            className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-400 focus:border-primary"
-            onChange={(e) => setNameEn(e.target.value)}
-          />
-        </div>
-
-        {/* NAME — PT */}
-        <div className="flex flex-col gap-1">
-          <label className="text-base font-medium">
-            Nome do Produto <span className="text-xs font-normal text-gray-400">(Portuguese)</span>
-          </label>
-          <input
-            type="text"
-            required
-            value={namePt}
-            className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-400 focus:border-primary"
-            onChange={(e) => setNamePt(e.target.value)}
-          />
-        </div>
-
-        {/* NAME — SV (optional) */}
-        <div className="flex flex-col gap-1">
-          <label className="text-base font-medium">
-            Produktnamn <span className="text-xs font-normal text-gray-400">(Swedish, optional)</span>
-          </label>
-          <input
-            type="text"
-            value={nameSv}
-            placeholder="Ange produktnamn på svenska"
-            className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-400 focus:border-primary"
-            onChange={(e) => setNameSv(e.target.value)}
-          />
-          <p className="text-xs text-gray-400">
-            Leave blank to show the English name to Swedish customers for now.
-          </p>
-        </div>
+        {/* PRODUCT NAME — one input per language, driven by LANGUAGES */}
+        {LANGUAGES.map((l) => (
+          <div className="flex flex-col gap-1" key={`name-${l.code}`}>
+            <label className="text-base font-medium">
+              Product Name{" "}
+              <span className="text-xs font-normal text-gray-400">
+                ({l.label}{!l.required ? ", optional" : ""})
+              </span>
+            </label>
+            <input
+              type="text"
+              required={l.required}
+              value={name[l.code]}
+              placeholder={l.placeholder}
+              className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-400 focus:border-primary"
+              onChange={(e) => updateName(l.code, e.target.value)}
+            />
+            {!l.required && (
+              <p className="text-xs text-gray-400">
+                Leave blank to show the English name to {l.label} customers for now.
+              </p>
+            )}
+          </div>
+        ))}
 
         {/* CATEGORY */}
         <div className="flex flex-col gap-1">
@@ -303,50 +325,29 @@ const EditProduct = () => {
           </select>
         </div>
 
-        {/* DESCRIPTION — EN */}
-        <div className="flex flex-col gap-3">
-          <label className="text-base font-medium">
-            Product Description <span className="text-xs font-normal text-gray-400">(English)</span>
-          </label>
-          <div className="border rounded">
-            <CKEditor
-              editor={ClassicEditor}
-              data={descriptionEn}
-              onChange={(event, editor) => setDescriptionEn(editor.getData())}
-            />
+        {/* DESCRIPTION — one editor per language, driven by LANGUAGES */}
+        {LANGUAGES.map((l) => (
+          <div className="flex flex-col gap-3" key={`desc-${l.code}`}>
+            <label className="text-base font-medium">
+              Product Description{" "}
+              <span className="text-xs font-normal text-gray-400">
+                ({l.label}{!l.required ? ", optional" : ""})
+              </span>
+            </label>
+            <div className="border rounded">
+              <CKEditor
+                editor={ClassicEditor}
+                data={description[l.code]}
+                onChange={(event, editor) => updateDescription(l.code, editor.getData())}
+              />
+            </div>
+            {!l.required && (
+              <p className="text-xs text-gray-400">
+                Leave blank to show the English description to {l.label} customers for now.
+              </p>
+            )}
           </div>
-        </div>
-
-        {/* DESCRIPTION — PT */}
-        <div className="flex flex-col gap-3">
-          <label className="text-base font-medium">
-            Descrição do Produto <span className="text-xs font-normal text-gray-400">(Portuguese)</span>
-          </label>
-          <div className="border rounded">
-            <CKEditor
-              editor={ClassicEditor}
-              data={descriptionPt}
-              onChange={(event, editor) => setDescriptionPt(editor.getData())}
-            />
-          </div>
-        </div>
-
-        {/* DESCRIPTION — SV (optional) */}
-        <div className="flex flex-col gap-3">
-          <label className="text-base font-medium">
-            Produktbeskrivning <span className="text-xs font-normal text-gray-400">(Swedish, optional)</span>
-          </label>
-          <div className="border rounded">
-            <CKEditor
-              editor={ClassicEditor}
-              data={descriptionSv}
-              onChange={(event, editor) => setDescriptionSv(editor.getData())}
-            />
-          </div>
-          <p className="text-xs text-gray-400">
-            Leave blank to show the English description to Swedish customers for now.
-          </p>
-        </div>
+        ))}
 
         {/* VARIANTS */}
         <div className="flex flex-col gap-3">

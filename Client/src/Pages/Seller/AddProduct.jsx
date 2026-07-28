@@ -20,8 +20,11 @@ const emptyVariant = () => ({
 // (tabs, validation, payload building) reads from it.
 const LANGUAGES = [
   { code: "en", label: "English", required: true, namePattern: /^[A-Za-z\s\-]*$/, namePlaceholder: "Enter Alphabets Only" },
-  { code: "pt", label: "Portuguese", required: true, namePattern: null, namePlaceholder: "Digite apenas letras" },
+  // { code: "pt", label: "Portuguese", required: true, namePattern: null, namePlaceholder: "Digite apenas letras" }, // commented out for now — Portuguese support paused
   { code: "sv", label: "Swedish", required: false, namePattern: null, namePlaceholder: "Ange produktnamn på svenska" },
+  { code: "fi", label: "Finnish", required: false, namePattern: null, namePlaceholder: "Anna tuotteen nimi suomeksi" },
+  { code: "da", label: "Danish", required: false, namePattern: null, namePlaceholder: "Indtast produktnavn på dansk" },
+  { code: "no", label: "Norwegian", required: false, namePattern: null, namePlaceholder: "Skriv inn produktnavn på norsk" },
 ];
 
 const AddProduct = () => {
@@ -29,8 +32,9 @@ const AddProduct = () => {
 
   // ✅ CHANGED: name/description collapsed from 6 separate useState fields
   // into two objects keyed by language code — { en, pt, sv }.
-  const [name, setName] = useState({ en: "", pt: "", sv: "" });
-  const [description, setDescription] = useState({ en: "", pt: "", sv: "" });
+  // pt dropped for now — Portuguese support paused; add it back to restore
+  const [name, setName] = useState({ en: "", sv: "", fi: "", da: "", no: "" });
+  const [description, setDescription] = useState({ en: "", sv: "", fi: "", da: "", no: "" });
 
   // ✅ NEW: which language tab is currently visible for Name / Description.
   const [activeNameLang, setActiveNameLang] = useState("en");
@@ -162,8 +166,8 @@ const AddProduct = () => {
         toast.success(data.message);
 
         // reset form
-        setName({ en: "", pt: "", sv: "" });
-        setDescription({ en: "", pt: "", sv: "" });
+        setName({ en: "", sv: "", fi: "", da: "", no: "" });
+        setDescription({ en: "", sv: "", fi: "", da: "", no: "" });
         setActiveNameLang("en");
         setActiveDescLang("en");
         setCategory("");
@@ -196,8 +200,11 @@ const AddProduct = () => {
       if (data.success) {
         setDescription({
           en: data.description.en,
-          pt: data.description.pt,
+          // pt: data.description.pt, // commented out for now — Portuguese support paused
           sv: data.description.sv || "",
+          fi: data.description.fi || "",
+          da: data.description.da || "",
+          no: data.description.no || "",
         });
         toast.success("Descriptions generated for all languages!");
       } else {
@@ -300,10 +307,10 @@ const AddProduct = () => {
             onChange={(e) => updateName(activeNameLang, e.target.value)}
           />
           {nameError && <p className="text-xs text-red-500">{nameError}</p>}
-          {activeNameLang === "sv" && (
+          {!activeNameDef.required && (
             <p className="text-xs text-gray-400">
-              Optional — leave blank to show the English name to Swedish
-              customers for now.
+              Optional — leave blank to show the English name to{" "}
+              {activeNameDef.label} customers for now.
             </p>
           )}
         </div>
@@ -353,9 +360,12 @@ const AddProduct = () => {
 
           <div className="flex items-center justify-between">
             <p className="text-xs text-gray-400">
-              {activeDescLang === "sv"
-                ? "Optional — leave blank to show the English description to Swedish customers for now."
-                : "AI can generate all three languages at once — review each before publishing."}
+              {(() => {
+                const activeDescDef = LANGUAGES.find((l) => l.code === activeDescLang);
+                return !activeDescDef.required
+                  ? `Optional — leave blank to show the English description to ${activeDescDef.label} customers for now.`
+                  : "AI can generate all languages at once — review each before publishing.";
+              })()}
             </p>
             <button
               type="button"

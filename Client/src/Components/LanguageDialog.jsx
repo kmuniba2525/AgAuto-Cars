@@ -21,11 +21,22 @@ const LanguageDialog = ({ onClose }) => {
           <button style={styles.btn} onClick={() => selectLanguage('en')}>
             🇬🇧 English
           </button>
+          {/* Portuguese commented out for now — Portuguese support paused
           <button style={styles.btn} onClick={() => selectLanguage('pt')}>
             🇧🇷 Português
           </button>
+          */}
           <button style={styles.btn} onClick={() => selectLanguage('sv')}>
             🇸🇪 Svenska
+          </button>
+          <button style={styles.btn} onClick={() => selectLanguage('fi')}>
+            🇫🇮 Suomi
+          </button>
+          <button style={styles.btn} onClick={() => selectLanguage('da')}>
+            🇩🇰 Dansk
+          </button>
+          <button style={styles.btn} onClick={() => selectLanguage('no')}>
+            🇳🇴 Norsk
           </button>
         </div>
       </div>

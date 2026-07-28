@@ -67,8 +67,13 @@ const variantSchema = new mongoose.Schema(
 const bilingualTextSchema = new mongoose.Schema(
   {
     en: { type: String, required: true },
-    pt: { type: String, required: true },
+    // pt required: true -> false for now — Portuguese support paused (kept
+    // in the schema, not required, so existing PT product data isn't lost)
+    pt: { type: String, required: false },
     sv: { type: String, required: false }, // optional so existing products don't break; falls back to en via getLocalizedText
+    fi: { type: String, required: false }, // optional, falls back to en via getLocalizedText
+    da: { type: String, required: false }, // optional, falls back to en via getLocalizedText
+    no: { type: String, required: false }, // optional, falls back to en via getLocalizedText
   },
   { _id: false }
 );
