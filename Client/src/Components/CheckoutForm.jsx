@@ -12,7 +12,7 @@ export default function CheckoutForm({ amount }) {
     if (!stripe || !elements) return;
 
     setLoading(true);
-
+// console.log("return_url:", `${import.meta.env.VITE_APP_URL}/payment-success`);
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {

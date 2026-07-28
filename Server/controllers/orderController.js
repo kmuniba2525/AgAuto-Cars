@@ -2,7 +2,10 @@ import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import User from "../models/User.js";
 import Notification from "../models/Notification.js";
+import Address from "../models/Address.js"; // ✅ NEW: needed to look up saved address for Klarna shipping info
 import { errorResponse, successResponse } from "../utils/response.js";
+import { toCountryCode } from "../utils/countryCodes.js"; // ✅ NEW: normalizes country name/casing to ISO alpha-2
+import { getCurrencyForCountry } from "../utils/klarnaCurrency.js"; // ✅ NEW: Klarna requires currency to match country
 import Stripe from "stripe";
 
 // ✅ NEW: shared helper — validates guest info/address, since guests
@@ -1024,10 +1027,64 @@ export const placeOrderStripeIntent = async (req, res) => {
 
     const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+    // ✅ NEW: Klarna (and other dynamic payment methods) determine customer
+    // eligibility primarily from `shipping.address.country` on the
+    // PaymentIntent. Without it, Stripe can't confirm the customer's
+    // country/currency qualify, so it silently hides Klarna from the
+    // Payment Element even though it's enabled in the Dashboard.
+    let shippingAddress = null;
+    let rawCountry = null; // ✅ NEW: raw country value as stored (name, mixed case, etc.)
+
+    if (userId) {
+      const addr = await Address.findById(address);
+      if (addr) {
+        rawCountry = addr.country;
+        shippingAddress = {
+          name: addr.name || "Customer",
+          address: {
+            line1: addr.street,
+            city: addr.city,
+            state: addr.state,
+            postal_code: addr.zipcode,
+            country: toCountryCode(addr.country), // ✅ CHANGED: normalize to ISO alpha-2
+          },
+        };
+      }
+    } else {
+      rawCountry = guestAddress.country;
+      shippingAddress = {
+        name: guestInfo.name,
+        address: {
+          line1: guestAddress.street,
+          city: guestAddress.city,
+          state: guestAddress.state,
+          postal_code: guestAddress.zipcode,
+          country: toCountryCode(guestAddress.country), // ✅ CHANGED: normalize to ISO alpha-2
+        },
+      };
+    }
+
+    // ✅ NEW: Klarna requires currency to match the customer's country
+    // (e.g. Sweden -> SEK, not EUR). Falls back to "eur" if the country
+    // isn't in our Klarna currency map, so non-Nordic/non-Klarna countries
+    // keep working exactly as before.
+    let currency = "eur";
+    if (rawCountry) {
+      const isoCountry = toCountryCode(rawCountry);
+      try {
+        currency = getCurrencyForCountry(isoCountry);
+      } catch (err) {
+        // Country not in the Klarna currency map — keep default "eur".
+        // This is expected for most non-Nordic countries and is not an error.
+        currency = "eur";
+      }
+    }
+
     const paymentIntent = await stripeInstance.paymentIntents.create({
       amount: Math.round(amount * 100),
-      currency: "eur",
+      currency, // ✅ CHANGED: dynamic based on shipping country instead of hardcoded "eur"
       automatic_payment_methods: { enabled: true },
+      ...(shippingAddress && { shipping: shippingAddress }), // ✅ NEW
       receipt_email: userId ? undefined : guestInfo.email, // ✅ NEW
       metadata: {
         orderId: order._id.toString(),
