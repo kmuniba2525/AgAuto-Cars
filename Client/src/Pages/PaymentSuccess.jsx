@@ -25,6 +25,14 @@ export default function PaymentSuccess() {
 
   const { currency, axios, user, navigate, setCartItems } = useAppContext();
 
+  // NEW: the order was charged in whatever currency the backend picked for
+  // the customer's shipping country — that can differ from `currency`
+  // above, which is just the storefront's globally selected display
+  // currency. Always prefer the order's own currency once we have it, and
+  // only fall back to the context value before the order has loaded (or
+  // for older orders created before the currency field existed).
+  const displayCurrency = order?.currency || currency;
+
   const fetchOrderById = async (orderId, attempt = 0) => {
     setOrderLoading(true);
     try {
@@ -152,7 +160,7 @@ export default function PaymentSuccess() {
                     {t('payment_success.payment')} <span className="text-gray-200 font-medium">{order.paymentType}</span>
                   </span>
                   <span className="text-white font-semibold">
-                   {formatCurrency(order.amount, currency)}
+                   {formatCurrency(order.amount, displayCurrency)}
                   </span>
                 </div>
 
@@ -194,7 +202,7 @@ export default function PaymentSuccess() {
                             {t(`payment_success.status.${order.status}`, order.status)}
                           </span>
                           <p className="text-red-500 text-sm sm:text-base font-semibold">
-                            {formatCurrency((item.product?.offerPrice || 0) * (item.quantity || 1), currency)}
+                            {formatCurrency((item.product?.offerPrice || 0) * (item.quantity || 1), displayCurrency)}
                           </p>
                         </div>
                       </div>

@@ -114,7 +114,7 @@ const ProductDetail = () => {
         <div className="lg:sticky lg:top-24 lg:self-start">
           <div className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
             {discountPercent > 0 && (
-              <span className="absolute top-3 left-3 z-10 bg-accent text-white text-xs font-bold px-2.5 py-1 rounded">
+              <span className="absolute top-3 left-3 z-10 bg-accent text-primary text-xs font-bold px-2.5 py-1 rounded">
                 -{discountPercent}%
               </span>
             )}
@@ -194,7 +194,7 @@ const ProductDetail = () => {
             </span>
 
             {discountPercent > 0 && (
-              <span className="text-xs font-bold text-white bg-accent px-2 py-1 rounded">
+              <span className="text-xs font-bold text-primary bg-accent px-2 py-1 rounded">
                 -{discountPercent}%
               </span>
             )}

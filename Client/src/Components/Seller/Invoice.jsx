@@ -57,7 +57,7 @@ const COMPANY = {
 };
 
 const Invoice = ({ order, onClose }) => {
-  const { currency } = useAppContext();
+  const { currency: contextCurrency } = useAppContext();
   const { t, i18n } = useTranslation();
   const [lang, setLang] = useState(() =>
     detectDefaultLanguage(order, i18n.language)
@@ -72,6 +72,13 @@ const Invoice = ({ order, onClose }) => {
   const locale = getLocaleForLang(lang);
 
   const customer = getOrderCustomer(order);
+
+  // The order was charged in whatever currency the backend picked for the
+  // customer's shipping country — that can differ from contextCurrency,
+  // which is just the storefront's globally selected display currency.
+  // Prefer the order's own currency; only fall back for older orders that
+  // predate the currency field.
+  const currency = order.currency || contextCurrency;
 
   const invoiceNumber = order._id
     ? order._id.slice(-8).toUpperCase()
@@ -105,24 +112,34 @@ const Invoice = ({ order, onClose }) => {
     };
   });
 
-  const subtotal = lineItems.reduce((sum, li) => sum + li.lineTotal, 0);
-  // Shipping isn't tracked as its own field on the order today; treat the
-  // gap between subtotal and the amount actually charged as shipping,
-  // never negative. If a dedicated order.shippingFee field gets added
-  // later, prefer that over this derived value.
-  const shipping = Math.max(0, Math.round((order.amount || 0) - subtotal));
   const total = order.amount || 0;
+
+  // NEW: prefer the tax amount actually charged via Stripe Tax at
+  // checkout (order.taxAmount), stored explicitly on the order instead of
+  // re-derived here. This used to be computed as `amount - subtotal` and
+  // mislabeled "Shipping" — there's no shipping fee anywhere in this
+  // flow, so that gap was always VAT. Falls back to the old derived
+  // calculation (now correctly labeled as an estimate) for orders placed
+  // before the taxAmount field existed.
+  const hasStoredTax = typeof order.taxAmount === "number";
+  const rawLineSubtotal = lineItems.reduce((sum, li) => sum + li.lineTotal, 0);
+  const taxAmount = hasStoredTax
+    ? order.taxAmount
+    : Math.max(0, Math.round((total - rawLineSubtotal) * 100) / 100);
+  const subtotal = hasStoredTax ? total - taxAmount : rawLineSubtotal;
+
   // Line-item prices reflect the CURRENT catalog price, not a snapshot
   // taken at purchase time (the order schema doesn't store one), so an
-  // older order can legitimately show a subtotal that no longer matches
-  // the amount actually charged if prices changed since.
-  const pricesMayHaveChanged = Math.round(subtotal) !== Math.round(total - shipping);
+  // older order can legitimately show line items that no longer sum to
+  // the stored subtotal if prices changed since checkout.
+  const pricesMayHaveChanged =
+    Math.round(rawLineSubtotal * 100) !== Math.round(subtotal * 100);
 
   // Locale-aware thousands/decimal separators (e.g. "1 234" in sv-SE vs
   // "1,234" in en-US), with the existing `currency` symbol kept as-is
   // rather than switched per language — swap in Intl's `style: "currency"`
   // instead if you want the symbol/code to change per language too.
-const fmt = (n) => formatCurrency(Number(n || 0), currency);
+  const fmt = (n) => formatCurrency(Number(n || 0), currency);
 
   const isPending = !order.isPaid;
 
@@ -400,8 +417,12 @@ const fmt = (n) => formatCurrency(Number(n || 0), currency);
                 <span>{fmt(subtotal)}</span>
               </div>
               <div className="flex justify-between text-sm text-gray-600">
-                <span>{tt("shipping", { defaultValue: "Shipping" })}</span>
-                <span>{fmt(shipping)}</span>
+                <span>
+                  {hasStoredTax
+                    ? tt("vat", { defaultValue: "VAT" })
+                    : tt("vatEstimated", { defaultValue: "VAT (est.)" })}
+                </span>
+                <span>{fmt(taxAmount)}</span>
               </div>
               <div
                 className="flex justify-between text-base font-bold pt-2 border-t-2"

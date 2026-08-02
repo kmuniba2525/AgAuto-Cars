@@ -9,7 +9,6 @@ body,
     padding: 0;
     overflow-x: hidden;
     width: 100%;
-    text-accent: #E10600;
 }
 
 /* Default font */
@@ -25,12 +24,19 @@ body,
 }
 
 @theme {
-    --color-primary: #111111;
-    --color-primary-dull: #1C1F26;
+    /* Navy — primary brand color */
+    --color-primary: #0A1A3D;
+    --color-primary-dull: #13224F;
 
-    /* Automotive Red */
-    --color-accent: #E10600;
-    --color-accent-dull: #C50500;
+    /* Logo Yellow (matches PAG Auto Systems logo exactly) */
+    --color-accent: #FFE200;
+    --color-accent-light: #FFEB4D;
+    --color-accent-dull: #E0C700;
+    --color-accent-dark: #C7B100;
+
+    /* Royal Blue */
+    --color-secondary: #1E3FCC;
+    --color-secondary-dull: #1A38B8;
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -61,7 +67,7 @@ body,
 }
 
 .swiper-pagination-bullet-active {
-    background: #E10600 !important;
+    background: #F5B800 !important;
     opacity: 1;
 }
 
@@ -144,11 +150,14 @@ body,
 }
 /* Theme Colors
 
-Primary Red: #E10600
-Dark Red: #C50500
+Primary Navy: #0A1A3D
+Dark Navy: #13224F
 
-Dark Black: #111111
-Secondary Black: #1C1F26
+Accent Gold: #F5B800
+Dark Gold: #D9A300
+
+Secondary Royal Blue: #1E3FCC
+Dark Royal Blue: #1A38B8
 
 Light Gray: #E5E7EB
 White: #FFFFFF

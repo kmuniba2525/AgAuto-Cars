@@ -18,7 +18,7 @@ const MainBanner = () => {
       title: (
         <>
           {t('banner.slide1_title1')} <br />
-          {t('banner.slide1_title2')} <span className="text-[#E10600]">{t('banner.slide1_highlight')}</span>
+          {t('banner.slide1_title2')} <span className="text-accent">{t('banner.slide1_highlight')}</span>
         </>
       ),
       subtitle: t('banner.slide1_subtitle'),
@@ -71,10 +71,10 @@ const MainBanner = () => {
           <SwiperSlide key={index}>
             <div className="relative w-full h-full">
               <img src={slide.image} alt="" className="absolute inset-0 w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/65 to-black/40" />
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/65 to-primary/40" />
               <div className="absolute inset-0 flex items-center justify-center text-center px-4 md:px-6">
                 <div className="max-w-3xl">
-                  <span className="inline-block px-3 py-1 md:px-5 md:py-2 rounded-full bg-[#E10600]/20 border border-[#E10600]/40 text-[#E10600] text-xs md:text-sm font-medium mb-3 md:mb-6 backdrop-blur-sm">
+                  <span className="inline-block px-3 py-1 md:px-5 md:py-2 rounded-full bg-accent/20 border border-accent/40 text-accent text-xs md:text-sm font-medium mb-3 md:mb-6 backdrop-blur-sm">
                     {slide.tagline}
                   </span>
                   <h1 className="text-white font-bold text-2xl sm:text-3xl md:text-5xl leading-tight tracking-tight">
@@ -85,7 +85,7 @@ const MainBanner = () => {
                   </p>
                   <div className="flex flex-row justify-center gap-2 md:gap-4 mt-5 md:mt-10">
                     <Link to={slide.primaryLink}
-                      className="px-4 py-2 md:px-8 md:py-4 rounded-lg bg-[#E10600] text-white text-sm md:text-base font-semibold hover:bg-[#C50500] hover:scale-105 transition duration-300 shadow-lg shadow-red-900/30">
+                      className="px-4 py-2 md:px-8 md:py-4 rounded-lg bg-accent text-primary text-sm md:text-base font-semibold hover:bg-accent-dull hover:scale-105 transition duration-300 shadow-lg shadow-accent/30">
                       {slide.primaryText}
                     </Link>
                     <Link to={slide.secondaryLink}

@@ -1,18 +1,23 @@
 import { useState } from 'react';
 import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
-export default function CheckoutForm({ amount }) {
+export default function CheckoutForm({ amount, currency = 'eur' }) {
   const stripe = useStripe();
   const elements = useElements();
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const formattedAmount = new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency: currency.toUpperCase(),
+  }).format(amount);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!stripe || !elements) return;
 
     setLoading(true);
-// console.log("return_url:", `${import.meta.env.VITE_APP_URL}/payment-success`);
+
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
@@ -37,7 +42,7 @@ export default function CheckoutForm({ amount }) {
         disabled={!stripe || loading}
         className="w-full bg-[#E8442C] hover:bg-[#d23b25] disabled:opacity-60 text-white rounded-lg py-2.5 text-sm font-medium mt-4 transition-colors"
       >
-        {loading ? 'Processing…' : `Pay €${amount.toFixed(2)}`}
+        {loading ? 'Processing…' : `Pay ${formattedAmount}`}
       </button>
 
       {message && (

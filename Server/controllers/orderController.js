@@ -2,13 +2,13 @@ import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import User from "../models/User.js";
 import Notification from "../models/Notification.js";
-import Address from "../models/Address.js"; // ✅ NEW: needed to look up saved address for Klarna shipping info
+import Address from "../models/Address.js"; // needed to look up saved address for tax/shipping info
 import { errorResponse, successResponse } from "../utils/response.js";
-import { toCountryCode } from "../utils/countryCodes.js"; // ✅ NEW: normalizes country name/casing to ISO alpha-2
-import { getCurrencyForCountry } from "../utils/klarnaCurrency.js"; // ✅ NEW: Klarna requires currency to match country
+import { toCountryCode } from "../utils/countryCodes.js"; // normalizes country name/casing to ISO alpha-2
+import { getCurrencyForCountry } from "../utils/klarnaCurrency.js"; // currency should match customer's country
 import Stripe from "stripe";
 
-// ✅ NEW: shared helper — validates guest info/address, since guests
+// shared helper — validates guest info/address, since guests
 // don't have a saved Address document to reference by id.
 const buildGuestFields = (guestInfo, guestAddress) => {
   if (
@@ -26,7 +26,7 @@ const buildGuestFields = (guestInfo, guestAddress) => {
   return { guestInfo, guestAddress };
 };
 
-// ✅ only accept language codes the app actually offers at checkout —
+// only accept language codes the app actually offers at checkout —
 // anything else (missing field, garbage from a stale client, etc.) silently
 // falls back to "en" rather than saving invalid data on the order.
 // "pt" is commented out for now — Portuguese support paused. Note: the
@@ -44,18 +44,110 @@ const SUPPORTED_ORDER_LANGUAGES = [
 const resolveOrderLanguage = (language) =>
   SUPPORTED_ORDER_LANGUAGES.includes(language) ? language : "en";
 
+// NEW: shared helper — resolves the customer's shipping address (from a
+// saved Address doc for logged-in users, or raw guestAddress for guests)
+// into the shape Stripe expects, plus picks a currency for the order based
+// on the customer's country. Used by both COD and the PaymentIntent flow so
+// tax/currency logic stays identical across payment methods.
+const resolveShippingAndCurrency = async ({ userId, address, guestInfo, guestAddress }) => {
+  let shippingAddress = null;
+  let rawCountry = null;
+
+  if (userId) {
+    const addr = await Address.findById(address);
+    if (addr) {
+      rawCountry = addr.country;
+      shippingAddress = {
+        name: addr.name || "Customer",
+        address: {
+          line1: addr.street,
+          city: addr.city,
+          state: addr.state,
+          postal_code: addr.zipcode,
+          country: toCountryCode(addr.country),
+        },
+      };
+    }
+  } else {
+    rawCountry = guestAddress.country;
+    shippingAddress = {
+      name: guestInfo.name,
+      address: {
+        line1: guestAddress.street,
+        city: guestAddress.city,
+        state: guestAddress.state,
+        postal_code: guestAddress.zipcode,
+        country: toCountryCode(guestAddress.country),
+      },
+    };
+  }
+
+  let currency = "eur";
+  if (rawCountry) {
+    const isoCountry = toCountryCode(rawCountry);
+    try {
+      currency = getCurrencyForCountry(isoCountry);
+    } catch (err) {
+      currency = "eur";
+    }
+  }
+
+  return { shippingAddress, currency };
+};
+
+// NEW: shared helper — runs a Stripe Tax calculation for a set of order
+// items against a resolved shipping address. Returns 0 tax (and no
+// calculation id) if we don't have a usable address, so callers can still
+// place an order rather than hard-failing on a missing/bad address.
+const calculateOrderTax = async (stripeInstance, { items, productMap, currency, shippingAddress }) => {
+  const taxLineItems = [];
+  let subtotal = 0;
+
+  for (const item of items) {
+    const product = productMap[item.product];
+    if (!product) continue;
+
+    const lineTotal = product.offerPrice * item.quantity;
+    subtotal += lineTotal;
+
+    taxLineItems.push({
+      amount: Math.round(lineTotal * 100),
+      reference: product._id.toString(),
+      tax_code: "txcd_99999999", // general tangible goods
+    });
+  }
+
+  if (!shippingAddress?.address?.country || taxLineItems.length === 0) {
+    return { subtotal, taxAmount: 0, taxCalculationId: null };
+  }
+
+  const calculation = await stripeInstance.tax.calculations.create({
+    currency,
+    line_items: taxLineItems,
+    customer_details: {
+      address: shippingAddress.address,
+      address_source: "shipping",
+    },
+  });
+
+  return {
+    subtotal,
+    taxAmount: calculation.tax_amount_exclusive / 100,
+    taxCalculationId: calculation.id,
+  };
+};
+
 // Place Order COD
 export const placeOrderCOD = async (req, res) => {
   try {
-    const { items, address, guestInfo, guestAddress, language } = req.body; // ✅ CHANGED: + language
-    const userId = req.user?.id || null; // ✅ CHANGED: null for guests
+    const { items, address, guestInfo, guestAddress, language } = req.body;
+    const userId = req.user?.id || null;
 
     // VALIDATION
     if (!items || items.length === 0) {
       return errorResponse(res, 400, "Invalid Data");
     }
 
-    // ✅ NEW: branch validation based on logged-in vs guest
     let guestFields = null;
     if (userId) {
       if (!address) return errorResponse(res, 400, "Invalid Data");
@@ -72,27 +164,18 @@ export const placeOrderCOD = async (req, res) => {
 
     // GET PRODUCTS
     const productIds = items.map((item) => item.product);
+    const products = await Product.find({ _id: { $in: productIds } });
 
-    const products = await Product.find({
-      _id: { $in: productIds },
-    });
-
-    // PRODUCT MAP
     const productMap = {};
-
     products.forEach((product) => {
       productMap[product._id.toString()] = product;
     });
 
-    // CALCULATE TOTAL
-    let amount = 0;
-
+    // STOCK CHECK (kept separate from tax calc so we fail fast on stock
+    // before ever calling out to Stripe)
     for (const item of items) {
       const product = productMap[item.product];
-
       if (!product) continue;
-
-      // STOCK CHECK
       if (product.stock < item.quantity) {
         return errorResponse(
           res,
@@ -100,38 +183,61 @@ export const placeOrderCOD = async (req, res) => {
           `${product.name} has insufficient stock`
         );
       }
-
-      amount += product.offerPrice * item.quantity;
     }
 
-    // TAX
-    const tax = amount * 0.02;
-    amount += Math.floor(tax);
+    // TAX — real Stripe Tax calculation instead of a hardcoded 2%
+    const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+    const { shippingAddress, currency } = await resolveShippingAndCurrency({
+      userId,
+      address,
+      guestInfo,
+      guestAddress,
+    });
+
+    const { subtotal, taxAmount, taxCalculationId } = await calculateOrderTax(
+      stripeInstance,
+      { items, productMap, currency, shippingAddress }
+    );
+
+    const amount = subtotal + taxAmount;
 
     // CREATE ORDER
     const order = await Order.create({
       userId,
       items,
       amount,
-      address: userId ? address : undefined, // ✅ CHANGED
-      isGuestOrder: !userId, // ✅ NEW
-      ...(guestFields || {}), // ✅ NEW: spreads guestInfo + guestAddress
+      currency,
+      taxAmount,
+      address: userId ? address : undefined,
+      isGuestOrder: !userId,
+      ...(guestFields || {}),
       paymentType: "COD",
       isPaid: true,
-      language: resolveOrderLanguage(language), // ✅ NEW: invoice language
+      language: resolveOrderLanguage(language),
     });
+
+    // record the tax transaction for reporting/filing now that the order
+    // is confirmed paid (COD is considered paid at handoff, same as before)
+    if (taxCalculationId) {
+      try {
+        await stripeInstance.tax.transactions.createFromCalculation({
+          calculation: taxCalculationId,
+          reference: order._id.toString(),
+        });
+      } catch (err) {
+        console.log("Tax transaction error:", err.message);
+      }
+    }
 
     // REDUCE STOCK
     for (const item of items) {
       const product = productMap[item.product];
-
       if (!product) continue;
 
       product.stock -= item.quantity;
-
       await product.save();
 
-      // LOW STOCK ALERT
       if (product.stock === 5) {
         await Notification.create({
           title: "Low Stock Alert",
@@ -140,7 +246,6 @@ export const placeOrderCOD = async (req, res) => {
         });
       }
 
-      // OUT OF STOCK ALERT
       if (product.stock === 0) {
         await Notification.create({
           title: "Out Of Stock",
@@ -154,27 +259,21 @@ export const placeOrderCOD = async (req, res) => {
     const itemSummary = items
       .map((item) => {
         const product = productMap[item.product];
-
         return `${item.quantity}x ${product.name}`;
       })
       .join(", ");
 
-    // CREATE ORDER NOTIFICATION
     await Notification.create({
       title: "New Order Received",
       message: itemSummary,
       type: "order",
     });
 
-    // CLEAR CART — ✅ CHANGED: only for logged-in users, guests have no cart doc
+    // CLEAR CART — only for logged-in users, guests have no cart doc
     if (userId) {
-      await User.findByIdAndUpdate(userId, {
-        cartItems: {},
-      });
+      await User.findByIdAndUpdate(userId, { cartItems: {} });
     }
 
-    // ✅ CHANGED: return orderId too — guests have no "My Orders" page to
-    // fall back on, so the frontend needs the ID to show a confirmation.
     return res.json({
       success: true,
       message: "Order Placed Successfully",
@@ -182,192 +281,11 @@ export const placeOrderCOD = async (req, res) => {
     });
   } catch (error) {
     console.log(error.message);
-
     return errorResponse(res, 500, error.message);
   }
 };
 
-// Place Order STRIPE
-export const placeOrderStripe = async (req, res) => {
-  try {
-    const { items, address, guestInfo, guestAddress, language } = req.body; // ✅ CHANGED: + language
-
-    const userId = req.user?.id || null; // ✅ CHANGED: null for guests
-
-    const { origin } = req.headers;
-
-    // VALIDATION
-    if (!items || items.length === 0) {
-      return errorResponse(res, 400, "Invalid Data");
-    }
-
-    // ✅ NEW: branch validation based on logged-in vs guest
-    let guestFields = null;
-    if (userId) {
-      if (!address) return errorResponse(res, 400, "Invalid Data");
-    } else {
-      guestFields = buildGuestFields(guestInfo, guestAddress);
-      if (!guestFields) {
-        return errorResponse(
-          res,
-          400,
-          "Name, email, phone and full address are required for guest checkout"
-        );
-      }
-    }
-
-    // GET PRODUCTS
-    const productIds = items.map((item) => item.product);
-
-    const products = await Product.find({
-      _id: { $in: productIds },
-    });
-
-    // PRODUCT MAP
-    const productMap = {};
-
-    products.forEach((product) => {
-      productMap[product._id.toString()] = product;
-    });
-
-    let amount = 0;
-    let productData = [];
-
-    // CALCULATE TOTAL
-    for (const item of items) {
-      const product = productMap[item.product];
-
-      if (!product) continue;
-
-      // STOCK CHECK
-      if (product.stock < item.quantity) {
-        return errorResponse(
-          res,
-          400,
-          `${product.name} has insufficient stock`
-        );
-      }
-
-      amount += product.offerPrice * item.quantity;
-
-      productData.push({
-        name: product.name,
-        price: product.offerPrice,
-        quantity: item.quantity,
-      });
-    }
-
-    // TAX
-    const tax = amount * 0.02;
-    amount += Math.floor(tax);
-
-    // CREATE ORDER
-    const order = await Order.create({
-      userId,
-      items,
-      amount,
-      address: userId ? address : undefined, // ✅ CHANGED
-      isGuestOrder: !userId, // ✅ NEW
-      ...(guestFields || {}), // ✅ NEW
-      paymentType: "Online",
-      language: resolveOrderLanguage(language), // ✅ NEW: invoice language
-    });
-
-    // REDUCE STOCK
-    for (const item of items) {
-      const product = productMap[item.product];
-
-      if (!product) continue;
-
-      product.stock -= item.quantity;
-
-      await product.save();
-
-      // LOW STOCK ALERT
-      if (product.stock === 5) {
-        await Notification.create({
-          title: "Low Stock Alert",
-          message: `Only ${product.stock} ${product.name} left in inventory`,
-          type: "stock",
-        });
-      }
-
-      // OUT OF STOCK ALERT
-      if (product.stock === 0) {
-        await Notification.create({
-          title: "Out Of Stock",
-          message: `${product.name} is now out of stock`,
-          type: "stock",
-        });
-      }
-    }
-
-    // ORDER SUMMARY
-    const itemSummary = items
-      .map((item) => {
-        const product = productMap[item.product];
-
-        return `${item.quantity}x ${product.name}`;
-      })
-      .join(", ");
-
-    // ORDER NOTIFICATION
-    await Notification.create({
-      title: "New Online Order",
-      message: itemSummary,
-      type: "order",
-    });
-
-    // STRIPE
-    const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-    const line_items = productData.map((item) => {
-      const finalPrice = item.price * 1.02;
-
-      return {
-        price_data: {
-          currency: "pkr",
-
-          product_data: {
-            name: item.name,
-          },
-
-          unit_amount: Math.floor(finalPrice * 100),
-        },
-
-        quantity: item.quantity,
-      };
-    });
-
-    const session = await stripeInstance.checkout.sessions.create({
-      line_items,
-
-      mode: "payment",
-
-      success_url: `${origin}/loader?next=my-orders`,
-
-      cancel_url: `${origin}/cart`,
-
-      // ✅ CHANGED: Stripe metadata values must be strings — "guest" fallback
-      // instead of null so the webhook can safely check for it later.
-      customer_email: userId ? undefined : guestInfo.email,
-      metadata: {
-        orderId: order._id.toString(),
-        userId: userId || "guest",
-      },
-    });
-
-    return res.json({
-      success: true,
-      url: session.url,
-    });
-  } catch (error) {
-    console.log(error.message);
-
-    return errorResponse(res, 500, error.message);
-  }
-};
-
+// STRIPE WEBHOOK
 // STRIPE WEBHOOK
 export const stripeWebhooks = async (request, response) => {
   const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -386,36 +304,41 @@ export const stripeWebhooks = async (request, response) => {
   }
 
   switch (event.type) {
-    case "checkout.session.completed": {
-      const session = event.data.object;
-      const { orderId, userId } = session.metadata;
-      await Order.findByIdAndUpdate(orderId, { isPaid: true });
-      // ✅ CHANGED: only clear cart for real logged-in users
-      if (userId && userId !== "guest") {
-        await User.findByIdAndUpdate(userId, { cartItems: {} });
-      }
-      break;
-    }
-    case "checkout.session.async_payment_failed": {
-      const session = event.data.object;
-      const { orderId } = session.metadata;
-      await Order.findByIdAndDelete(orderId);
-      break;
-    }
     case "payment_intent.succeeded": {
       const paymentIntent = event.data.object;
-      const { orderId, userId } = paymentIntent.metadata;
+      const { orderId, userId, taxCalculationId } = paymentIntent.metadata;
+      console.log("Webhook received: payment_intent.succeeded", { orderId, taxCalculationId });
+
       if (orderId) {
         await Order.findByIdAndUpdate(orderId, { isPaid: true });
-        // ✅ CHANGED: only clear cart for real logged-in users
+        console.log("Order marked as paid:", orderId);
+
+        if (taxCalculationId) {
+          try {
+            console.log("Attempting tax transaction for calculation:", taxCalculationId);
+            const taxTx = await stripeInstance.tax.transactions.createFromCalculation({
+              calculation: taxCalculationId,
+              reference: orderId,
+            });
+            console.log("Tax transaction created successfully:", taxTx.id);
+          } catch (err) {
+            console.log("Tax transaction error:", err.message, err);
+          }
+        } else {
+          console.log("No taxCalculationId in metadata — skipping tax transaction");
+        }
+
+        // only clear cart for real logged-in users
         if (userId && userId !== "guest") {
           await User.findByIdAndUpdate(userId, { cartItems: {} });
         }
+
         const order = await Order.findById(orderId);
         const productIds = order.items.map((item) => item.product);
         const products = await Product.find({ _id: { $in: productIds } });
         const productMap = {};
         products.forEach((p) => (productMap[p._id.toString()] = p));
+
         for (const item of order.items) {
           const product = productMap[item.product.toString()];
           if (!product) continue;
@@ -436,12 +359,14 @@ export const stripeWebhooks = async (request, response) => {
             });
           }
         }
+
         const itemSummary = order.items
           .map((item) => {
             const product = productMap[item.product.toString()];
             return `${item.quantity}x ${product?.name ?? "item"}`;
           })
           .join(", ");
+
         await Notification.create({
           title: "New Online Order",
           message: itemSummary,
@@ -470,9 +395,7 @@ export const getUserOrder = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const orders = await Order.find({
-      userId,
-    })
+    const orders = await Order.find({ userId })
       .populate("items.product address")
       .sort({ createdAt: -1 });
 
@@ -483,7 +406,7 @@ export const getUserOrder = async (req, res) => {
   }
 };
 
-//details of every single order
+// details of every single order
 export const getSingleOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
@@ -491,32 +414,20 @@ export const getSingleOrder = async (req, res) => {
       .populate("address");
 
     if (!order) {
-      return res.json({
-        success: false,
-        message: "Order not found",
-      });
+      return res.json({ success: false, message: "Order not found" });
     }
 
-    // ✅ NEW: if this order belongs to a registered user, only that same
+    // if this order belongs to a registered user, only that same
     // logged-in user can view it. Guest orders have no userId, so anyone
     // with the (unguessable) order ID can view them — same pattern most
     // checkout confirmation pages use.
     if (order.userId && (!req.user || req.user.id !== order.userId.toString())) {
-      return res.json({
-        success: false,
-        message: "Order not found",
-      });
+      return res.json({ success: false, message: "Order not found" });
     }
 
-    res.json({
-      success: true,
-      order,
-    });
+    res.json({ success: true, order });
   } catch (error) {
-    res.json({
-      success: false,
-      message: error.message,
-    });
+    res.json({ success: false, message: error.message });
   }
 };
 
@@ -538,20 +449,10 @@ export const getAllOrders = async (req, res) => {
 export const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
-
-    await Order.findByIdAndUpdate(req.params.id, {
-      status,
-    });
-
-    res.json({
-      success: true,
-      message: "Status updated",
-    });
+    await Order.findByIdAndUpdate(req.params.id, { status });
+    res.json({ success: true, message: "Status updated" });
   } catch (error) {
-    res.json({
-      success: false,
-      message: error.message,
-    });
+    res.json({ success: false, message: error.message });
   }
 };
 
@@ -559,40 +460,26 @@ export const updateOrderStatus = async (req, res) => {
 export const getAnalytics = async (req, res) => {
   try {
     const { range } = req.query;
-
     let filter = {};
-
     const now = new Date();
 
     if (range === "today") {
       const start = new Date();
       start.setHours(0, 0, 0, 0);
-
       const end = new Date();
       end.setHours(23, 59, 59, 999);
-
-      filter.createdAt = {
-        $gte: start,
-        $lte: end,
-      };
+      filter.createdAt = { $gte: start, $lte: end };
     } else if (range === "week") {
       const start = new Date();
       start.setDate(now.getDate() - 7);
-
-      filter.createdAt = {
-        $gte: start,
-      };
+      filter.createdAt = { $gte: start };
     } else if (range === "month") {
       const start = new Date();
       start.setMonth(now.getMonth() - 1);
-
-      filter.createdAt = {
-        $gte: start,
-      };
+      filter.createdAt = { $gte: start };
     }
 
     const orders = await Order.find(filter).sort({ createdAt: -1 });
-
     const totalRevenue = orders.reduce((sum, order) => sum + order.amount, 0);
 
     res.json({
@@ -603,11 +490,7 @@ export const getAnalytics = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-
-    res.json({
-      success: false,
-      message: error.message,
-    });
+    res.json({ success: false, message: error.message });
   }
 };
 
@@ -642,7 +525,6 @@ const getDateRange = (range, customStart, customEnd) => {
   } else if (range === "all") {
     start = new Date(2000, 0, 1);
   } else {
-    // default: "month"
     start = new Date();
     start.setMonth(now.getMonth() - 1);
   }
@@ -655,7 +537,6 @@ export const getAdvancedAnalytics = async (req, res) => {
     const { range = "month", startDate, endDate } = req.query;
     const { start, end } = getDateRange(range, startDate, endDate);
 
-    // Comparable previous period (same length) so we can show growth %.
     const durationMs = Math.max(end.getTime() - start.getTime(), 1);
     const prevEnd = new Date(start.getTime() - 1);
     const prevStart = new Date(prevEnd.getTime() - durationMs);
@@ -663,8 +544,6 @@ export const getAdvancedAnalytics = async (req, res) => {
     const dateMatch = { createdAt: { $gte: start, $lte: end } };
     const prevDateMatch = { createdAt: { $gte: prevStart, $lte: prevEnd } };
 
-    // Daily buckets for short windows, monthly buckets once the range
-    // gets long enough that a daily chart would just be noise.
     const dayCount = durationMs / (1000 * 60 * 60 * 24);
     const trendFormat = dayCount > 90 ? "%Y-%m" : "%Y-%m-%d";
 
@@ -737,9 +616,6 @@ export const getAdvancedAnalytics = async (req, res) => {
           },
         },
       ]),
-      // Top products by units sold. Revenue is estimated using each
-      // product's CURRENT offerPrice, since line items only store
-      // quantity, not a price snapshot at purchase time.
       Order.aggregate([
         { $match: dateMatch },
         { $unwind: "$items" },
@@ -844,8 +720,6 @@ export const getAdvancedAnalytics = async (req, res) => {
       ]),
     ]);
 
-    // New vs returning customers: "new" = their first-ever order (across
-    // all time, not just this window) falls inside this window.
     const distinctCustomers = await Order.aggregate([
       { $match: { ...dateMatch, userId: { $ne: null } } },
       { $group: { _id: "$userId" } },
@@ -963,14 +837,13 @@ export const getAdvancedAnalytics = async (req, res) => {
 // Place Order STRIPE — Payment Intent version (for custom Payment Element UI)
 export const placeOrderStripeIntent = async (req, res) => {
   try {
-    const { items, address, guestInfo, guestAddress, language } = req.body; // ✅ CHANGED: + language
-    const userId = req.user?.id || null; // ✅ CHANGED: null for guests
+    const { items, address, guestInfo, guestAddress, language } = req.body;
+    const userId = req.user?.id || null;
 
     if (!items || items.length === 0) {
       return errorResponse(res, 400, "Invalid Data");
     }
 
-    // ✅ NEW: branch validation based on logged-in vs guest
     let guestFields = null;
     if (userId) {
       if (!address) return errorResponse(res, 400, "Invalid Data");
@@ -987,108 +860,63 @@ export const placeOrderStripeIntent = async (req, res) => {
 
     const productIds = items.map((item) => item.product);
     const products = await Product.find({ _id: { $in: productIds } });
-
     const productMap = {};
     products.forEach((product) => {
       productMap[product._id.toString()] = product;
     });
 
-    let amount = 0;
-
+    // STOCK CHECK (before we call out to Stripe for tax/payment)
     for (const item of items) {
       const product = productMap[item.product];
       if (!product) continue;
-
       if (product.stock < item.quantity) {
-        return errorResponse(
-          res,
-          400,
-          `${product.name} has insufficient stock`
-        );
+        return errorResponse(res, 400, `${product.name} has insufficient stock`);
       }
-
-      amount += product.offerPrice * item.quantity;
     }
 
-    const tax = amount * 0.02;
-    amount += Math.floor(tax);
+    const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+    // resolve shipping address + currency BEFORE calculating tax,
+    // since Stripe Tax needs to know where the customer is to pick the right rate.
+    const { shippingAddress, currency } = await resolveShippingAndCurrency({
+      userId,
+      address,
+      guestInfo,
+      guestAddress,
+    });
+
+    const { subtotal, taxAmount, taxCalculationId } = await calculateOrderTax(
+      stripeInstance,
+      { items, productMap, currency, shippingAddress }
+    );
+
+    const amount = subtotal + taxAmount;
+
+    // CREATE ORDER
     const order = await Order.create({
       userId,
       items,
       amount,
-      address: userId ? address : undefined, // ✅ CHANGED
-      isGuestOrder: !userId, // ✅ NEW
-      ...(guestFields || {}), // ✅ NEW
+      currency,
+      taxAmount,
+      address: userId ? address : undefined,
+      isGuestOrder: !userId,
+      ...(guestFields || {}),
       paymentType: "Online",
       isPaid: false,
-      language: resolveOrderLanguage(language), // ✅ NEW: invoice language
+      language: resolveOrderLanguage(language),
     });
-
-    const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-    // ✅ NEW: Klarna (and other dynamic payment methods) determine customer
-    // eligibility primarily from `shipping.address.country` on the
-    // PaymentIntent. Without it, Stripe can't confirm the customer's
-    // country/currency qualify, so it silently hides Klarna from the
-    // Payment Element even though it's enabled in the Dashboard.
-    let shippingAddress = null;
-    let rawCountry = null; // ✅ NEW: raw country value as stored (name, mixed case, etc.)
-
-    if (userId) {
-      const addr = await Address.findById(address);
-      if (addr) {
-        rawCountry = addr.country;
-        shippingAddress = {
-          name: addr.name || "Customer",
-          address: {
-            line1: addr.street,
-            city: addr.city,
-            state: addr.state,
-            postal_code: addr.zipcode,
-            country: toCountryCode(addr.country), // ✅ CHANGED: normalize to ISO alpha-2
-          },
-        };
-      }
-    } else {
-      rawCountry = guestAddress.country;
-      shippingAddress = {
-        name: guestInfo.name,
-        address: {
-          line1: guestAddress.street,
-          city: guestAddress.city,
-          state: guestAddress.state,
-          postal_code: guestAddress.zipcode,
-          country: toCountryCode(guestAddress.country), // ✅ CHANGED: normalize to ISO alpha-2
-        },
-      };
-    }
-
-    // ✅ NEW: Klarna requires currency to match the customer's country
-    // (e.g. Sweden -> SEK, not EUR). Falls back to "eur" if the country
-    // isn't in our Klarna currency map, so non-Nordic/non-Klarna countries
-    // keep working exactly as before.
-    let currency = "eur";
-    if (rawCountry) {
-      const isoCountry = toCountryCode(rawCountry);
-      try {
-        currency = getCurrencyForCountry(isoCountry);
-      } catch (err) {
-        // Country not in the Klarna currency map — keep default "eur".
-        // This is expected for most non-Nordic countries and is not an error.
-        currency = "eur";
-      }
-    }
 
     const paymentIntent = await stripeInstance.paymentIntents.create({
       amount: Math.round(amount * 100),
-      currency, // ✅ CHANGED: dynamic based on shipping country instead of hardcoded "eur"
+      currency,
       automatic_payment_methods: { enabled: true },
-      ...(shippingAddress && { shipping: shippingAddress }), // ✅ NEW
-      receipt_email: userId ? undefined : guestInfo.email, // ✅ NEW
+      ...(shippingAddress && { shipping: shippingAddress }),
+      receipt_email: userId ? undefined : guestInfo.email,
       metadata: {
         orderId: order._id.toString(),
-        userId: userId || "guest", // ✅ CHANGED
+        userId: userId || "guest",
+        taxCalculationId: taxCalculationId || "",
       },
     });
 
@@ -1097,6 +925,7 @@ export const placeOrderStripeIntent = async (req, res) => {
       clientSecret: paymentIntent.client_secret,
       orderId: order._id,
       amount,
+      currency, // frontend needs this to display/format the correct currency
     });
   } catch (error) {
     console.log(error.message);

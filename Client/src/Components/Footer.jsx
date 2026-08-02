@@ -44,7 +44,7 @@ const Footer = () => {
 
                     {/* Logo & Description */}
                     <div className="max-w-md">
-                        <img src={assets.Logo} alt="Autodex" className="w-44" />
+                        <img src={assets.Logo} alt="Autodex" className="w-64 md:w-72 h-auto object-contain" />
                         <p className="mt-6 text-gray-400 leading-7 text-sm">
                             {t('footer.description')}
                         </p>
