@@ -219,14 +219,16 @@ const AddProduct = () => {
   };
 
   // ✅ NEW: reusable language tab-switcher, used for both Name and Description.
+  // Scrolls horizontally instead of wrapping so 5 tabs stay on one row even
+  // on narrow phones.
   const LangTabs = ({ active, onChange, filledMap }) => (
-    <div className="flex gap-1 bg-gray-100 rounded p-1 w-fit">
+    <div className="flex gap-1 bg-gray-100 rounded p-1 w-full sm:w-fit overflow-x-auto no-scrollbar">
       {LANGUAGES.map((l) => (
         <button
           key={l.code}
           type="button"
           onClick={() => onChange(l.code)}
-          className={`px-3 py-1 text-xs font-medium rounded transition ${
+          className={`px-2.5 sm:px-3 py-1 text-xs font-medium rounded transition shrink-0 whitespace-nowrap ${
             active === l.code
               ? "bg-white shadow text-primary"
               : "text-gray-500 hover:text-gray-700"
@@ -250,7 +252,7 @@ const AddProduct = () => {
     <div className="no-scrollbar flex-1 h-[95vh] overflow-y-scroll flex flex-col justify-between">
       <form
         onSubmit={onSubmitHandler}
-        className="md:p-10 p-4 space-y-6 max-w-lg"
+        className="p-4 sm:p-6 md:p-10 space-y-6 w-full max-w-lg"
       >
         {/* IMAGE UPLOAD */}
         <div>
@@ -274,7 +276,7 @@ const AddProduct = () => {
                   />
 
                   <img
-                    className="max-w-24 cursor-pointer rounded border border-gray-300"
+                    className="w-16 h-16 sm:w-24 sm:h-24 object-cover cursor-pointer rounded border border-gray-300"
                     src={
                       files[index]
                         ? URL.createObjectURL(files[index])
@@ -289,7 +291,7 @@ const AddProduct = () => {
 
         {/* PRODUCT NAME — single field, language tabs */}
         <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <label className="text-base font-medium">Product Name</label>
             <LangTabs
               active={activeNameLang}
@@ -303,7 +305,7 @@ const AddProduct = () => {
             required={activeNameDef.required}
             value={name[activeNameLang]}
             placeholder={activeNameDef.namePlaceholder}
-            className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-400 focus:border-primary"
+            className="w-full outline-none md:py-2.5 py-2 px-3 rounded border border-gray-400 focus:border-primary text-sm sm:text-base"
             onChange={(e) => updateName(activeNameLang, e.target.value)}
           />
           {nameError && <p className="text-xs text-red-500">{nameError}</p>}
@@ -320,7 +322,7 @@ const AddProduct = () => {
           <label className="text-base font-medium">Category</label>
           <select
             value={category}
-            className="outline-none md:py-2.5 py-2 px-3 rounded border border-gray-400 focus:border-primary"
+            className="w-full outline-none md:py-2.5 py-2 px-3 rounded border border-gray-400 focus:border-primary text-sm sm:text-base"
             onChange={(e) => setCategory(e.target.value)}
           >
             <option value="">Select Category</option>
@@ -334,7 +336,7 @@ const AddProduct = () => {
 
         {/* DESCRIPTION — single editor, language tabs */}
         <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <label className="text-base font-medium">
               Product Description
             </label>
@@ -345,7 +347,7 @@ const AddProduct = () => {
             />
           </div>
 
-          <div className="border rounded">
+          <div className="border rounded overflow-hidden">
             {/* key forces CKEditor to remount with the right initial data
                 when switching languages, since it's an uncontrolled editor */}
             <CKEditor
@@ -358,7 +360,7 @@ const AddProduct = () => {
             />
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <p className="text-xs text-gray-400">
               {(() => {
                 const activeDescDef = LANGUAGES.find((l) => l.code === activeDescLang);
@@ -371,7 +373,7 @@ const AddProduct = () => {
               type="button"
               onClick={generateDescription}
               disabled={loadingAI}
-              className="text-blue-600 text-sm hover:underline whitespace-nowrap"
+              className="text-blue-600 text-sm hover:underline whitespace-nowrap self-start sm:self-auto"
             >
               {loadingAI ? "Generating..." : "✨ Generate with AI"}
             </button>
@@ -380,7 +382,7 @@ const AddProduct = () => {
 
         {/* SIZES / LITRE VARIANTS */}
         <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <label className="text-base font-medium">
               Sizes &amp; Pricing
             </label>
@@ -388,7 +390,7 @@ const AddProduct = () => {
             <button
               type="button"
               onClick={addVariantRow}
-              className="text-primary text-sm font-medium hover:underline"
+              className="text-primary text-sm font-medium hover:underline whitespace-nowrap"
             >
               + Add Size
             </button>
@@ -411,7 +413,7 @@ const AddProduct = () => {
                   </button>
                 )}
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-3 pr-6">
                   <div className="flex flex-col gap-1 col-span-2 sm:col-span-1">
                     <label className="text-xs text-gray-500 font-medium">
                       Size Label
@@ -421,14 +423,14 @@ const AddProduct = () => {
                       required
                       value={variant.label}
                       placeholder="e.g. 1L, 5L, 25L"
-                      className="outline-none py-2 px-3 rounded border border-gray-300 focus:border-primary text-sm"
+                      className="w-full outline-none py-2 px-3 rounded border border-gray-300 focus:border-primary text-sm"
                       onChange={(e) =>
                         updateVariant(index, "label", e.target.value)
                       }
                     />
                   </div>
 
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-1 col-span-2 sm:col-span-1">
                     <label className="text-xs text-gray-500 font-medium">
                       Stock Quantity
                     </label>
@@ -437,7 +439,7 @@ const AddProduct = () => {
                       min="0"
                       value={variant.stock}
                       placeholder="0"
-                      className="outline-none py-2 px-3 rounded border border-gray-300 focus:border-primary text-sm"
+                      className="w-full outline-none py-2 px-3 rounded border border-gray-300 focus:border-primary text-sm"
                       onChange={(e) =>
                         updateVariant(index, "stock", e.target.value)
                       }
@@ -454,7 +456,7 @@ const AddProduct = () => {
                       min="0"
                       value={variant.price}
                       placeholder="0"
-                      className="outline-none py-2 px-3 rounded border border-gray-300 focus:border-primary text-sm"
+                      className="w-full outline-none py-2 px-3 rounded border border-gray-300 focus:border-primary text-sm"
                       onChange={(e) =>
                         updateVariant(index, "price", e.target.value)
                       }
@@ -471,7 +473,7 @@ const AddProduct = () => {
                       min="0"
                       value={variant.offerPrice}
                       placeholder="0"
-                      className="outline-none py-2 px-3 rounded border border-gray-300 focus:border-primary text-sm"
+                      className="w-full outline-none py-2 px-3 rounded border border-gray-300 focus:border-primary text-sm"
                       onChange={(e) =>
                         updateVariant(index, "offerPrice", e.target.value)
                       }
@@ -486,7 +488,7 @@ const AddProduct = () => {
                       type="text"
                       value={variant.sku}
                       placeholder="Supplier / internal code"
-                      className="outline-none py-2 px-3 rounded border border-gray-300 focus:border-primary text-sm"
+                      className="w-full outline-none py-2 px-3 rounded border border-gray-300 focus:border-primary text-sm"
                       onChange={(e) =>
                         updateVariant(index, "sku", e.target.value)
                       }

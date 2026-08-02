@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { useAppContext } from "../../Context/AppContext";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { Search, X } from "lucide-react";
 import { getLocalizedText } from "../../utils/getLocalizedText";
 import { formatCurrency } from "../../utils/formatCurrency";
 
@@ -16,6 +17,8 @@ const ProductList = () => {
     axios,
     fetchProducts,
   } = useAppContext();
+
+  const [searchTerm, setSearchTerm] = useState("");
 
   const updateStock = async (id, stock) => {
     try {
@@ -45,17 +48,71 @@ const ProductList = () => {
   const gaugeWidth = (stock) =>
     `${Math.min(100, Math.round((stock / STOCK_CEILING) * 100))}%`;
 
+  // Search matches against the localized (English) product name and the
+  // category, so "Edit" / "Full 5L" etc. are all findable from one box.
+  const query = searchTerm.trim().toLowerCase();
+  const filteredProducts = Array.isArray(products)
+    ? products.filter((product) => {
+        if (!query) return true;
+        const displayName = getLocalizedText(product.name, "en") || "";
+        const category = product.category || "";
+        return (
+          displayName.toLowerCase().includes(query) ||
+          category.toLowerCase().includes(query)
+        );
+      })
+    : [];
+
   return (
     <div className="no-scrollbar flex-1 h-[95vh] overflow-y-scroll flex flex-col justify-between">
       <div className="w-full md:p-10 p-4">
-        <h2 className="pb-5 text-xl font-semibold text-gray-900 tracking-tight">
-          Inventory Management
-        </h2>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-5">
+          <h2 className="text-xl font-semibold text-gray-900 tracking-tight">
+            Inventory Management
+          </h2>
 
+          {/* SEARCH */}
+          <div className="relative w-full sm:w-64">
+            <Search
+              size={16}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search products..."
+              className="w-full pl-9 pr-8 py-2 text-sm rounded-lg border border-gray-300 outline-none focus:border-primary text-gray-800 placeholder:text-gray-400"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                aria-label="Clear search"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {searchTerm && (
+          <p className="text-xs text-gray-400 -mt-3 mb-4">
+            {filteredProducts.length} result{filteredProducts.length !== 1 ? "s" : ""} for "{searchTerm}"
+          </p>
+        )}
+
+        {filteredProducts.length === 0 ? (
+          <div className="bg-white rounded-xl p-8 border border-gray-200 text-center">
+            <p className="text-gray-500 text-sm">
+              {searchTerm ? "No products match your search" : "No products found"}
+            </p>
+          </div>
+        ) : (
+          <>
         {/* MOBILE: dashboard-style gauge list (below md) */}
         <div className="md:hidden -mx-4 px-4 border-t border-gray-900/10">
-          {Array.isArray(products) &&
-            products.map((product) => {
+          {filteredProducts.map((product) => {
               const displayName = getLocalizedText(product.name, "en");
               const stock = product.stock;
 
@@ -139,8 +196,7 @@ const ProductList = () => {
             </thead>
 
             <tbody className="text-sm text-gray-600">
-              {Array.isArray(products) &&
-                products.map((product) => {
+              {filteredProducts.map((product) => {
                   const displayName = getLocalizedText(product.name, "en");
 
                   return (
@@ -208,6 +264,8 @@ const ProductList = () => {
             </tbody>
           </table>
         </div>
+        </>
+        )}
       </div>
     </div>
   );

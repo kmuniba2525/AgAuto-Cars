@@ -18,6 +18,15 @@ function Orders() {
   const [orders, setOrders] = useState([]);
   const [printOrder, setPrintOrder] = useState(null);
 
+  // ================= PAGINATION (client-side) =================
+  // Orders are all fetched in one call, but we only render the first
+  // PAGE_SIZE at a time — each order card is fairly heavy (progress
+  // tracker, address block, etc.), so capping the rendered DOM keeps the
+  // page fast even with a long order history. "Show more" just reveals
+  // more of what's already in memory, no extra network request.
+  const PAGE_SIZE = 10;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
   const orderSteps = [
     "Order Placed",
     "Preparing",
@@ -69,6 +78,16 @@ function Orders() {
     fetchOrder();
   }, []);
 
+  // Reset back to the first page whenever the underlying order list
+  // changes size (e.g. a fresh fetch), so we don't end up "showing more"
+  // than actually exist after a refetch returns fewer orders.
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [orders.length]);
+
+  const visibleOrders = orders.slice(0, visibleCount);
+  const hasMore = visibleCount < orders.length;
+
   return (
     <>
     <div className="no-scrollbar flex-1 h-[95vh] overflow-y-auto bg-[#f8fafc] print:hidden">
@@ -88,7 +107,8 @@ function Orders() {
             <p className="text-gray-500 text-base sm:text-lg">No orders found</p>
           </div>
         ) : (
-          orders.map((order, index) => {
+          <>
+          {visibleOrders.map((order, index) => {
             const currentStep = orderSteps.indexOf(order?.status);
             const customer = getOrderCustomer(order);
 
@@ -270,7 +290,23 @@ function Orders() {
 
               </div>
             );
-          })
+          })}
+
+          {/* SHOW MORE */}
+          {hasMore && (
+            <div className="flex flex-col items-center gap-2 pt-2 pb-6">
+              <p className="text-xs sm:text-sm text-gray-400">
+                Showing {visibleOrders.length} of {orders.length} orders
+              </p>
+              <button
+                onClick={() => setVisibleCount((prev) => prev + PAGE_SIZE)}
+                className="px-6 py-2.5 rounded-lg border border-primary text-primary text-sm font-medium hover:bg-primary/5 transition-colors"
+              >
+                Show more
+              </button>
+            </div>
+          )}
+          </>
         )}
       </div>
     </div>

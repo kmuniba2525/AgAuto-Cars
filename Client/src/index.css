@@ -37,6 +37,89 @@ body,
     /* Royal Blue */
     --color-secondary: #1E3FCC;
     --color-secondary-dull: #1A38B8;
+
+    /* Cream/beige — used for the page backdrop and as the glass tint.
+       Kept in @theme so it's also usable directly as a Tailwind class
+       (bg-glass-tint, border-glass-tint, etc.) if needed. */
+    --color-glass-tint: #FAF4E8;
+}
+
+/* ================= PAGE BACKGROUND ================= */
+/* A soft, light cream/beige wash behind everything, instead of flat
+   white. This is what the glass panels below actually blur/show
+   through — a glass effect on top of pure white looks identical to
+   solid white, since there's no color or texture underneath to reveal. */
+body {
+    background: linear-gradient(180deg, #FDFBF7 0%, #F8F1E3 100%);
+    background-attachment: fixed;
+}
+
+/* ================= GLASS SURFACES ================= */
+/* Drop this class on any element that currently uses bg-white (cards,
+   panels, table wrappers, dropdowns, modals) to give it a frosted,
+   cream-tinted glass look instead of solid white. Works best when
+   the element sits over the body background above, or over an image/
+   colored section — the blur needs something behind it to actually show.
+
+   Usage: replace `bg-white` with `glass` in a component's className.
+   Everything else (rounded-xl, shadow, border, padding) still applies
+   the same way. */
+.glass {
+    background: rgba(250, 244, 232, 0.5);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    backdrop-filter: blur(16px) saturate(150%);
+    border: 1px solid rgba(255, 253, 248, 0.65);
+}
+
+/* Slightly stronger tint/blur — for elements that need to stay clearly
+   legible over busy content behind them (e.g. a sticky header, a modal
+   over a photo). */
+.glass-strong {
+    background: rgba(246, 238, 220, 0.68);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(255, 253, 248, 0.7);
+}
+
+/* Fallback for browsers without backdrop-filter support (older Safari/
+   Firefox versions) — degrades to a plain cream/beige tint instead of a
+   transparent see-through panel with no blur, which would look broken. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass,
+    .glass-strong {
+        background: #FAF4E8;
+    }
+}
+
+/* ================= AUTO-APPLY GLASS TO bg-white ================= */
+/* This is the "no component edits" switch: instead of only affecting
+   elements you tag with .glass, we redefine Tailwind's own bg-white
+   utility to BE the glass look. Since this rule is written as plain
+   CSS (not inside a Tailwind @layer), it sits outside Tailwind's
+   cascade layers — and per the CSS Cascade Layers spec, unlayered
+   rules always win over layered ones regardless of source order. So
+   this silently overrides every `bg-white` class already used across
+   the app, with no need to touch any .jsx file. */
+.bg-white {
+    background: rgba(250, 244, 232, 0.5) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    backdrop-filter: blur(16px) saturate(150%);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .bg-white {
+        background: #FAF4E8 !important;
+    }
+}
+
+/* Printable documents (e.g. Invoice) must stay solid white regardless
+   of the override above — glass/blur doesn't print. */
+@media print {
+    .bg-white {
+        background: #FFFFFF !important;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -161,5 +244,7 @@ Dark Royal Blue: #1A38B8
 
 Light Gray: #E5E7EB
 White: #FFFFFF
+
+Glass tint (light cream/beige): #FAF4E8
 
 */

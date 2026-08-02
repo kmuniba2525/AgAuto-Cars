@@ -31,14 +31,16 @@ import { formatCurrency } from "../../utils/formatCurrency";
 // belt-and-suspenders approach: a plain <style> tag with `visibility`
 // rules, instead of relying only on Tailwind's `print:` variant.
 //
-// DESIGN NOTE: the brand navy used throughout this invoice (headings,
-// table header, totals) is a project-specific color that may not exist
-// in the Tailwind config, so — same reasoning as above — it's applied via
-// inline `style` (NAVY / NAVY_DARK constants below) rather than an
-// arbitrary Tailwind class like `text-[#182848]`, which is exactly the
-// kind of new/arbitrary utility that can silently fail to compile.
-const NAVY = "#1B2A56";
-const NAVY_DARK = "#141F42";
+// DESIGN NOTE: the brand colors used throughout this invoice (headings,
+// table header, totals, accent rule) are the project's theme colors
+// (navy primary + gold accent from tailwind.css @theme). They're applied
+// via inline `style` (NAVY / NAVY_DARK / ACCENT constants below) rather
+// than arbitrary Tailwind classes like `text-[#0A1A3D]`, which is exactly
+// the kind of new/arbitrary utility that can silently fail to compile.
+const NAVY = "#0A1A3D"; // --color-primary
+const NAVY_DARK = "#13224F"; // --color-primary-dull
+const ACCENT = "#FFE200"; // --color-accent
+const ACCENT_DARK = "#C7B100"; // --color-accent-dark
 
 // Seller/company details shown in the header + footer. These are looked up
 // through the SAME invoice.* translation namespace as everything else so
@@ -153,7 +155,7 @@ const Invoice = ({ order, onClose }) => {
         right: 0,
         bottom: 0,
         zIndex: 9999,
-        backgroundColor: "rgba(15, 15, 15, 0.6)",
+        backgroundColor: "rgba(10, 26, 61, 0.55)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -171,16 +173,16 @@ const Invoice = ({ order, onClose }) => {
         }}
       >
         {/* TOOLBAR — hidden when printing */}
-        <div className="invoice-no-print flex items-center justify-between px-6 py-4 border-b gap-3 flex-wrap">
-          <h3 className="font-semibold text-gray-800">{tt("invoicePreview")}</h3>
-          <div className="flex items-center gap-2">
+        <div className="invoice-no-print flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b gap-3 flex-wrap">
+          <h3 className="font-semibold text-gray-800 text-sm sm:text-base">{tt("invoicePreview")}</h3>
+          <div className="flex items-center gap-2 flex-wrap">
             <div className="flex items-center gap-1.5 border rounded-lg px-2.5 py-1.5 text-sm text-gray-600">
-              <Globe size={15} className="text-gray-400" />
+              <Globe size={15} className="text-gray-400 shrink-0" />
               <select
                 aria-label={tt("language")}
                 value={lang}
                 onChange={(e) => setLang(e.target.value)}
-                className="bg-transparent outline-none cursor-pointer"
+                className="bg-transparent outline-none cursor-pointer max-w-[6rem] sm:max-w-none"
               >
                 {SUPPORTED_LANGUAGES.map((l) => (
                   <option key={l.code} value={l.code}>
@@ -191,14 +193,14 @@ const Invoice = ({ order, onClose }) => {
             </div>
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-2 bg-primary text-white text-sm px-4 py-2 rounded-lg hover:opacity-90 transition"
+              className="flex items-center gap-2 bg-primary text-white text-sm px-3 sm:px-4 py-2 rounded-lg hover:bg-primary-dull transition-colors"
             >
               <Printer size={16} />
-              {tt("print")}
+              <span className="hidden xs:inline">{tt("print")}</span>
             </button>
             <button
               onClick={onClose}
-              className="flex items-center justify-center w-9 h-9 rounded-lg border text-gray-500 hover:bg-gray-50 transition"
+              className="flex items-center justify-center w-9 h-9 rounded-lg border text-gray-500 hover:bg-gray-50 transition-colors"
             >
               <X size={18} />
             </button>
@@ -206,16 +208,17 @@ const Invoice = ({ order, onClose }) => {
         </div>
 
         {/* INVOICE BODY */}
-        <div className="p-8 print:p-10">
-          {/* HEADER — logo + tagline on the left, company contact block on
-              the right, separated by a thin vertical rule (matches the
-              reference layout: logo | company name & details). */}
-          <div className="flex items-start gap-6 pb-6">
+        <div className="p-4 sm:p-8 print:p-10">
+          {/* HEADER — logo + tagline on top (mobile) / left (desktop), company
+              contact block beside it, separated by a thin vertical rule on
+              wider screens (matches the reference layout: logo | company
+              name & details). */}
+          <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-6 pb-6">
             <div className="flex flex-col items-start shrink-0">
               <img
                 src={assets.InvoiceLogo}
                 alt={COMPANY.name}
-                className="w-70 mb-1 object-contain"
+                className="w-40 sm:w-56 md:w-64 mb-1 object-contain"
               />
             </div>
 
@@ -223,7 +226,7 @@ const Invoice = ({ order, onClose }) => {
 
             <div className="flex-1 min-w-0">
               <h2
-                className="text-xl font-bold tracking-tight"
+                className="text-lg sm:text-xl font-bold tracking-tight"
                 style={{ color: NAVY }}
               >
                 {tt("companyName", { defaultValue: COMPANY.name })}
@@ -234,15 +237,15 @@ const Invoice = ({ order, onClose }) => {
 
               <div className="space-y-1.5 text-sm text-gray-600">
                 <div className="flex items-center gap-2">
-                  <Phone size={14} style={{ color: NAVY }} />
+                  <Phone size={14} style={{ color: NAVY }} className="shrink-0" />
                   <span>{tt("companyPhone", { defaultValue: COMPANY.phone })}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Mail size={14} style={{ color: NAVY }} />
-                  <span>{tt("companyEmail", { defaultValue: COMPANY.email })}</span>
+                  <Mail size={14} style={{ color: NAVY }} className="shrink-0" />
+                  <span className="break-all">{tt("companyEmail", { defaultValue: COMPANY.email })}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Globe size={14} style={{ color: NAVY }} />
+                  <Globe size={14} style={{ color: NAVY }} className="shrink-0" />
                   <span>{tt("companyWebsite", { defaultValue: COMPANY.website })}</span>
                 </div>
                 <div className="flex items-start gap-2">
@@ -264,14 +267,14 @@ const Invoice = ({ order, onClose }) => {
           <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
             <div>
               <h1
-                className="text-4xl font-extrabold tracking-tight"
+                className="text-3xl sm:text-4xl font-extrabold tracking-tight"
                 style={{ color: NAVY }}
               >
                 {tt("invoice")}
               </h1>
               <div
                 className="mt-2 h-1 w-16 rounded-full"
-                style={{ backgroundColor: NAVY }}
+                style={{ backgroundColor: ACCENT_DARK }}
               />
             </div>
 
@@ -288,7 +291,7 @@ const Invoice = ({ order, onClose }) => {
           </div>
 
           {/* BILL TO + INVOICE META */}
-          <div className="flex flex-wrap justify-between gap-8 mb-8 pb-8 border-b border-gray-100">
+          <div className="flex flex-wrap justify-between gap-6 sm:gap-8 mb-8 pb-8 border-b border-gray-100">
             <div>
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
                 {tt("billTo")}
@@ -302,7 +305,7 @@ const Invoice = ({ order, onClose }) => {
                 )}
               </p>
               {customer.email && (
-                <p className="text-sm text-gray-600">{customer.email}</p>
+                <p className="text-sm text-gray-600 break-all">{customer.email}</p>
               )}
               {customer.phone && (
                 <p className="text-sm text-gray-600">{customer.phone}</p>
@@ -318,24 +321,24 @@ const Invoice = ({ order, onClose }) => {
             </div>
 
             <div className="text-sm space-y-2.5">
-              <div className="flex justify-between gap-8">
+              <div className="flex justify-between gap-6 sm:gap-8">
                 <span className="text-gray-500">{tt("issueDate", { defaultValue: "Invoice date" })}:</span>
                 <span className="font-medium text-gray-800">{issueDate.toLocaleDateString(locale)}</span>
               </div>
-              <div className="flex justify-between gap-8">
+              <div className="flex justify-between gap-6 sm:gap-8">
                 <span className="text-gray-500">{tt("dueDate", { defaultValue: "Due date" })}:</span>
                 <span className="font-medium text-gray-800">{dueDate.toLocaleDateString(locale)}</span>
               </div>
-              <div className="flex justify-between items-center gap-8">
+              <div className="flex justify-between items-center gap-6 sm:gap-8">
                 <span className="text-gray-500">{tt("status")}:</span>
                 <span className="font-semibold" style={{ color: NAVY }}>
                   {order.status}
                 </span>
               </div>
-              <div className="flex justify-between items-center gap-8">
+              <div className="flex justify-between items-center gap-6 sm:gap-8">
                 <span className="text-gray-500">{tt("payment")}:</span>
                 <span
-                  className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                  className={`text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${
                     isPending
                       ? "bg-amber-50 text-amber-700"
                       : "bg-emerald-50 text-emerald-700"
@@ -350,51 +353,53 @@ const Invoice = ({ order, onClose }) => {
           </div>
 
           {/* ITEMS TABLE */}
-          <table className="w-full text-sm mb-6 border-separate" style={{ borderSpacing: 0 }}>
-            <thead>
-              <tr style={{ backgroundColor: NAVY_DARK }}>
-                <th className="py-3 px-3 font-semibold text-left text-white rounded-l-md">
-                  {tt("item")}
-                </th>
-                <th className="py-3 px-3 font-semibold text-center text-white">
-                  {tt("qty")}
-                </th>
-                <th className="py-3 px-3 font-semibold text-right text-white">
-                  {tt("unitPrice")}
-                </th>
-                <th className="py-3 px-3 font-semibold text-right text-white rounded-r-md">
-                  {tt("total")}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {lineItems.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="py-4 text-center text-gray-400">
-                    {tt("noItems")}
-                  </td>
+          <div className="overflow-x-auto mb-6 -mx-1 px-1">
+            <table className="w-full text-sm border-separate min-w-[420px]" style={{ borderSpacing: 0 }}>
+              <thead>
+                <tr style={{ backgroundColor: NAVY_DARK }}>
+                  <th className="py-3 px-3 font-semibold text-left text-white rounded-l-md">
+                    {tt("item")}
+                  </th>
+                  <th className="py-3 px-3 font-semibold text-center text-white">
+                    {tt("qty")}
+                  </th>
+                  <th className="py-3 px-3 font-semibold text-right text-white">
+                    {tt("unitPrice")}
+                  </th>
+                  <th className="py-3 px-3 font-semibold text-right text-white rounded-r-md">
+                    {tt("total")}
+                  </th>
                 </tr>
-              ) : (
-                lineItems.map((li, idx) => (
-                  <tr
-                    key={idx}
-                    style={idx % 2 === 1 ? { backgroundColor: "#F9FAFB" } : undefined}
-                  >
-                    <td className="py-3 px-3 text-gray-800 border-b border-gray-100">{li.name}</td>
-                    <td className="py-3 px-3 text-center text-gray-600 border-b border-gray-100">
-                      {li.quantity}
-                    </td>
-                    <td className="py-3 px-3 text-right text-gray-600 border-b border-gray-100">
-                      {fmt(li.unitPrice)}
-                    </td>
-                    <td className="py-3 px-3 text-right font-medium text-gray-800 border-b border-gray-100">
-                      {fmt(li.lineTotal)}
+              </thead>
+              <tbody>
+                {lineItems.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="py-4 text-center text-gray-400">
+                      {tt("noItems")}
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  lineItems.map((li, idx) => (
+                    <tr
+                      key={idx}
+                      style={idx % 2 === 1 ? { backgroundColor: "#F9FAFB" } : undefined}
+                    >
+                      <td className="py-3 px-3 text-gray-800 border-b border-gray-100">{li.name}</td>
+                      <td className="py-3 px-3 text-center text-gray-600 border-b border-gray-100">
+                        {li.quantity}
+                      </td>
+                      <td className="py-3 px-3 text-right text-gray-600 border-b border-gray-100">
+                        {fmt(li.unitPrice)}
+                      </td>
+                      <td className="py-3 px-3 text-right font-medium text-gray-800 border-b border-gray-100">
+                        {fmt(li.lineTotal)}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
 
           {/* NOTE + SUMMARY */}
           <div className="flex flex-wrap gap-6 mb-6">
@@ -426,7 +431,7 @@ const Invoice = ({ order, onClose }) => {
               </div>
               <div
                 className="flex justify-between text-base font-bold pt-2 border-t-2"
-                style={{ color: NAVY, borderColor: NAVY_DARK }}
+                style={{ color: NAVY, borderColor: ACCENT_DARK }}
               >
                 <span>{tt("totalCharged")}</span>
                 <span>{fmt(total)}</span>
@@ -437,8 +442,8 @@ const Invoice = ({ order, onClose }) => {
           {/* CURRENCY NOTE */}
           <div className="flex items-center gap-3 border border-gray-200 rounded-xl px-4 py-3 mb-6">
             <span
-              className="flex items-center justify-center w-9 h-9 rounded-full text-white text-xs font-bold shrink-0"
-              style={{ backgroundColor: NAVY_DARK }}
+              className="flex items-center justify-center w-9 h-9 rounded-full text-xs font-bold shrink-0"
+              style={{ backgroundColor: ACCENT, color: NAVY }}
             >
               {currency}
             </span>

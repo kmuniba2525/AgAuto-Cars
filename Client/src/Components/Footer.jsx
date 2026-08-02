@@ -38,9 +38,9 @@ const Footer = () => {
     ];
 
     return (
-        <footer className="mt-24 bg-[#111111] border-t border-gray-800">
+        <footer className="mt-24 bg-primary border-t border-primary-dull">
             <div className="max-w-7xl mx-auto px-6 md:px-16 lg:px-24 py-14">
-                <div className="flex flex-col md:flex-row justify-between gap-12 border-b border-gray-800 pb-10">
+                <div className="flex flex-col md:flex-row justify-between gap-12 border-b border-primary-dull pb-10">
 
                     {/* Logo & Description */}
                     <div className="max-w-md">
@@ -60,7 +60,7 @@ const Footer = () => {
                                 <ul className="space-y-3">
                                     {section.links.map((link, i) => (
                                         <li key={i}>
-                                            <a href={link.url} className="text-gray-400 hover:text-red-600 transition duration-300">
+                                            <a href={link.url} className="text-gray-400 hover:text-accent transition duration-300">
                                                 {link.text}
                                             </a>
                                         </li>
@@ -75,11 +75,11 @@ const Footer = () => {
                 {/* Bottom */}
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8">
                     <p className="text-gray-500 text-sm">
-                        © {new Date().getFullYear()} <span className="text-red-600 font-medium">AgAuto</span>. {t('footer.all_rights')}
+                        © {new Date().getFullYear()} <span className="text-accent font-medium">AgAuto</span>. {t('footer.all_rights')}
                     </p>
                     <div className="flex gap-6 text-sm">
-                        <a href="#" className="text-gray-400 hover:text-red-700 transition">{t('footer.privacy')}</a>
-                        <a href="#" className="text-gray-400 hover:text-red-700 transition">{t('footer.terms')}</a>
+                        <a href="#" className="text-gray-400 hover:text-accent-dull transition">{t('footer.privacy')}</a>
+                        <a href="#" className="text-gray-400 hover:text-accent-dull transition">{t('footer.terms')}</a>
                     </div>
                 </div>
 

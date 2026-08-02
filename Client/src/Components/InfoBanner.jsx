@@ -62,16 +62,16 @@ const InfoBanner = () => {
   return (
     <div className="relative mt-10 px-4 sm:px-6 lg:px-8">
       <div
-        className="max-w-6xl mx-auto rounded-2xl border border-white/10 bg-black/95 backdrop-blur-xl shadow-2xl shadow-black/40 py-5 sm:py-6 px-6 sm:px-8 relative overflow-hidden"
+        className="max-w-6xl mx-auto rounded-2xl border border-white/10 bg-primary/95 backdrop-blur-xl shadow-2xl shadow-primary/40 py-5 sm:py-6 px-6 sm:px-8 relative overflow-hidden"
       >
-        {/* subtle ambient glow, signature detail */}
+        {/* subtle ambient glow, signature detail — now brand gold instead of amber */}
         <div
           className="pointer-events-none absolute -top-24 -left-16 w-72 h-72 rounded-full opacity-20 blur-3xl"
-          style={{ background: "radial-gradient(circle, #E3A83B, transparent 70%)" }}
+          style={{ background: "radial-gradient(circle, #FFE200, transparent 70%)" }}
         />
         <div
           className="pointer-events-none absolute -bottom-24 -right-16 w-72 h-72 rounded-full opacity-10 blur-3xl"
-          style={{ background: "radial-gradient(circle, #E3A83B, transparent 70%)" }}
+          style={{ background: "radial-gradient(circle, #FFE200, transparent 70%)" }}
         />
 
         <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">

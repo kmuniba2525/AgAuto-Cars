@@ -1,24 +1,12 @@
-import React, { useEffect } from "react";
-import { useAppContext } from "../Context/AppContext";
-import { useLocation } from "react-router-dom";
+import React from "react";
 
+// Plain, side-effect-free spinner. This is what Suspense shows while a
+// lazy-loaded route chunk is still downloading (e.g. on a hard reload of
+// /seller, /cart, /checkout, etc). It must NOT navigate anywhere — it
+// used to redirect to "/" on mount, which meant any hard reload of a
+// lazy route got bounced straight back to home before the real page's
+// chunk even finished loading.
 function Loading() {
-  const { navigate } = useAppContext();
-  const { search } = useLocation();
-
-  const query = new URLSearchParams(search);
-  const nextUrl = query.get("next");
-
-  useEffect(() => {
-    if (nextUrl) {
-      setTimeout(() => {
-        navigate(`/${nextUrl}`); // ✅ FIXED
-      }, 2000); // 2 sec delay
-    } else {
-      navigate("/"); // ✅ fallback
-    }
-  }, [nextUrl, navigate]);
-
   return (
     <div className="flex justify-center items-center h-screen">
       <div className="animate-spin rounded-full h-24 w-24 border-4 border-gray-300 border-t-primary"></div>

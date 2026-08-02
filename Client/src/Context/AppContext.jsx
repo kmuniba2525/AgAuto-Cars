@@ -10,6 +10,18 @@ export const AppContext = createContext();
 
 const currency = import.meta.env.VITE_CURRENCY || "Rs.";
 
+// Reads the guest cart persisted in localStorage. Used both to seed the
+// initial cartItems state (so a refresh doesn't show an empty cart for a
+// split second before the auth check resolves) and to restore it whenever
+// fetchUser determines there's no logged-in user.
+const getGuestCart = () => {
+  try {
+    return JSON.parse(localStorage.getItem("guestCart") || "{}");
+  } catch {
+    return {};
+  }
+};
+
 export const AppContextProvider = ({ children }) => {
   const navigate = useNavigate();
 
@@ -17,7 +29,7 @@ export const AppContextProvider = ({ children }) => {
   const [isSeller, setIsSeller] = useState(false);
   const [showUserLogin, setShowUserLogin] = useState(false);
   const [products, setProducts] = useState([]);
-  const [cartItems, setCartItems] = useState({});
+  const [cartItems, setCartItems] = useState(() => getGuestCart());
   const [cartReady, setCartReady] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -26,9 +38,6 @@ export const AppContextProvider = ({ children }) => {
   const fetchSeller = async () => {
     try {
       const { data } = await axios.get("/api/seller/is-auth");
-
-      // console.log("🧾 Seller Auth:", data);
-
       setIsSeller(!!data.success);
     } catch (error) {
       console.log("❌ Seller auth failed:", error.message);
@@ -40,11 +49,8 @@ export const AppContextProvider = ({ children }) => {
   const fetchUser = async () => {
     try {
       const { data } = await axios.get("/api/user/is-auth");
-console.log("FETCH USER RESPONSE:", data);
-      // console.log("👤 User Auth Response:", data);
 
       if (data.success) {
-        // const userData = data.data?.user;
         const userData = data.user;
 
         setUser(userData);
@@ -55,13 +61,19 @@ console.log("FETCH USER RESPONSE:", data);
         setCartReady(true);
       } else {
         setUser(null);
-        setCartItems({});
+        // Not logged in — fall back to whatever's saved as a guest cart
+        // instead of clearing it. Previously this always reset to {},
+        // which meant a page refresh silently wiped a guest's cart even
+        // though it was still sitting in localStorage.
+        setCartItems(getGuestCart());
         setCartReady(true);
       }
     } catch (error) {
       console.log("❌ fetchUser error:", error.message);
       setUser(null);
-      setCartItems({});
+      // Same fix for the network/error path — don't blow away the guest
+      // cart just because the auth check itself failed.
+      setCartItems(getGuestCart());
       setCartReady(true);
     }
   };
@@ -70,8 +82,6 @@ console.log("FETCH USER RESPONSE:", data);
   const fetchProducts = async () => {
     try {
       const { data } = await axios.get("/api/product/list");
-
-      // console.log("📦 Products:", data);
 
       if (data.success) {
         setProducts(data.products);
@@ -206,21 +216,23 @@ const syncGuestCart = async () => {
   };
 
   // ================= INITIAL LOAD =================
-useEffect(() => {
-  const init = async () => {
-    
+  // These three calls are independent of each other (user auth, product
+  // list, seller auth all hit different endpoints and don't depend on one
+  // another's result), so they should fire together instead of one after
+  // another. The old sequential `await fetchUser(); await fetchProducts();
+  // await fetchSeller();` meant total wait time = sum of all three
+  // requests; Promise.all makes it = the slowest single one. There was
+  // also a hardcoded 100ms artificial delay before anything started,
+  // which had no purpose and just added dead time to every page load —
+  // removed.
+  useEffect(() => {
+    const init = async () => {
+      await Promise.all([fetchUser(), fetchProducts(), fetchSeller()]);
+      setLoading(false);
+    };
 
-    await new Promise((res) => setTimeout(res, 100)); // ✅ small delay
-
-    await fetchUser();
-    await fetchProducts();
-    await fetchSeller();
-
-    setLoading(false);
-  };
-
-  init();
-}, []);
+    init();
+  }, []);
   // ================= CONTEXT VALUE =================
   const value = {
     navigate,
@@ -244,6 +256,8 @@ useEffect(() => {
     loading,
     fetchProducts,
     fetchUser,
+    fetchSeller,
+    cartReady,
     setCartItems,
     syncGuestCart,
   };
