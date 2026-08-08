@@ -3,6 +3,8 @@ import "dotenv/config";
 import cookieParser from "cookie-parser";
 import express from "express";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 
 import connectDB from "./configs/db.js";
 import connectCloudinary from "./configs/cloudinary.js";
@@ -18,6 +20,9 @@ import { stripeWebhooks } from "./controllers/orderController.js";
 import aiRouter from "./routes/aiRoutes.js";
 import notificationRouter from "./routes/Notification.js";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
 const port = process.env.PORT || 4000;
 
@@ -31,7 +36,8 @@ app.post(
 // Allowed origins for CORS
 const allowedOrigins = [
   "http://localhost:5173",
-  process.env.CLIENT_URL, // e.g. https://ag-auto-cars.vercel.app
+  "http://localhost:4000",
+  process.env.CLIENT_URL, // e.g. https://agautosystemab.com
 ].filter(Boolean);
 
 app.use(cors({
@@ -53,11 +59,7 @@ app.use(compression());
 app.use(express.json());
 app.use(cookieParser());
 
-// routes
-app.get("/", (req, res) => {
-  res.send("API is working");
-});
-
+// API routes
 app.use("/api/user", userRouter);
 app.use("/api/seller", sellerRouter);
 app.use("/api/product", productRouter);
@@ -66,6 +68,14 @@ app.use("/api/address", addressRouter);
 app.use("/api/order", orderRouter);
 app.use("/api/ai", aiRouter);
 app.use("/api/notification", notificationRouter);
+
+// Serve React build (production frontend)
+app.use(express.static(path.join(__dirname, "../Client/dist")));
+
+// Catch-all: send index.html for any non-API route so React Router can handle it
+app.get("/{*splat}", (req, res) => {
+  res.sendFile(path.join(__dirname, "../Client/dist/index.html"));
+});
 
 // start server
 const startServer = async () => {
