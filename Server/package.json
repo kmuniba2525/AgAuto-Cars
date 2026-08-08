@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
   "start": "node server.js",
-  "build": "cd ../Client && npm install && npm run build"
+  "build": "cd ../Client && npm install && npm run build && rm -rf ../Server/client-dist && cp -r dist ../Server/client-dist"
 },
   "keywords": [],
   "author": "",

@@ -69,12 +69,10 @@ app.use("/api/order", orderRouter);
 app.use("/api/ai", aiRouter);
 app.use("/api/notification", notificationRouter);
 
-// Serve React build (production frontend)
-app.use(express.static(path.join(__dirname, "../Client/dist")));
+app.use(express.static(path.join(__dirname, "client-dist")));
 
-// Catch-all: send index.html for any non-API route so React Router can handle it
 app.get("/{*splat}", (req, res) => {
-  res.sendFile(path.join(__dirname, "../Client/dist/index.html"));
+  res.sendFile(path.join(__dirname, "client-dist/index.html"));
 });
 
 // start server
