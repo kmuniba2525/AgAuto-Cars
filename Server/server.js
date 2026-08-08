@@ -6,7 +6,7 @@ import cors from "cors";
 
 import connectDB from "./configs/db.js";
 import connectCloudinary from "./configs/cloudinary.js";
-
+import compression from "compression";
 import userRouter from "./routes/userRoute.js";
 import sellerRouter from "./routes/sellerRoute.js";
 import productRouter from "./routes/productRoute.js";
@@ -46,6 +46,8 @@ app.use(cors({
   },
   credentials: true,
 }));
+
+app.use(compression());
 
 // NORMAL MIDDLEWARE AFTER
 app.use(express.json());

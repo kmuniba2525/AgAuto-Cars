@@ -6,6 +6,7 @@ import { useAppContext } from '../Context/AppContext';
 import { useTranslation } from 'react-i18next';
 import { getLocalizedText } from '../utils/getLocalizedText';
 import { formatCurrency } from "../utils/formatCurrency";
+import { getOptimizedImageUrl } from "../utils/getOptimizedImageUrl";
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 const statusStyles = {
@@ -179,10 +180,11 @@ export default function PaymentSuccess() {
                         <div className="flex items-center gap-3.5 min-w-0">
                           <div className="bg-red-600/5 border border-red-600/10 p-2.5 rounded-xl shrink-0">
                             <img
-                              src={item.product?.image?.[0]}
-                              alt={localizedName}
-                              className="w-14 h-14 object-cover rounded-md"
-                            />
+  src={getOptimizedImageUrl(item.product?.image?.[0])}
+  alt={localizedName}
+  loading="lazy"
+  className="w-14 h-14 object-cover rounded-md"
+/>
                           </div>
                           <div className="min-w-0">
                             <h2 className="text-sm sm:text-base font-medium text-gray-100 truncate">

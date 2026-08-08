@@ -5,6 +5,7 @@ import { useAppContext } from "../Context/AppContext";
 import { useTranslation } from "react-i18next";
 import { getLocalizedText } from "../utils/getLocalizedText";
 import { formatCurrency } from "../utils/formatCurrency";
+import { getOptimizedImageUrl } from "../utils/getOptimizedImageUrl";
 const ProductCard = ({ product }) => {
   const {
     currency,
@@ -37,10 +38,12 @@ const ProductCard = ({ product }) => {
       {/* Product Image */}
       <div className="overflow-hidden bg-gradient-to-b from-gray-50 to-white h-50 sm:h-60 flex items-center justify-center">
     <img
-        src={product.image?.[0] || assets.upload_area}
-        alt={localizedName}
-        className="max-w-[85%] max-h-[80%] object-contain scale-[1.25] hover:scale-[1.45] transition-all duration-500"
-    />
+    src={getOptimizedImageUrl(product.image?.[0]) || assets.upload_area}
+    alt={localizedName}
+    loading="lazy"
+    decoding="async"
+    className="max-w-[85%] max-h-[80%] object-contain scale-[1.25] hover:scale-[1.45] transition-all duration-500"
+/>
 </div>
 
       {/* Content */}

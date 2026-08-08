@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getLocalizedText } from '../utils/getLocalizedText';
 import { formatCurrency } from "../utils/formatCurrency";
+import { getOptimizedImageUrl } from "../utils/getOptimizedImageUrl";
 const statusStyles = {
   Delivered: "bg-emerald-50 text-emerald-700 border-emerald-200",
   Shipped: "bg-blue-50 text-blue-700 border-blue-200",
@@ -101,10 +102,11 @@ const MyOrder = () => {
                     <div className='flex items-center gap-3.5 sm:gap-4 min-w-0'>
                       <div className='bg-primary/5 border border-primary/10 p-2.5 sm:p-3 rounded-xl shrink-0'>
                         <img
-                          src={item.product?.image?.[0]}
-                          alt={localizedName}
-                          className='w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-md'
-                        />
+  src={getOptimizedImageUrl(item.product?.image?.[0])}
+  alt={localizedName}
+  loading="lazy"
+  className='w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-md'
+/>
                       </div>
 
                       <div className="min-w-0">

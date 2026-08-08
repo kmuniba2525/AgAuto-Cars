@@ -8,6 +8,7 @@ import { FaStar } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 import { getLocalizedText } from "../utils/getLocalizedText";
 import { formatCurrency } from "../utils/formatCurrency";
+import { getOptimizedImageUrl } from "../utils/getOptimizedImageUrl";
 const ProductDetail = () => {
   const { t, i18n } = useTranslation();
   const { currency, addToCart, products, navigate, axios, user } =
@@ -120,10 +121,10 @@ const ProductDetail = () => {
             )}
 
             <img
-              src={thumbnail || product.image?.[0]}
-              alt={localizedName}
-              className="w-full h-full object-cover"
-            />
+  src={getOptimizedImageUrl(thumbnail || product.image?.[0], 800)}
+  alt={localizedName}
+  className="w-full h-full object-cover"
+/>
           </div>
 
           {product.image?.length > 1 && (
@@ -138,11 +139,12 @@ const ProductDetail = () => {
                       : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
-                  <img
-                    src={img}
-                    alt={`thumb-${index}`}
-                    className="w-full h-full object-cover"
-                  />
+                 <img
+  src={getOptimizedImageUrl(img)}
+  alt={`thumb-${index}`}
+  loading="lazy"
+  className="w-full h-full object-cover"
+/>
                 </button>
               ))}
             </div>

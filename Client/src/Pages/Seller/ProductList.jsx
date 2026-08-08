@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import { Search, X } from "lucide-react";
 import { getLocalizedText } from "../../utils/getLocalizedText";
 import { formatCurrency } from "../../utils/formatCurrency";
-
+import { getOptimizedImageUrl } from "../../utils/getOptimizedImageUrl";
 const STOCK_CEILING = 20; // gauge treats this as "full" — tune to your typical restock level
 
 const ProductList = () => {
@@ -123,11 +123,12 @@ const ProductList = () => {
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-14 h-14 shrink-0 rounded-md overflow-hidden bg-gray-50 border border-gray-900/10">
-                      <img
-                        src={product.image?.[0]}
-                        alt={displayName}
-                        className="w-full h-full object-cover"
-                      />
+                     <img
+  src={getOptimizedImageUrl(product.image?.[0])}
+  alt={displayName}
+  loading="lazy"
+  className="w-full h-full object-cover"
+/>
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -207,10 +208,11 @@ const ProductList = () => {
                       <td className="md:px-4 pl-2 md:pl-4 py-4 flex items-center gap-3">
                         <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
                           <img
-                            src={product.image?.[0]}
-                            alt={displayName}
-                            className="w-16 h-16 object-cover"
-                          />
+  src={getOptimizedImageUrl(product.image?.[0])}
+  alt={displayName}
+  loading="lazy"
+  className="w-16 h-16 object-cover"
+/>
                         </div>
 
                         <div className="flex flex-col">

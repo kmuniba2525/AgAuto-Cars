@@ -126,7 +126,7 @@ export const addProduct = async (req, res) => {
 // =========================
 export const productList = async (req, res) => {
   try {
-    const products = await Product.find({});
+    const products = await Product.find({}).lean();
 
     return res.json({
       success: true,
@@ -149,7 +149,7 @@ export const productById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const product = await Product.findById(id);
+    const product = await Product.findById(id).lean();
 
     if (!product) {
       return errorResponse(res, 404, "Product not found");

@@ -11,6 +11,7 @@ import { useAppContext } from "../Context/AppContext";
 import { useTranslation } from "react-i18next";
 import { getLocalizedText } from "../utils/getLocalizedText";
 import { formatCurrency } from "../utils/formatCurrency";
+import { getOptimizedImageUrl } from "../utils/getOptimizedImageUrl";
 const TrackOrder = () => {
   const { t, i18n } = useTranslation();
   const { id } = useParams();
@@ -187,10 +188,11 @@ const TrackOrder = () => {
                   {/* LEFT */}
                   <div className="flex items-center gap-4">
                     <img
-                      src={item.product?.image?.[0]}
-                      alt={localizedName}
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover flex-shrink-0"
-                    />
+  src={getOptimizedImageUrl(item.product?.image?.[0])}
+  alt={localizedName}
+  loading="lazy"
+  className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover flex-shrink-0"
+/>cd
 
                     <div className="min-w-0">
                       <h2 className="text-base sm:text-lg font-semibold text-gray-800 break-words">

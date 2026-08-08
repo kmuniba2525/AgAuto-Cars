@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import { getLocalizedText } from "../utils/getLocalizedText";
 import { formatCurrency } from "../utils/formatCurrency";
+import { getOptimizedImageUrl } from "../utils/getOptimizedImageUrl";
 const Cart = () => {
   const { t, i18n } = useTranslation();
   const {
@@ -254,10 +255,11 @@ const Cart = () => {
                   className="cursor-pointer w-20 h-20 sm:w-24 sm:h-24 border rounded-lg overflow-hidden shrink-0"
                 >
                   <img
-                    src={product.image[0]}
-                    alt={localizedName}
-                    className="w-full h-full object-cover"
-                  />
+  src={getOptimizedImageUrl(product.image[0])}
+  alt={localizedName}
+  loading="lazy"
+  className="w-full h-full object-cover"
+/>
                 </div>
 
                 <div className="min-w-0 flex-1">
