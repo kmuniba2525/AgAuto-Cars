@@ -15,7 +15,7 @@ import productRouter from "./routes/productRoute.js";
 import cartRouter from "./routes/cartRoute.js";
 import addressRouter from "./routes/addressRoutes.js";
 import orderRouter from "./routes/orderRoute.js";
-
+import sitemapRouter from "./routes/sitemapRoute.js";
 import { stripeWebhooks } from "./controllers/orderController.js";
 import aiRouter from "./routes/aiRoutes.js";
 import notificationRouter from "./routes/Notification.js";
@@ -68,7 +68,7 @@ app.use("/api/address", addressRouter);
 app.use("/api/order", orderRouter);
 app.use("/api/ai", aiRouter);
 app.use("/api/notification", notificationRouter);
-
+app.use("/", sitemapRouter);
 app.use(express.static(path.join(__dirname, "client-dist")));
 
 app.get("/{*splat}", (req, res) => {
