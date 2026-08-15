@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { getLocalizedText } from "../utils/getLocalizedText";
 import { formatCurrency } from "../utils/formatCurrency";
 import { getOptimizedImageUrl } from "../utils/getOptimizedImageUrl";
+import SEO from "../Components/SEO";
 const ProductDetail = () => {
   const { t, i18n } = useTranslation();
   const { currency, addToCart, products, navigate, axios, user } =
@@ -36,22 +37,22 @@ const ProductDetail = () => {
     return product.variants?.length > 0
       ? product.variants
       : [
-          {
-            label: "Standard",
-            price: product.price,
-            offerPrice: product.offerPrice,
-            stock: product.stock,
-          },
-        ];
+        {
+          label: "Standard",
+          price: product.price,
+          offerPrice: product.offerPrice,
+          stock: product.stock,
+        },
+      ];
   }, [product]);
 
   const discountPercent =
     selectedVariant && selectedVariant.price > selectedVariant.offerPrice
       ? Math.round(
-          ((selectedVariant.price - selectedVariant.offerPrice) /
-            selectedVariant.price) *
-            100
-        )
+        ((selectedVariant.price - selectedVariant.offerPrice) /
+          selectedVariant.price) *
+        100
+      )
       : 0;
 
   const rating = localProduct?.rating || product?.rating || 0;
@@ -87,6 +88,12 @@ const ProductDetail = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-8">
+      <SEO
+        title={localizedName}
+        description={localizedDescription?.replace(/<[^>]*>/g, "").slice(0, 160)}
+        image={product.image?.[0]}
+      />
+
       {/* BREADCRUMB */}
       <p className="text-xs text-gray-400 font-medium tracking-wide mb-6">
         <Link to="/" className="hover:text-gray-700 transition-colors">
@@ -121,10 +128,10 @@ const ProductDetail = () => {
             )}
 
             <img
-  src={getOptimizedImageUrl(thumbnail || product.image?.[0], 800)}
-  alt={localizedName}
-  className="w-full h-full object-cover"
-/>
+              src={getOptimizedImageUrl(thumbnail || product.image?.[0], 800)}
+              alt={localizedName}
+              className="w-full h-full object-cover"
+            />
           </div>
 
           {product.image?.length > 1 && (
@@ -133,18 +140,17 @@ const ProductDetail = () => {
                 <button
                   key={index}
                   onClick={() => setThumbnail(img)}
-                  className={`w-16 h-16 rounded-lg overflow-hidden border-2 shrink-0 transition-colors ${
-                    thumbnail === img
+                  className={`w-16 h-16 rounded-lg overflow-hidden border-2 shrink-0 transition-colors ${thumbnail === img
                       ? "border-primary"
                       : "border-gray-200 hover:border-gray-300"
-                  }`}
+                    }`}
                 >
-                 <img
-  src={getOptimizedImageUrl(img)}
-  alt={`thumb-${index}`}
-  loading="lazy"
-  className="w-full h-full object-cover"
-/>
+                  <img
+                    src={getOptimizedImageUrl(img)}
+                    alt={`thumb-${index}`}
+                    loading="lazy"
+                    className="w-full h-full object-cover"
+                  />
                 </button>
               ))}
             </div>
@@ -166,11 +172,10 @@ const ProductDetail = () => {
               {[1, 2, 3, 4, 5].map((star) => (
                 <FaStar
                   key={star}
-                  className={`text-sm ${
-                    star <= Math.round(rating)
+                  className={`text-sm ${star <= Math.round(rating)
                       ? "text-accent"
                       : "text-gray-200"
-                  }`}
+                    }`}
                 />
               ))}
             </div>
@@ -192,7 +197,7 @@ const ProductDetail = () => {
             )}
 
             <span className="text-2xl sm:text-3xl font-bold text-gray-900">
-             {formatCurrency(selectedVariant.offerPrice, currency)}
+              {formatCurrency(selectedVariant.offerPrice, currency)}
             </span>
 
             {discountPercent > 0 && (
@@ -207,9 +212,8 @@ const ProductDetail = () => {
           {/* AVAILABILITY */}
           <div className="flex items-center gap-2 mt-3 text-sm font-medium">
             <span
-              className={`w-2 h-2 rounded-full ${
-                selectedVariant.stock > 0 ? "bg-green-500" : "bg-red-500"
-              }`}
+              className={`w-2 h-2 rounded-full ${selectedVariant.stock > 0 ? "bg-green-500" : "bg-red-500"
+                }`}
             />
             <span
               className={
@@ -401,7 +405,7 @@ const ProductDetail = () => {
         {/* REVIEWS LIST */}
         <div className="mt-8 space-y-4">
           {Array.isArray(localProduct?.reviews) &&
-          localProduct.reviews.length > 0 ? (
+            localProduct.reviews.length > 0 ? (
             [...localProduct.reviews]
               .sort(
                 (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
@@ -426,11 +430,10 @@ const ProductDetail = () => {
                           {[1, 2, 3, 4, 5].map((star) => (
                             <FaStar
                               key={star}
-                              className={`text-xs ${
-                                star <= review.rating
+                              className={`text-xs ${star <= review.rating
                                   ? "text-accent"
                                   : "text-gray-200"
-                              }`}
+                                }`}
                             />
                           ))}
                         </div>

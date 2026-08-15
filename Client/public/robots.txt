@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /seller
+Disallow: /cart
+Disallow: /checkout
+Disallow: /my-orders
+Disallow: /add-address
+Disallow: /track-order
+Disallow: /payment-success
+Disallow: /loader
+
+Sitemap: https://agautosystemab.com/sitemap.xml

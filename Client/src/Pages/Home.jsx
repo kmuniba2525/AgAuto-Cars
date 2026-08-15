@@ -8,10 +8,16 @@ import NewsLetter from '../Components/NewsLetter'
 import Testimonial from '../Components/Testimonials'
 import InfoBanner from '../Components/InfoBanner'
 import PaymentMethods from '../Components/PaymentMethods'
+import SEO from '../Components/SEO'
 
 const Home = () => {
   return (
     <>
+      <SEO
+        title="Welcome"
+        description="Shop quality automotive parts and accessories online at AgAuto — paint, primer, sanding, safety gear, and more."
+      />
+
       {/* Full width hero */}
       <MainBanner />
 

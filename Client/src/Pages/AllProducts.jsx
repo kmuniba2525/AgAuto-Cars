@@ -5,6 +5,7 @@ import SortBar from "../Components/ProductPage/SortBar";
 import ProductGrid from "../Components/ProductPage/ProductGrid";
 import { useTranslation } from "react-i18next";
 import { getLocalizedText } from "../utils/getLocalizedText";
+import SEO from "../Components/SEO";
 
 const PRODUCTS_PER_PAGE = 24;
 
@@ -143,6 +144,11 @@ const AllProducts = () => {
 
   return (
     <div className="bg-gradient-to-b from-white via-[#f9fafb] to-[#f2f3f6] min-h-screen">
+      <SEO
+        title={t("all_products.title")}
+        description={t("all_products.subtitle")}
+      />
+
       {/* Mobile Backdrop */}
       {mobileFilterOpen && (
         <div

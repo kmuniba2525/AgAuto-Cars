@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import { categories } from '../assets/assets';
 import ProductCard from '../Components/ProductCard';
 import { useTranslation } from 'react-i18next';
+import SEO from '../Components/SEO';
 
 const ProductCategory = () => {
     const { t } = useTranslation();
@@ -14,6 +15,11 @@ const ProductCategory = () => {
     const filteredProducts=products.filter((product)=>product.category.toLowerCase()===category)
   return (
     <div className='m-16'>
+        <SEO
+            title={searchCategory ? searchCategory.text : category}
+            description={`Shop ${searchCategory ? searchCategory.text : category} auto parts and accessories at AgAuto.`}
+        />
+
         {searchCategory && (
             <div className='flex flex-col items-end w-max' >
                 <p className='text-2xl font-medium'>{searchCategory.text.toUpperCase()}</p>
