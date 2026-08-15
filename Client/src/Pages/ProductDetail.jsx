@@ -26,7 +26,22 @@ const ProductDetail = () => {
 
   const reviewsRef = useRef(null);
 
-  const product = products.find((item) => item._id?.toString() === id);
+  // ✅ CHANGED: look up by slug first (new SEO-friendly URLs), falling back
+  // to the raw MongoDB _id for any old links/bookmarks still pointing at it.
+  const product =
+    products.find((item) => item.slug === id) ||
+    products.find((item) => item._id?.toString() === id);
+
+  // If we matched by _id but the product actually has a slug, redirect to
+  // the slug URL so old links self-correct instead of staying on the
+  // non-canonical ID version.
+  useEffect(() => {
+    if (product?.slug && id !== product.slug) {
+      navigate(`/products/${product.category?.toLowerCase()}/${product.slug}`, {
+        replace: true,
+      });
+    }
+  }, [product, id]);
 
   // ✅ resolve bilingual name/description for the active language
   const localizedName = getLocalizedText(product?.name, i18n.language);

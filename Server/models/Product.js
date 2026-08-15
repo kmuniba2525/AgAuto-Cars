@@ -78,6 +78,20 @@ const bilingualTextSchema = new mongoose.Schema(
   { _id: false }
 );
 
+// ======================
+// SLUG GENERATOR
+// ======================
+// Turns a product name into a clean, URL-safe string, e.g.
+// "Premium Ceramic Shield™ (5L)" -> "premium-ceramic-shield-5l"
+const slugify = (text) =>
+  text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
 const productsSchema = new mongoose.Schema(
   {
     // ✅ CHANGED: name and description are now { en, pt } objects instead
@@ -85,6 +99,17 @@ const productsSchema = new mongoose.Schema(
     name: { type: bilingualTextSchema, required: true },
 
     description: { type: bilingualTextSchema, required: true },
+
+    // SEO-friendly URL segment, e.g. "premium-ceramic-shield". Generated
+    // automatically from the English name the first time a product is
+    // saved — see the pre-save hook below. Left unset here (not required)
+    // so existing products can be backfilled via utils/backfillSlugs.js.
+    slug: {
+      type: String,
+      unique: true,
+      sparse: true,
+      index: true,
+    },
 
     price: { type: Number, required: true },
 
@@ -128,6 +153,23 @@ const productsSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Auto-generate a unique slug from the English name — only on first save,
+// so editing the name later never breaks an already-indexed URL.
+productsSchema.pre("save", async function () {
+  if (this.slug) return;
+
+  const base = slugify(this.name?.en || "product") || "product";
+  let slug = base;
+  let counter = 1;
+
+  while (await this.constructor.exists({ slug, _id: { $ne: this._id } })) {
+    counter += 1;
+    slug = `${base}-${counter}`;
+  }
+
+  this.slug = slug;
+});
 
 const Product =
   mongoose.models.product ||

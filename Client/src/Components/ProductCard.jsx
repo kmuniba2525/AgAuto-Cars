@@ -30,7 +30,7 @@ const ProductCard = ({ product }) => {
   return (
     <div
       onClick={() => {
-        navigate(`/products/${product.category.toLowerCase()}/${product._id}`);
+        navigate(`/products/${product.category.toLowerCase()}/${product.slug || product._id}`);
         window.scrollTo({ top: 0, behavior: "smooth" });
       }}
       className="flex flex-col bg-white rounded-xl sm:rounded-2xl border border-gray-200/70 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.06)] cursor-pointer hover:shadow-[0_12px_28px_-8px_rgba(0,0,0,0.12)] hover:border-gray-300 transition-all duration-300 w-full overflow-hidden"

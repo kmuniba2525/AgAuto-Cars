@@ -9,7 +9,7 @@ const CATEGORIES = [
 export const generateSitemap = async (req, res) => {
   try {
     const baseUrl = process.env.CLIENT_URL || "https://agautosystemab.com";
-    const products = await Product.find({}, "_id category updatedAt");
+    const products = await Product.find({}, "slug category updatedAt");
 
     const staticUrls = [
       { loc: `${baseUrl}/`, priority: "1.0" },
@@ -21,11 +21,16 @@ export const generateSitemap = async (req, res) => {
       priority: "0.7",
     }));
 
-    const productUrls = products.map((p) => ({
-      loc: `${baseUrl}/products/${p.category?.toLowerCase()}/${p._id}`,
-      lastmod: p.updatedAt ? p.updatedAt.toISOString().split("T")[0] : undefined,
-      priority: "0.8",
-    }));
+    // ✅ CHANGED: use the SEO-friendly slug instead of the raw MongoDB _id.
+    // Any product without a slug yet (shouldn't happen after the backfill,
+    // but just in case) is skipped rather than listing a broken URL.
+    const productUrls = products
+      .filter((p) => p.slug)
+      .map((p) => ({
+        loc: `${baseUrl}/products/${p.category?.toLowerCase()}/${p.slug}`,
+        lastmod: p.updatedAt ? p.updatedAt.toISOString().split("T")[0] : undefined,
+        priority: "0.8",
+      }));
 
     const allUrls = [...staticUrls, ...categoryUrls, ...productUrls];
 
