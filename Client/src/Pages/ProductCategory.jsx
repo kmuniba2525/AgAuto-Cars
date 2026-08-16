@@ -19,7 +19,19 @@ const ProductCategory = () => {
             title={searchCategory ? searchCategory.text : category}
             description={`Shop ${searchCategory ? searchCategory.text : category} auto parts and accessories at AgAuto.`}
         />
-
+{filteredProducts.length > 0 && (
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      itemListElement: filteredProducts.map((p, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        url: `https://agautosystemab.com/products/${p.category?.toLowerCase()}/${p.slug || p._id}`,
+      })),
+    })}
+  </script>
+)}
         {searchCategory && (
             <div className='flex flex-col items-end w-max' >
                 <p className='text-2xl font-medium'>{searchCategory.text.toUpperCase()}</p>

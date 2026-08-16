@@ -97,7 +97,7 @@ const Navbar = () => {
 
                     {/* CHAT */}
                     <button onClick={() => setOpenChat(prev => !prev)} className="shrink-0">
-                        <img src={assets.chat_icon} className="w-6 opacity-80" />
+                       <img src={assets.chat_icon} alt="chat" className="w-6 opacity-80" />
                     </button>
 
 
@@ -189,14 +189,14 @@ const Navbar = () => {
                 {/* MOBILE ICONS */}
                 <div className='flex sm:hidden items-center gap-5'>
                     <div onClick={() => navigate("/cart")} className="relative cursor-pointer">
-                        <img src={assets.nav_cart_icon} className='w-6 opacity-80' />
+                        <img src={assets.nav_cart_icon} alt='cart' className='w-6 opacity-80' />
                         <span className="absolute -top-2 -right-3 text-[10px] text-primary bg-accent w-[18px] h-[18px] rounded-full flex items-center justify-center">
                             {getCartCount()}
                         </span>
                     </div>
 
                     <button onClick={() => setOpenChat(prev => !prev)}>
-                        <img src={assets.chat_icon} className="w-6 opacity-80" />
+                        <img src={assets.chat_icon} alt="chat" className="w-6 opacity-80" />
                     </button>
 
                     <button onClick={() => setOpen(!open)} aria-label="Toggle menu">

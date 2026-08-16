@@ -148,7 +148,19 @@ const AllProducts = () => {
         title={t("all_products.title")}
         description={t("all_products.subtitle")}
       />
-
+{paginatedProducts.length > 0 && (
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      itemListElement: paginatedProducts.map((p, index) => ({
+        "@type": "ListItem",
+        position: (currentPage - 1) * PRODUCTS_PER_PAGE + index + 1,
+        url: `https://agautosystemab.com/products/${p.category?.toLowerCase()}/${p.slug || p._id}`,
+      })),
+    })}
+  </script>
+)}
       {/* Mobile Backdrop */}
       {mobileFilterOpen && (
         <div
