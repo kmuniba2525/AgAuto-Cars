@@ -124,7 +124,7 @@ const ProductDetail = () => {
       offers: {
         "@type": "Offer",
         url: window.location.href,
-        priceCurrency: currency || "USD",
+        priceCurrency: "SEK",
         price: selectedVariant?.offerPrice ?? product.offerPrice,
         availability:
           (selectedVariant?.stock ?? product.stock) > 0
