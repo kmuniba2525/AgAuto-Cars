@@ -108,7 +108,39 @@ const ProductDetail = () => {
         description={localizedDescription?.replace(/<[^>]*>/g, "").slice(0, 160)}
         image={product.image?.[0]}
       />
-
+  {product && (
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: localizedName,
+      image: product.image,
+      description: localizedDescription?.replace(/<[^>]*>/g, "").slice(0, 500),
+      sku: product._id,
+      brand: {
+        "@type": "Brand",
+        name: "AgAuto",
+      },
+      offers: {
+        "@type": "Offer",
+        url: window.location.href,
+        priceCurrency: currency || "USD",
+        price: selectedVariant?.offerPrice ?? product.offerPrice,
+        availability:
+          (selectedVariant?.stock ?? product.stock) > 0
+            ? "https://schema.org/InStock"
+            : "https://schema.org/OutOfStock",
+      },
+      ...(localProduct?.numReviews > 0 && {
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: rating,
+          reviewCount: localProduct.numReviews,
+        },
+      }),
+    })}
+  </script>
+)}
       {/* BREADCRUMB */}
       <p className="text-xs text-gray-400 font-medium tracking-wide mb-6">
         <Link to="/" className="hover:text-gray-700 transition-colors">
