@@ -1,0 +1,1 @@
+var e=(e,t=400)=>{if(!e||typeof e!=`string`)return e;let n=e.indexOf(`/upload/`);if(!e.includes(`res.cloudinary.com`)||n===-1)return e;let r=n+8;return e.slice(0,r)+`f_auto,q_auto,w_${t}/`+e.slice(r)};export{e as t};

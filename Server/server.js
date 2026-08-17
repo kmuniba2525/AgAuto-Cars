@@ -33,25 +33,38 @@ app.post(
   stripeWebhooks
 );
 
-// Allowed origins for CORS
+// Allowed origins for CORS — include both www and non-www variants,
+// plus whatever CLIENT_URL is set to on the host, so a mismatch there
+// can't take down the whole site.
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:4000",
-  process.env.CLIENT_URL, // e.g. https://agautosystemab.com
+  "https://agautosystemab.com",
+  "https://www.agautosystemab.com",
+  process.env.CLIENT_URL, // e.g. https://www.agautosystemab.com
 ].filter(Boolean);
 
-app.use(cors({
+const corsOptions = {
   origin: function (origin, callback) {
     // allow requests with no origin (like Postman, curl, server-to-server)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       console.log("❌ Blocked by CORS:", origin);
-      callback(new Error("Not allowed by CORS"));
+      // Deny gracefully instead of throwing — an unhandled CORS error
+      // here used to bubble up to Express's default error handler and
+      // return a 500 HTML page for every request, including static
+      // assets, breaking the whole site for that origin.
+      callback(null, false);
     }
   },
   credentials: true,
-}));
+};
+
+// CORS only applies to API routes — your own static frontend assets
+// (JS/CSS/images served below) don't need CORS at all since they're
+// same-origin, so a bad origin here can no longer break asset loading.
+app.use("/api", cors(corsOptions));
 
 app.use(compression());
 

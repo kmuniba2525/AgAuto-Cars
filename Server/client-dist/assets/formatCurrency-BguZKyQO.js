@@ -1,0 +1,1 @@
+var e=(e,t)=>`${(Number(e)||0).toLocaleString()} ${t}`;export{e as t};

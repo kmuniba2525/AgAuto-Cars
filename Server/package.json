@@ -6,7 +6,7 @@
   "scripts": {
   "start": "node server.js",
   "server": "nodemon server.js",
-  "build": "cd ../Client && npm install && npm run build && rm -rf ../Server/client-dist && cp -r dist ../Server/client-dist",
+  "build": "cd Client && npm install && npm run build && rm -rf ../Server/client-dist && cp -r dist ../Server/client-dist",
   "backfill-slugs": "node utils/backfillSlugs.js"
 },
   "keywords": [],

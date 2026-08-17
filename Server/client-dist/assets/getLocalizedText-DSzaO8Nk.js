@@ -1,0 +1,1 @@
+var e=(e,t)=>e?typeof e==`string`?e:e[t]||e.en||``:``;export{e as t};
