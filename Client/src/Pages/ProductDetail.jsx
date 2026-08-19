@@ -8,7 +8,7 @@ import { FaStar } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
 import { getLocalizedText } from "../utils/getLocalizedText";
 import { formatCurrency } from "../utils/formatCurrency";
-import { getOptimizedImageUrl } from "../utils/getOptimizedImageUrl";
+import { getOptimizedImageUrl, getSrcSet } from "../utils/getOptimizedImageUrl";
 import SEO from "../Components/SEO";
 const ProductDetail = () => {
   const { t, i18n } = useTranslation();
@@ -26,15 +26,10 @@ const ProductDetail = () => {
 
   const reviewsRef = useRef(null);
 
-  // ✅ CHANGED: look up by slug first (new SEO-friendly URLs), falling back
-  // to the raw MongoDB _id for any old links/bookmarks still pointing at it.
   const product =
     products.find((item) => item.slug === id) ||
     products.find((item) => item._id?.toString() === id);
 
-  // If we matched by _id but the product actually has a slug, redirect to
-  // the slug URL so old links self-correct instead of staying on the
-  // non-canonical ID version.
   useEffect(() => {
     if (product?.slug && id !== product.slug) {
       navigate(`/products/${product.category?.toLowerCase()}/${product.slug}`, {
@@ -43,7 +38,6 @@ const ProductDetail = () => {
     }
   }, [product, id]);
 
-  // ✅ resolve bilingual name/description for the active language
   const localizedName = getLocalizedText(product?.name, i18n.language);
   const localizedDescription = getLocalizedText(product?.description, i18n.language);
 
@@ -101,6 +95,8 @@ const ProductDetail = () => {
     return <p className="p-6">{t("product_detail.loading")}</p>;
   }
 
+  const heroImage = thumbnail || product.image?.[0];
+
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 py-8">
       <SEO
@@ -108,6 +104,16 @@ const ProductDetail = () => {
         description={localizedDescription?.replace(/<[^>]*>/g, "").slice(0, 160)}
         image={product.image?.[0]}
       />
+      {/*
+        Preload the LCP image so the browser starts fetching it before it
+        would otherwise discover it in the render tree. If your SEO
+        component supports injecting extra <link> tags into <head>, move
+        this there instead — otherwise react-helmet/whatever you're using
+        for SEO should expose a way to add:
+        <link rel="preload" as="image"
+              href={getOptimizedImageUrl(product.image?.[0], 800)}
+              imagesrcset={getSrcSet(product.image?.[0])} />
+      */}
   {product && (
   <script type="application/ld+json">
     {JSON.stringify({
@@ -175,8 +181,12 @@ const ProductDetail = () => {
             )}
 
             <img
-              src={getOptimizedImageUrl(thumbnail || product.image?.[0], 800)}
+              src={getOptimizedImageUrl(heroImage, 800)}
+              srcSet={getSrcSet(heroImage, [400, 600, 800, 1000, 1200])}
+              sizes="(max-width: 1024px) 100vw, 50vw"
               alt={localizedName}
+              fetchpriority="high"
+              decoding="async"
               className="w-full h-full object-cover"
             />
           </div>
@@ -193,9 +203,10 @@ const ProductDetail = () => {
                     }`}
                 >
                   <img
-                    src={getOptimizedImageUrl(img)}
+                    src={getOptimizedImageUrl(img, 100)}
                     alt={`thumb-${index}`}
                     loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover"
                   />
                 </button>
@@ -441,7 +452,6 @@ const ProductDetail = () => {
           {t("product_detail.customer_reviews")}
         </h2>
 
-        {/* REVIEW FORM — now its own component */}
         <AddReview
           product={localProduct}
           user={user}
@@ -449,7 +459,6 @@ const ProductDetail = () => {
           onReviewSubmitted={(updatedProduct) => setLocalProduct(updatedProduct)}
         />
 
-        {/* REVIEWS LIST */}
         <div className="mt-8 space-y-4">
           {Array.isArray(localProduct?.reviews) &&
             localProduct.reviews.length > 0 ? (

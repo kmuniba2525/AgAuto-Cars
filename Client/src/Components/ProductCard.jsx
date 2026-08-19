@@ -5,8 +5,12 @@ import { useAppContext } from "../Context/AppContext";
 import { useTranslation } from "react-i18next";
 import { getLocalizedText } from "../utils/getLocalizedText";
 import { formatCurrency } from "../utils/formatCurrency";
-import { getOptimizedImageUrl } from "../utils/getOptimizedImageUrl";
-const ProductCard = ({ product }) => {
+import { getOptimizedImageUrl, getSrcSet } from "../utils/getOptimizedImageUrl";
+
+// Pass eager={true} for cards rendered above the fold (e.g. the first
+// 3-4 cards on a grid page) so their images load immediately instead of
+// waiting on the lazy-load/scroll trigger.
+const ProductCard = ({ product, eager = false }) => {
   const {
     currency,
     addToCart,
@@ -19,13 +23,14 @@ const ProductCard = ({ product }) => {
 
   if (!product) return null;
 
-  // ✅ CHANGED: resolve bilingual name/description for the active language
   const localizedName = getLocalizedText(product.name, i18n.language);
   const localizedDescriptionRaw = getLocalizedText(product.description, i18n.language);
 
   const description = localizedDescriptionRaw
     ? localizedDescriptionRaw.replace(/<[^>]*>/g, "")
     : "";
+
+  const rawImage = product.image?.[0];
 
   return (
     <div
@@ -37,14 +42,17 @@ const ProductCard = ({ product }) => {
     >
       {/* Product Image */}
       <div className="overflow-hidden bg-gradient-to-b from-gray-50 to-white h-50 sm:h-60 flex items-center justify-center">
-    <img
-    src={getOptimizedImageUrl(product.image?.[0]) || assets.upload_area}
-    alt={localizedName}
-    loading="lazy"
-    decoding="async"
-    className="max-w-[85%] max-h-[80%] object-contain scale-[1.25] hover:scale-[1.45] transition-all duration-500"
-/>
-</div>
+        <img
+          src={getOptimizedImageUrl(rawImage, 400) || assets.upload_area}
+          srcSet={getSrcSet(rawImage)}
+          sizes="(max-width: 640px) 45vw, (max-width: 1024px) 25vw, 20vw"
+          alt={localizedName}
+          loading={eager ? "eager" : "lazy"}
+          fetchpriority={eager ? "high" : "auto"}
+          decoding="async"
+          className="max-w-[85%] max-h-[80%] object-contain scale-[1.25] hover:scale-[1.45] transition-all duration-500"
+        />
+      </div>
 
       {/* Content */}
       <div className="p-2 sm:p-3.5 text-[11px] sm:text-xs flex flex-col flex-1">
