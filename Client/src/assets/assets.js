@@ -1,4 +1,3 @@
-
 import Logo from "./Logo.png"
 import Logo2 from './Logo2.png'
 import search_icon from "./search_icon.svg";
@@ -22,17 +21,25 @@ import box_icon from "./box_icon.svg";
 import trust_icon from "./trust_icon.svg";
 import black_arrow_icon from "./black_arrow_icon.svg";
 import white_arrow_icon from "./white_arrow_icon.svg";
-import main_banner_bg from "./main_banner_bg.png";
-// import main_banner_bg_sm from "./main_banner_bg_sm.png";
+
+// ── Banner images (optimized WebP, desktop + mobile variants) ─────────────
+// NOTE: clean up the duplicate "main_banner_bg_sm (2).webp" in your assets folder —
+// keep only the correct one, rename it to exactly "main_banner_bg_sm.webp".
+import main_banner_bg from "./main_banner_bg.webp";
+import main_banner_bg_sm from "./main_banner_bg_sm.webp";
+import main_banner_bg2 from "./main_banner_bg2.webp";
+import main_banner_bg2_sm from "./main_banner_bg2_sm.webp";
+import main_banner_bg3 from "./main_banner_bg3.webp";
+import main_banner_bg3_sm from "./main_banner_bg3_sm.webp";
+
 import bottom_banner_image from "./bottom_banner_image.png";
 // import bottom_banner_image_sm from "./bottom_banner_image_sm.png";
 import add_address_iamge from "./add_address_image.svg";
 import bell_icon from './bell_icon.png';
 import chat_icon from './chat_icon.png';
 import chart_icon from './chart_icon.png';
-import main_banner_bg2 from './main_banner_bg2.png'
-import main_banner_bg3 from './main_banner_bg3.png'
-// ── AutoDex category images (same filenames, new automotive content) ──────────
+
+// ── AutoDex category images (same filenames, new automotive content) ──────
 import organic_vegitable_image from "./organic_vegitable_image.png"; // Primer
 import fresh_fruits_image from "./fresh_fruits_image.png";           // Clearcoat
 import bottles_image from "./bottles_image.png";                     // Thinners
@@ -46,6 +53,7 @@ import HouseHold from './Household.jpg';                             // Ceramic 
 import Spices from './Spices.jpg';                                   // Acrylic Spray
 import PersonalCare from './PersonalCare.png';                       // Workwear
 import InvoiceLogo from './InvoiceLogo.png'; // Invoice logo
+
 export const assets = {
   Logo,
   search_icon,
@@ -69,11 +77,13 @@ export const assets = {
   black_arrow_icon,
   white_arrow_icon,
   main_banner_bg,
-  // main_banner_bg_sm,
+  main_banner_bg_sm,
   bottom_banner_image,
   // bottom_banner_image_sm,
   main_banner_bg2,
+  main_banner_bg2_sm,
   main_banner_bg3,
+  main_banner_bg3_sm,
   add_address_iamge,
   box_icon,
   bell_icon,

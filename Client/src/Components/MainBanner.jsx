@@ -14,6 +14,7 @@ const MainBanner = () => {
   const slides = [
     {
       image: assets.main_banner_bg,
+      imageMobile: assets.main_banner_bg_sm,
       tagline: t('banner.slide1_tagline'),
       title: (
         <>
@@ -29,6 +30,7 @@ const MainBanner = () => {
     },
     {
       image: assets.main_banner_bg2,
+      imageMobile: assets.main_banner_bg2_sm,
       tagline: t('banner.slide2_tagline'),
       title: (
         <>
@@ -44,6 +46,7 @@ const MainBanner = () => {
     },
     {
       image: assets.main_banner_bg3,
+      imageMobile: assets.main_banner_bg3_sm,
       tagline: t('banner.slide3_tagline'),
       title: (
         <>
@@ -67,37 +70,55 @@ const MainBanner = () => {
         pagination={{ clickable: true }}
         navigation loop className="h-full"
       >
-        {slides.map((slide, index) => (
-          <SwiperSlide key={index}>
-            <div className="relative w-full h-full">
-              <img src={slide.image} alt="" className="absolute inset-0 w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/65 to-primary/40" />
-              <div className="absolute inset-0 flex items-center justify-center text-center px-4 md:px-6">
-                <div className="max-w-3xl">
-                  <span className="inline-block px-3 py-1 md:px-5 md:py-2 rounded-full bg-accent/20 border border-accent/40 text-accent text-xs md:text-sm font-medium mb-3 md:mb-6 backdrop-blur-sm">
-                    {slide.tagline}
-                  </span>
-                  <h1 className="text-white font-bold text-2xl sm:text-3xl md:text-5xl leading-tight tracking-tight">
-                    {slide.title}
-                  </h1>
-                  <p className="hidden sm:block mt-4 md:mt-6 text-[#E5E7EB] text-sm md:text-xl max-w-2xl mx-auto leading-relaxed">
-                    {slide.subtitle}
-                  </p>
-                  <div className="flex flex-row justify-center gap-2 md:gap-4 mt-5 md:mt-10">
-                    <Link to={slide.primaryLink}
-                      className="px-4 py-2 md:px-8 md:py-4 rounded-lg bg-accent text-primary text-sm md:text-base font-semibold hover:bg-accent-dull hover:scale-105 transition duration-300 shadow-lg shadow-accent/30">
-                      {slide.primaryText}
-                    </Link>
-                    <Link to={slide.secondaryLink}
-                      className="px-4 py-2 md:px-8 md:py-4 rounded-lg border border-white/20 bg-white/10 backdrop-blur-md text-white text-sm md:text-base font-medium hover:bg-white/20 transition duration-300">
-                      {slide.secondaryText}
-                    </Link>
+        {slides.map((slide, index) => {
+          const isFirst = index === 0;
+          return (
+            <SwiperSlide key={index}>
+              <div className="relative w-full h-full">
+                <picture>
+                  {slide.imageMobile && (
+                    <source media="(max-width: 768px)" srcSet={slide.imageMobile} />
+                  )}
+                  <img
+                    src={slide.image}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover"
+                    // Only the first slide is above-the-fold on initial load, so only it
+                    // gets eager/high-priority loading. The rest are lazy to avoid
+                    // competing with the LCP image for bandwidth.
+                    loading={isFirst ? "eager" : "lazy"}
+                    fetchpriority={isFirst ? "high" : "auto"}
+                    decoding={isFirst ? "sync" : "async"}
+                  />
+                </picture>
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/85 via-primary/65 to-primary/40" />
+                <div className="absolute inset-0 flex items-center justify-center text-center px-4 md:px-6">
+                  <div className="max-w-3xl">
+                    <span className="inline-block px-3 py-1 md:px-5 md:py-2 rounded-full bg-accent/20 border border-accent/40 text-accent text-xs md:text-sm font-medium mb-3 md:mb-6 backdrop-blur-sm">
+                      {slide.tagline}
+                    </span>
+                    <h1 className="text-white font-bold text-2xl sm:text-3xl md:text-5xl leading-tight tracking-tight">
+                      {slide.title}
+                    </h1>
+                    <p className="hidden sm:block mt-4 md:mt-6 text-[#E5E7EB] text-sm md:text-xl max-w-2xl mx-auto leading-relaxed">
+                      {slide.subtitle}
+                    </p>
+                    <div className="flex flex-row justify-center gap-2 md:gap-4 mt-5 md:mt-10">
+                      <Link to={slide.primaryLink}
+                        className="px-4 py-2 md:px-8 md:py-4 rounded-lg bg-accent text-primary text-sm md:text-base font-semibold hover:bg-accent-dull hover:scale-105 transition duration-300 shadow-lg shadow-accent/30">
+                        {slide.primaryText}
+                      </Link>
+                      <Link to={slide.secondaryLink}
+                        className="px-4 py-2 md:px-8 md:py-4 rounded-lg border border-white/20 bg-white/10 backdrop-blur-md text-white text-sm md:text-base font-medium hover:bg-white/20 transition duration-300">
+                        {slide.secondaryText}
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </SwiperSlide>
-        ))}
+            </SwiperSlide>
+          );
+        })}
       </Swiper>
     </section>
   );
