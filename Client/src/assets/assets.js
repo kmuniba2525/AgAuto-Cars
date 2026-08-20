@@ -1,5 +1,5 @@
-import Logo from "./Logo.png"
-import Logo2 from './Logo2.png'
+import Logo from "./Logo.webp"
+import Logo2 from './Logo2.webp'
 import search_icon from "./search_icon.svg";
 import remove_icon from "./remove_icon.svg";
 import arrow_right_icon_colored from "./arrow_right_icon_colored.svg";
