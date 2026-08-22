@@ -318,5 +318,20 @@
     "priceNote": "Enhetspriser gjenspeiler gjeldende katalogpris og kan avvike noe fra prisen da bestillingen ble lagt inn.",
     "thankYou": "Takk for at du handlet hos AG Auto Cars.",
     "language": "Språk"
+  },
+  "contact": {
+    "title": "Kontakt oss",
+    "subtitle": "Spørsmål om en bestilling eller et produkt? Vi hjelper gjerne.",
+    "form_name": "Ditt navn",
+    "form_email": "Din e-post",
+    "form_message": "Melding",
+    "form_submit": "Send melding",
+    "form_sending": "Sender...",
+    "form_success": "Takk! Meldingen din er sendt.",
+    "form_error": "Noe gikk galt. Prøv igjen.",
+    "info_title": "Kontaktinformasjon",
+    "email_label": "E-post",
+    "phone_label": "Telefon",
+    "address_label": "Adresse"
   }
 }

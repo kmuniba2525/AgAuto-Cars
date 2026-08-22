@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const LANGUAGES = [
   { code: 'en', label: 'English', flag: '🇬🇧' },
@@ -10,9 +11,13 @@ const LANGUAGES = [
   { code: 'no', label: 'Norsk', flag: '🇳🇴' },
 ];
 
+const SUPPORTED_LANGS = ['en', 'sv', 'fi', 'da', 'no'];
+
 const LanguageDialog = ({ onClose }) => {
   const { i18n, t, ready } = useTranslation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   // Don't render until i18n is ready
   if (!ready) return null;
@@ -20,6 +25,17 @@ const LanguageDialog = ({ onClose }) => {
   const selectLanguage = (lang) => {
     i18n.changeLanguage(lang);
     localStorage.setItem('selectedLanguage', lang);
+
+    // Swap the :lang segment in the URL — LocaleLayout reads the URL as
+    // the source of truth, so without this the language reverts on the
+    // very next navigation.
+    const segments = location.pathname.split('/').filter(Boolean);
+    if (SUPPORTED_LANGS.includes(segments[0])) {
+      segments[0] = lang;
+    } else {
+      segments.unshift(lang);
+    }
+    navigate(`/${segments.join('/')}`);
     onClose();
   };
 

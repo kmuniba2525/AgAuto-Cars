@@ -17,9 +17,22 @@ const Navbar = () => {
         searchQuery, setSearchQuery, getCartCount, axios, setCartItems
     } = useAppContext()
 
+    const SUPPORTED_LANGS = ['en', 'sv', 'fi', 'da', 'no']
+
     const changeLang = (lang) => {
         i18n.changeLanguage(lang)
         localStorage.setItem('selectedLanguage', lang)
+
+        // Swap the :lang segment in the current URL so LocaleLayout's
+        // effect (which reads the URL, not i18next state) doesn't stomp
+        // this choice back to the old language on the next navigation.
+        const segments = location.pathname.split('/').filter(Boolean)
+        if (SUPPORTED_LANGS.includes(segments[0])) {
+            segments[0] = lang
+        } else {
+            segments.unshift(lang)
+        }
+        navigate(`/${segments.join('/')}`)
     }
 
     const logout = async () => {
@@ -62,9 +75,9 @@ const Navbar = () => {
                 {/* CENTER: NAV LINKS */}
                 <div className="hidden sm:flex flex-none px-6 justify-center">
                     <div className="flex items-center gap-10">
-                        <NavLink to='/home' className={navLinkClass}>{t('navbar.home')}</NavLink>
-                        <NavLink to='/products' className={navLinkClass}>{t('navbar.products')}</NavLink>
-                        <NavLink to='/contact' className={navLinkClass}>{t('navbar.contact')}</NavLink>
+                        <NavLink to={`/${i18n.language}/home`} className={navLinkClass}>{t('navbar.home')}</NavLink>
+                        <NavLink to={`/${i18n.language}/products`} className={navLinkClass}>{t('navbar.products')}</NavLink>
+                        <NavLink to={`/${i18n.language}/contact`} className={navLinkClass}>{t('navbar.contact')}</NavLink>
                     </div>
                 </div>
 
@@ -78,7 +91,7 @@ const Navbar = () => {
                             onChange={(e) => {
                                 const value = e.target.value
                                 setSearchQuery(value)
-                                if (value.trim().length > 0 && location.pathname !== "/products") navigate("/products")
+                                if (value.trim().length > 0 && !location.pathname.endsWith("/products")) navigate(`/${i18n.language}/products`)
                             }}
                             className="w-full bg-transparent outline-none text-white placeholder-gray-400 text-sm"
                             type="text"
@@ -215,9 +228,9 @@ const Navbar = () => {
                                 onChange={(e) => {
                                     const value = e.target.value
                                     setSearchQuery(value)
-                                    if (value.trim().length > 0 && location.pathname !== "/products") {
+                                    if (value.trim().length > 0 && !location.pathname.endsWith("/products")) {
                                         setOpen(false)
-                                        navigate("/products")
+                                        navigate(`/${i18n.language}/products`)
                                     }
                                 }}
                                 className="w-full bg-transparent outline-none text-white placeholder-gray-400 text-sm"
@@ -227,9 +240,9 @@ const Navbar = () => {
                             <img src={assets.search_icon} alt="search" className="w-4 h-4 opacity-100 brightness-150" />
                         </div>
 
-                        <NavLink to='/home' onClick={() => setOpen(false)} className={navLinkClass}>{t('navbar.home')}</NavLink>
-                        <NavLink to='/products' onClick={() => setOpen(false)} className={navLinkClass}>{t('navbar.all_products')}</NavLink>
-                        <NavLink to='/contact' onClick={() => setOpen(false)} className={navLinkClass}>{t('navbar.contact')}</NavLink>
+                        <NavLink to={`/${i18n.language}/home`} onClick={() => setOpen(false)} className={navLinkClass}>{t('navbar.home')}</NavLink>
+                        <NavLink to={`/${i18n.language}/products`} onClick={() => setOpen(false)} className={navLinkClass}>{t('navbar.all_products')}</NavLink>
+                        <NavLink to={`/${i18n.language}/contact`} onClick={() => setOpen(false)} className={navLinkClass}>{t('navbar.contact')}</NavLink>
 
                         {user && (
                             <button onClick={() => { setOpen(false); navigate("/my-orders") }}

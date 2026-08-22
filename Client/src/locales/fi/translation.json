@@ -318,5 +318,20 @@
     "priceNote": "Yksikköhinnat vastaavat nykyistä hinnastoa ja voivat poiketa hieman tilaushetken hinnasta.",
     "thankYou": "Kiitos, että ostit AG Auto Carsilta.",
     "language": "Kieli"
+  },
+  "contact": {
+    "title": "Ota yhteyttä",
+    "subtitle": "Kysyttävää tilauksesta tai tuotteesta? Autamme mielellämme.",
+    "form_name": "Nimesi",
+    "form_email": "Sähköpostisi",
+    "form_message": "Viesti",
+    "form_submit": "Lähetä viesti",
+    "form_sending": "Lähetetään...",
+    "form_success": "Kiitos! Viestisi on lähetetty.",
+    "form_error": "Jokin meni pieleen. Yritä uudelleen.",
+    "info_title": "Yhteystiedot",
+    "email_label": "Sähköposti",
+    "phone_label": "Puhelin",
+    "address_label": "Osoite"
   }
 }

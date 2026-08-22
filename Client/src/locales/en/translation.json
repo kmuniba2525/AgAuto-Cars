@@ -318,5 +318,20 @@
     "priceNote": "Unit prices reflect current catalog pricing and may differ slightly from the price at the time this order was placed.",
     "thankYou": "Thank you for shopping with AG Auto Cars.",
     "language": "Language"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "Questions about an order or a product? We're happy to help.",
+    "form_name": "Your Name",
+    "form_email": "Your Email",
+    "form_message": "Message",
+    "form_submit": "Send Message",
+    "form_sending": "Sending...",
+    "form_success": "Thanks! Your message has been sent.",
+    "form_error": "Something went wrong. Please try again.",
+    "info_title": "Get in Touch",
+    "email_label": "Email",
+    "phone_label": "Phone",
+    "address_label": "Address"
   }
 }

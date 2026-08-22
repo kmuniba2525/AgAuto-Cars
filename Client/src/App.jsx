@@ -1,6 +1,14 @@
-import React, { Suspense, useState } from "react";
-import { Route, Routes, useLocation } from "react-router-dom";
+import React, { Suspense, useState, useEffect } from "react";
+import {
+  Route,
+  Routes,
+  useLocation,
+  useParams,
+  Navigate,
+  Outlet,
+} from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 import Navbar from "./Components/Navbar";
 import Footer from "./Components/Footer";
@@ -9,12 +17,8 @@ import Loading from "./Components/Loading";
 import LanguageDialog from "./Components/LanguageDialog";
 
 // ================= LAZY-LOADED PAGES =================
-// Each page becomes its own JS chunk, fetched only when the user actually
-// navigates there — instead of one giant bundle downloaded up front on
-// first visit. This is the single biggest lever for initial load time:
-// a shopper landing on "/" no longer pays for the seller dashboard,
-// CKEditor (pulled in by AddProduct), Stripe checkout code, etc.
 const Home = React.lazy(() => import("./Pages/Home"));
+const Contact = React.lazy(() => import("./Pages/Contact"));
 const AllProducts = React.lazy(() => import("./Pages/AllProducts"));
 const ProductCategory = React.lazy(() => import("./Pages/ProductCategory"));
 const ProductDetail = React.lazy(() => import("./Pages/ProductDetail"));
@@ -36,12 +40,40 @@ const Analytics = React.lazy(() => import("./Pages/Seller/Analytics"));
 
 import { useAppContext } from "./Context/AppContext";
 
+// ================= LOCALE ROUTING =================
+const SUPPORTED_LANGS = ["en", "sv", "fi", "da", "no"]; // add "pt" back when re-enabled
+
+const LocaleLayout = () => {
+  const { lang } = useParams();
+  const { i18n } = useTranslation();
+
+  useEffect(() => {
+    if (!SUPPORTED_LANGS.includes(lang)) return; // bail, redirect below handles it
+    if (i18n.language !== lang) {
+      i18n.changeLanguage(lang);
+    }
+    localStorage.setItem("selectedLanguage", lang);
+    // <html lang> is now set by SEO.jsx via Helmet's htmlAttributes,
+    // so it doesn't need to be set manually here too.
+  }, [lang, i18n]);
+
+  if (!SUPPORTED_LANGS.includes(lang)) {
+    return <Navigate to="/en" replace />;
+  }
+
+  return <Outlet />;
+};
+
+const LegacyRedirect = () => {
+  const { pathname } = useLocation();
+  return <Navigate to={`/en${pathname}`} replace />;
+};
+
+// "/contact" has no locale-agnostic route of its own (mirrors "/products/*"
+// above) -- it goes through the same LegacyRedirect so an old bookmark or
+// external link to /contact still lands correctly rather than 404ing.
+
 // ================= NAVBAR / FOOTER VISIBILITY =================
-// Single source of truth for which routes hide the storefront chrome.
-// - Exact paths match precisely ("/checkout" only matches "/checkout").
-// - Prefixes match the path and everything under it ("/seller" also
-//   hides it on "/seller/orders", "/seller/product-list", etc.).
-// Add or remove entries here — nothing else needs to change.
 const HIDE_CHROME_EXACT = ["/checkout", "/payment-success"];
 const HIDE_CHROME_PREFIXES = ["/seller"];
 
@@ -54,67 +86,47 @@ const shouldHideChrome = (pathname) =>
 const App = () => {
   const { pathname } = useLocation();
   const hideChrome = shouldHideChrome(pathname);
-
   const { showUserLogin, isSeller } = useAppContext();
-
   const [showLangDialog, setShowLangDialog] = useState(
     !localStorage.getItem("selectedLanguage")
   );
 
   return (
     <div className="text-default min-h-screen text-gray-700">
-
-      {/* Language Dialog */}
       {showLangDialog && (
         <LanguageDialog onClose={() => setShowLangDialog(false)} />
       )}
-
-      {/* Navbar */}
       {!hideChrome && <Navbar />}
-
-      {/* Login Modal */}
       {showUserLogin && <Login />}
-
-      {/* Toast Notifications */}
       <Toaster position="top-right" />
 
-      {/* Routes */}
-      {/* IMPORTANT: <Loading /> here is the Suspense fallback shown while a
-          lazy route chunk is still downloading — e.g. on a hard reload of
-          /seller. It must stay a plain spinner with no navigate() calls.
-          The old version of Loading.jsx redirected to "/" on mount, which
-          meant every hard reload of a lazy route bounced back to home
-          before its chunk even finished loading. That redirect-with-delay
-          behavior now lives only in Pages/RedirectLoader.jsx, used below
-          at the dedicated /loader route. */}
       <Suspense fallback={<Loading />}>
         <Routes>
 
-          {/* Default page */}
-          <Route path="/" element={<AllProducts />} />
+          {/* ===== Indexable, locale-prefixed routes ===== */}
+          <Route path="/:lang" element={<LocaleLayout />}>
+            {/* index (e.g. "/en", "/sv") matches original "/" -> AllProducts */}
+            <Route index element={<AllProducts />} />
+            <Route path="home" element={<Home />} />
+            <Route path="products" element={<AllProducts />} />
+            <Route path="products/:category" element={<ProductCategory />} />
+            <Route path="products/:category/:id" element={<ProductDetail />} />
+            <Route path="contact" element={<Contact />} />
+          </Route>
 
-          {/* Home Page */}
-          <Route path="/home" element={<Home />} />
-
-          {/* Products */}
-          <Route path="/products" element={<AllProducts />} />
-          <Route path="/products/:category" element={<ProductCategory />} />
-          <Route path="/products/:category/:id" element={<ProductDetail />} />
-
-          {/* Cart & Orders */}
+          {/* ===== Cart & Orders (non-indexable, no locale prefix needed) ===== */}
           <Route path="/cart" element={<Cart />} />
           <Route path="/add-address" element={<AddAddress />} />
           <Route path="/my-orders" element={<MyOrder />} />
           <Route path="/track-order/:id" element={<TrackOrder />} />
 
-          {/* Payment */}
+          {/* ===== Payment ===== */}
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
 
-          {/* Redirect helper (spinner + delayed navigate, e.g. /loader?next=my-orders) */}
           <Route path="/loader" element={<RedirectLoader />} />
 
-          {/* Seller */}
+          {/* ===== Seller ===== */}
           <Route
             path="/seller"
             element={isSeller ? <SellerLayout /> : <SellerLogin />}
@@ -126,10 +138,16 @@ const App = () => {
             <Route path="analytics" element={<Analytics />} />
           </Route>
 
+          {/* ===== Root + legacy unprefixed URLs -> redirect into /en ===== */}
+          <Route path="/" element={<Navigate to="/en" replace />} />
+          <Route path="/home" element={<Navigate to="/en/home" replace />} />
+          <Route path="/products/*" element={<LegacyRedirect />} />
+          <Route path="/products" element={<LegacyRedirect />} />
+          <Route path="/contact" element={<LegacyRedirect />} />
+
         </Routes>
       </Suspense>
 
-      {/* Footer */}
       {!hideChrome && <Footer />}
     </div>
   );

@@ -6,45 +6,60 @@ const CATEGORIES = [
   "Aerosol", "Workwear",
 ];
 
+// Keep in sync with SUPPORTED_LANGS in Client/src/App.jsx and SEO.jsx.
+// "pt" stays out until Portuguese support is re-enabled.
+const LANGS = ["en", "sv", "fi", "da", "no"];
+const DEFAULT_LANG = "en";
+
 export const generateSitemap = async (req, res) => {
   try {
     const baseUrl = process.env.CLIENT_URL || "https://agautosystemab.com";
     const products = await Product.find({}, "slug category updatedAt");
 
-    const staticUrls = [
-      { loc: `${baseUrl}/`, priority: "1.0" },
-      { loc: `${baseUrl}/products`, priority: "0.9" },
+    // Each entry is one *page*, described by its path suffix (no lang, no
+    // domain) — e.g. "" for the homepage, "products/paint" for a category.
+    // One <url> block per language gets generated from each entry below,
+    // and every block lists all language versions as <xhtml:link> alternates
+    // so Google can tell they're the same page, not duplicate content.
+    const pages = [
+      { path: "", priority: "1.0" },
+      { path: "products", priority: "0.9" },
+      { path: "contact", priority: "0.5" },
+      ...CATEGORIES.map((cat) => ({
+        path: `products/${cat.toLowerCase()}`,
+        priority: "0.7",
+      })),
+      ...products
+        .filter((p) => p.slug)
+        .map((p) => ({
+          path: `products/${p.category?.toLowerCase()}/${p.slug}`,
+          lastmod: p.updatedAt ? p.updatedAt.toISOString().split("T")[0] : undefined,
+          priority: "0.8",
+        })),
     ];
 
-    const categoryUrls = CATEGORIES.map((cat) => ({
-      loc: `${baseUrl}/products/${cat.toLowerCase()}`,
-      priority: "0.7",
-    }));
+    const pageUrl = (lang, path) => `${baseUrl}/${lang}${path ? `/${path}` : ""}`;
 
-    // ✅ CHANGED: use the SEO-friendly slug instead of the raw MongoDB _id.
-    // Any product without a slug yet (shouldn't happen after the backfill,
-    // but just in case) is skipped rather than listing a broken URL.
-    const productUrls = products
-      .filter((p) => p.slug)
-      .map((p) => ({
-        loc: `${baseUrl}/products/${p.category?.toLowerCase()}/${p.slug}`,
-        lastmod: p.updatedAt ? p.updatedAt.toISOString().split("T")[0] : undefined,
-        priority: "0.8",
-      }));
+    const alternateLinks = (path) =>
+      LANGS.map(
+        (lang) => `    <xhtml:link rel="alternate" hreflang="${lang}" href="${pageUrl(lang, path)}" />`
+      ).join("\n") +
+      `\n    <xhtml:link rel="alternate" hreflang="x-default" href="${pageUrl(DEFAULT_LANG, path)}" />`;
 
-    const allUrls = [...staticUrls, ...categoryUrls, ...productUrls];
+    const urlBlocks = pages.flatMap(({ path, priority, lastmod }) =>
+      LANGS.map(
+        (lang) => `  <url>
+    <loc>${pageUrl(lang, path)}</loc>
+${alternateLinks(path)}
+    ${lastmod ? `<lastmod>${lastmod}</lastmod>` : ""}
+    <priority>${priority}</priority>
+  </url>`
+      )
+    );
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${allUrls
-  .map(
-    (u) => `  <url>
-    <loc>${u.loc}</loc>
-    ${u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ""}
-    <priority>${u.priority}</priority>
-  </url>`
-  )
-  .join("\n")}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+${urlBlocks.join("\n")}
 </urlset>`;
 
     res.header("Content-Type", "application/xml");
