@@ -77,6 +77,7 @@ const Navbar = () => {
                     <div className="flex items-center gap-10">
                         <NavLink to={`/${i18n.language}/home`} className={navLinkClass}>{t('navbar.home')}</NavLink>
                         <NavLink to={`/${i18n.language}/products`} className={navLinkClass}>{t('navbar.products')}</NavLink>
+                        <NavLink to={`/${i18n.language}/about`} className={navLinkClass}>{t('navbar.about')}</NavLink>
                         <NavLink to={`/${i18n.language}/contact`} className={navLinkClass}>{t('navbar.contact')}</NavLink>
                     </div>
                 </div>
@@ -242,6 +243,7 @@ const Navbar = () => {
 
                         <NavLink to={`/${i18n.language}/home`} onClick={() => setOpen(false)} className={navLinkClass}>{t('navbar.home')}</NavLink>
                         <NavLink to={`/${i18n.language}/products`} onClick={() => setOpen(false)} className={navLinkClass}>{t('navbar.all_products')}</NavLink>
+                        <NavLink to={`/${i18n.language}/about`} onClick={() => setOpen(false)} className={navLinkClass}>{t('navbar.about')}</NavLink>
                         <NavLink to={`/${i18n.language}/contact`} onClick={() => setOpen(false)} className={navLinkClass}>{t('navbar.contact')}</NavLink>
 
                         {user && (

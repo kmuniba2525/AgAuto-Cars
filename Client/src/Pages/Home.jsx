@@ -9,6 +9,7 @@ import Testimonial from '../Components/Testimonials'
 import InfoBanner from '../Components/InfoBanner'
 import PaymentMethods from '../Components/PaymentMethods'
 import SEO from '../Components/SEO'
+import FAQ from '../Components/FAQ'
 
 const Home = () => {
   return (
@@ -30,7 +31,8 @@ const Home = () => {
         {/* <NewsLetter /> */}
         <Testimonial/>
         {/* <BottomBanner /> */}
-        <InfoBanner/>
+        <FAQ/>
+        {/* <InfoBanner/> */}
         
 
       </div>

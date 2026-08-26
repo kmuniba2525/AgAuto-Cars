@@ -9,6 +9,7 @@ const Footer = () => {
     const quickLinks = [
         { text: t('footer_links.home'), url: `/${lang}/home` },
         { text: t('navbar.products'), url: `/${lang}/products` },
+        { text: t('navbar.about'), url: `/${lang}/about` },
         { text: t('footer_links.contact_us'), url: `/${lang}/contact` },
         { text: t('footer_links.track_order'), url: "/track-order" },
     ];

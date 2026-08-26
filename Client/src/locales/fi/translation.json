@@ -11,7 +11,8 @@
     "my_orders": "Tilaukseni",
     "login": "Kirjaudu",
     "logout": "Kirjaudu ulos",
-    "search_placeholder": "Hae autonosia..."
+    "search_placeholder": "Hae autonosia...",
+    "about": "Meistä"
   },
   "footer": {
     "description": "Luotettava kohteesi laadukkaille autonosille ja lisävarusteille. Tarjoamme korkealaatuisia tuotteita, kilpailukykyisiä hintoja ja nopean valtakunnallisen toimituksen.",
@@ -333,5 +334,43 @@
     "email_label": "Sähköposti",
     "phone_label": "Puhelin",
     "address_label": "Osoite"
-  }
+  },
+  "about": {
+    "title": "Meistä",
+    "tagline": "Ammattitason autonkorjaustarvikkeita, toimitettuna kautta Pohjoismaiden.",
+    "story_title": "Tarinamme",
+    "story_body": "AgAuto perustettiin Ruotsissa yksinkertaisella tavoitteella — antaa korjaamoille ja harrastajille kautta Skandinavian suora pääsy ammattitason automaalaus- ja korjaustuotteisiin, ilman yksittäistuonnin viiveitä ja hintalisiä. Keskitetystä ruotsalaisesta toiminnasta on kasvanut markkinapaikka, joka palvelee nyt asiakkaita Ruotsissa, Norjassa, Suomessa ja Tanskassa.",
+    "mission_title": "Missiomme",
+    "mission_body": "Tehdä laadukkaiden autonkorjaustuotteiden löytäminen, tilaaminen ja vastaanottaminen helpoksi — riippumatta siitä, missä Pohjoismaassa olet.",
+    "stat_countries": "Palveltavat maat",
+    "stat_categories": "Tuotekategoriaa",
+    "stat_languages": "Tuettua kieltä",
+    "stat_shipping": "Toimitukset kautta Pohjoismaiden",
+    "what_title": "Mitä tarjoamme",
+    "what_body": "Pohjamaaleista kirkaslakkoihin, hiontatarvikkeisiin, maalarinteippiin, tiivisteaineisiin ja suojavarusteisiin — pidämme varastossa sitä, mitä korjaamot oikeasti käyttävät, nopeilla toimituksilla kautta alueen.",
+    "why_title": "Miksi valita meidät",
+    "why_1": "Selkeä, läpinäkyvä hinnoittelu — ei piilotettuja tuontimaksuja",
+    "why_2": "Valikoima rakennettu sen ympärille, mitä korjaamot oikeasti käyttävät",
+    "why_3": "Nopeat toimitukset Ruotsiin, Norjaan, Suomeen ja Tanskaan",
+    "why_4": "Sivusto saatavilla omalla kielelläsi"
+  },
+  "faq": {
+  "title": "Usein Kysytyt Kysymykset",
+  "subtitle": "Kaikki mitä sinun tulee tietää ennen tilaamista.",
+
+  "q1": "Mihin maihin toimitatte?",
+  "a1": "Toimitamme tällä hetkellä Ruotsiin, Norjaan, Suomeen ja Tanskaan. Toimitusaika ja -kulut lasketaan automaattisesti kassalla osoitteesi perusteella.",
+
+  "q2": "Kuinka kauan toimitus kestää?",
+  "a2": "Useimmat tilaukset saapuvat 2–5 arkipäivässä sijainnistasi ja tuotteen saatavuudesta riippuen. Saat seurantalinkin sähköpostitse heti, kun tilauksesi on lähetetty.",
+
+  "q3": "Mitä maksutapoja hyväksytte?",
+  "a3": "Hyväksymme kaikki yleisimmät luotto- ja pankkikortit, Klarnan sekä Apple Payn / Google Payn. Kaikki maksut käsitellään turvallisesti Stripen kautta.",
+
+  "q4": "Voinko palauttaa tai vaihtaa tuotteen?",
+  "a4": "Kyllä, useimmat tuotteet voi palauttaa 14 päivän kuluessa toimituksesta, mikäli ne ovat käyttämättömiä ja alkuperäispakkauksessa. Aloita palautus tilaushistoriastasi.",
+
+  "q5": "Mistä tiedän, että osa sopii ajoneuvooni?",
+  "a5": "Jokaisella tuotesivulla on lueteltu yhteensopivat merkit, mallit ja vuosimallit. Jos olet epävarma, ota yhteyttä ja kerro ajoneuvosi tiedot, niin autamme varmistamaan yhteensopivuuden ennen tilausta."
+}
 }

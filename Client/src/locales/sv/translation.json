@@ -11,7 +11,8 @@
     "my_orders": "Mina Beställningar",
     "login": "Logga in",
     "logout": "Logga ut",
-    "search_placeholder": "Sök bildelar..."
+    "search_placeholder": "Sök bildelar...",
+    "about": "Om oss"
   },
   "footer": {
     "description": "Din pålitliga destination för förstklassiga bildelar och tillbehör. Vi erbjuder produkter av hög kvalitet, konkurrenskraftiga priser och snabb leverans i hela landet så att ditt fordon presterar som bäst.",
@@ -333,5 +334,43 @@
     "email_label": "E-post",
     "phone_label": "Telefon",
     "address_label": "Adress"
-  }
+  },
+  "about": {
+    "title": "Om oss",
+    "tagline": "Professionella produkter för billackering, levererade i hela Norden.",
+    "story_title": "Vår historia",
+    "story_body": "AgAuto grundades i Sverige med ett enkelt mål — att ge verkstäder och entusiaster i hela Skandinavien direkt tillgång till billackeringsprodukter av professionell kvalitet, utan väntetider och påslag från styckvis import. Det som började som en fokuserad svensk verksamhet har vuxit till en marknadsplats som nu betjänar kunder i Sverige, Norge, Finland och Danmark.",
+    "mission_title": "Vårt uppdrag",
+    "mission_body": "Att göra det enkelt att hitta, beställa och få kvalitetsprodukter för billackering — oavsett vilket nordiskt land du befinner dig i.",
+    "stat_countries": "Länder vi levererar till",
+    "stat_categories": "Produktkategorier",
+    "stat_languages": "Språk som stöds",
+    "stat_shipping": "Leverans i hela Norden",
+    "what_title": "Vad vi erbjuder",
+    "what_body": "Från primers och klarlack till slipmaterial, maskeringstejp, tätningsmedel och skyddsutrustning — vi lagerhåller det verkstäder faktiskt använder, med snabba leveranser i hela regionen.",
+    "why_title": "Varför välja oss",
+    "why_1": "Tydliga, transparenta priser — inga dolda importavgifter",
+    "why_2": "Ett sortiment byggt kring det verkstäder verkligen använder",
+    "why_3": "Snabb leverans i Sverige, Norge, Finland och Danmark",
+    "why_4": "Webbplatsen finns på ditt eget språk"
+  },
+  "faq": {
+  "title": "Vanliga Frågor",
+  "subtitle": "Allt du behöver veta innan du beställer.",
+
+  "q1": "Vilka länder levererar ni till?",
+  "a1": "Vi levererar för närvarande till Sverige, Norge, Finland och Danmark. Leveranstid och fraktkostnad beräknas automatiskt i kassan baserat på din adress.",
+
+  "q2": "Hur lång tid tar leveransen?",
+  "a2": "De flesta beställningar levereras inom 2–5 arbetsdagar, beroende på din plats och produktens tillgänglighet. Du får en spårningslänk via e-post så snart din beställning har skickats.",
+
+  "q3": "Vilka betalningsmetoder accepterar ni?",
+  "a3": "Vi accepterar alla större kredit- och betalkort, Klarna samt Apple Pay / Google Pay. Alla betalningar hanteras säkert via Stripe.",
+
+  "q4": "Kan jag returnera eller byta en produkt?",
+  "a4": "Ja, de flesta produkter kan returneras inom 14 dagar efter leverans, förutsatt att de är oanvända och i originalförpackning. Gå till din orderhistorik för att starta en retur.",
+
+  "q5": "Hur vet jag att en del passar mitt fordon?",
+  "a5": "Varje produktsida listar kompatibla märken, modeller och årsmodeller. Är du osäker? Kontakta oss med ditt fordons uppgifter så hjälper vi dig att bekräfta kompatibiliteten innan du beställer."
+}
 }

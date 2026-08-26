@@ -11,7 +11,8 @@
     "my_orders": "My Orders",
     "login": "Login",
     "logout": "Logout",
-    "search_placeholder": "Search automotive parts..."
+    "search_placeholder": "Search automotive parts...",
+    "about": "About"
   },
   "footer": {
     "description": "Your trusted destination for premium automotive parts and accessories. We provide high-quality products, competitive prices, and fast nationwide delivery to keep your vehicle performing at its best.",
@@ -333,5 +334,43 @@
     "email_label": "Email",
     "phone_label": "Phone",
     "address_label": "Address"
-  }
+  },
+  "about": {
+    "title": "About Us",
+    "tagline": "Professional automotive refinishing supplies, delivered across the Nordics.",
+    "story_title": "Our Story",
+    "story_body": "AgAuto was founded in Sweden with a simple goal — give automotive workshops and enthusiasts across Scandinavia direct access to professional-grade paint and refinishing products, without the delays and markups of piece-by-piece importing. What started as a focused Swedish operation has grown into a marketplace now serving customers across Sweden, Norway, Finland, and Denmark.",
+    "mission_title": "Our Mission",
+    "mission_body": "To make quality automotive refinishing products easy to find, order, and receive — no matter which Nordic country you're in.",
+    "stat_countries": "Countries Served",
+    "stat_categories": "Product Categories",
+    "stat_languages": "Languages Supported",
+    "stat_shipping": "Nordic-Wide Shipping",
+    "what_title": "What We Offer",
+    "what_body": "From primers and clearcoats to sanding supplies, masking tape, sealants, and safety gear — we stock the everyday essentials automotive professionals reach for, sourced for consistent quality and shipped quickly across the region.",
+    "why_title": "Why Choose Us",
+    "why_1": "Straightforward, transparent pricing — no hidden import fees",
+    "why_2": "A catalog built around what workshops actually use, not filler",
+    "why_3": "Fast delivery across Sweden, Norway, Finland, and Denmark",
+    "why_4": "Site available in your own language"
+  },
+  "faq": {
+  "title": "Frequently Asked Questions",
+  "subtitle": "Everything you need to know before you order.",
+
+  "q1": "Which countries do you ship to?",
+  "a1": "We currently ship across Sweden, Norway, Finland, and Denmark. Delivery times and shipping costs are calculated automatically at checkout based on your address.",
+
+  "q2": "How long does delivery take?",
+  "a2": "Most orders arrive within 2–5 business days, depending on your location and the item's availability. You'll receive a tracking link by email as soon as your order ships.",
+
+  "q3": "What payment methods do you accept?",
+  "a3": "We accept all major credit and debit cards, Klarna, and Apple Pay / Google Pay. All payments are processed securely through Stripe.",
+
+  "q4": "Can I return or exchange a product?",
+  "a4": "Yes, most items can be returned within 14 days of delivery, provided they're unused and in their original packaging. Visit your order history to start a return.",
+
+  "q5": "How do I know a part will fit my vehicle?",
+  "a5": "Each product page lists compatible makes, models, and years. If you're unsure, contact us with your vehicle details and we'll help confirm compatibility before you order."
+}
 }

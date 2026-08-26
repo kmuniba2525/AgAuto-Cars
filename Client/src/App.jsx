@@ -18,6 +18,7 @@ import LanguageDialog from "./Components/LanguageDialog";
 
 // ================= LAZY-LOADED PAGES =================
 const Home = React.lazy(() => import("./Pages/Home"));
+const About = React.lazy(() => import("./Pages/About"));
 const Contact = React.lazy(() => import("./Pages/Contact"));
 const AllProducts = React.lazy(() => import("./Pages/AllProducts"));
 const ProductCategory = React.lazy(() => import("./Pages/ProductCategory"));
@@ -69,9 +70,10 @@ const LegacyRedirect = () => {
   return <Navigate to={`/en${pathname}`} replace />;
 };
 
-// "/contact" has no locale-agnostic route of its own (mirrors "/products/*"
-// above) -- it goes through the same LegacyRedirect so an old bookmark or
-// external link to /contact still lands correctly rather than 404ing.
+// "/contact" and "/about" have no locale-agnostic route of their own (mirrors
+// "/products/*" above) -- they go through the same LegacyRedirect so an old
+// bookmark or external link to /contact or /about still lands correctly
+// rather than 404ing.
 
 // ================= NAVBAR / FOOTER VISIBILITY =================
 const HIDE_CHROME_EXACT = ["/checkout", "/payment-success"];
@@ -108,6 +110,7 @@ const App = () => {
             {/* index (e.g. "/en", "/sv") matches original "/" -> AllProducts */}
             <Route index element={<AllProducts />} />
             <Route path="home" element={<Home />} />
+            <Route path="about" element={<About />} />
             <Route path="products" element={<AllProducts />} />
             <Route path="products/:category" element={<ProductCategory />} />
             <Route path="products/:category/:id" element={<ProductDetail />} />
@@ -144,6 +147,7 @@ const App = () => {
           <Route path="/products/*" element={<LegacyRedirect />} />
           <Route path="/products" element={<LegacyRedirect />} />
           <Route path="/contact" element={<LegacyRedirect />} />
+          <Route path="/about" element={<LegacyRedirect />} />
 
         </Routes>
       </Suspense>

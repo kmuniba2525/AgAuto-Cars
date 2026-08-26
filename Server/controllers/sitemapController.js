@@ -24,6 +24,7 @@ export const generateSitemap = async (req, res) => {
     const pages = [
       { path: "", priority: "1.0" },
       { path: "products", priority: "0.9" },
+      { path: "about", priority: "0.6" },
       { path: "contact", priority: "0.5" },
       ...CATEGORIES.map((cat) => ({
         path: `products/${cat.toLowerCase()}`,
