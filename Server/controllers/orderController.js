@@ -7,7 +7,8 @@ import { errorResponse, successResponse } from "../utils/response.js";
 import { toCountryCode } from "../utils/countryCodes.js"; // normalizes country name/casing to ISO alpha-2
 import { getCurrencyForCountry } from "../utils/klarnaCurrency.js"; // currency should match customer's country
 import Stripe from "stripe";
-
+import { sendMail } from "../config/mailer.js";
+import { buildOrderConfirmationEmail } from "../utils/emailTemplates/orderConfirmation.js";
 // shared helper — validates guest info/address, since guests
 // don't have a saved Address document to reference by id.
 const buildGuestFields = (guestInfo, guestAddress) => {
@@ -26,13 +27,7 @@ const buildGuestFields = (guestInfo, guestAddress) => {
   return { guestInfo, guestAddress };
 };
 
-// only accept language codes the app actually offers at checkout —
-// anything else (missing field, garbage from a stale client, etc.) silently
-// falls back to "en" rather than saving invalid data on the order.
-// "pt" is commented out for now — Portuguese support paused. Note: the
-// Order schema's enum (Server/models/Order.js) still lists "pt" so any
-// existing orders tagged "pt" keep passing validation; only new orders are
-// blocked from selecting it here.
+
 const SUPPORTED_ORDER_LANGUAGES = [
   "en",
   // "pt", // commented out for now — Portuguese support paused
@@ -44,11 +39,7 @@ const SUPPORTED_ORDER_LANGUAGES = [
 const resolveOrderLanguage = (language) =>
   SUPPORTED_ORDER_LANGUAGES.includes(language) ? language : "en";
 
-// NEW: shared helper — resolves the customer's shipping address (from a
-// saved Address doc for logged-in users, or raw guestAddress for guests)
-// into the shape Stripe expects, plus picks a currency for the order based
-// on the customer's country. Used by both COD and the PaymentIntent flow so
-// tax/currency logic stays identical across payment methods.
+
 const resolveShippingAndCurrency = async ({ userId, address, guestInfo, guestAddress }) => {
   let shippingAddress = null;
   let rawCountry = null;
@@ -95,10 +86,7 @@ const resolveShippingAndCurrency = async ({ userId, address, guestInfo, guestAdd
   return { shippingAddress, currency };
 };
 
-// NEW: shared helper — runs a Stripe Tax calculation for a set of order
-// items against a resolved shipping address. Returns 0 tax (and no
-// calculation id) if we don't have a usable address, so callers can still
-// place an order rather than hard-failing on a missing/bad address.
+
 const calculateOrderTax = async (stripeInstance, { items, productMap, currency, shippingAddress }) => {
   const taxLineItems = [];
   let subtotal = 0;
@@ -274,6 +262,29 @@ export const placeOrderCOD = async (req, res) => {
       await User.findByIdAndUpdate(userId, { cartItems: {} });
     }
 
+    // SEND CONFIRMATION EMAIL — never blocks the response if it fails
+    const recipientEmail = userId
+      ? (await User.findById(userId))?.email
+      : guestInfo?.email;
+
+    if (recipientEmail) {
+      const orderForEmail = {
+        _id: order._id,
+        items: items.map((item) => {
+          const product = productMap[item.product];
+          return {
+            name: product?.name?.en || "Item",
+            quantity: item.quantity,
+            price: product?.offerPrice || 0,
+          };
+        }),
+        totalAmount: amount,
+        address: userId ? null : guestAddress, // populate this properly if you want saved addresses shown too
+      };
+      const { subject, html } = buildOrderConfirmationEmail(orderForEmail, "en");
+      sendMail(recipientEmail, subject, html);
+    }
+
     return res.json({
       success: true,
       message: "Order Placed Successfully",
@@ -285,7 +296,6 @@ export const placeOrderCOD = async (req, res) => {
   }
 };
 
-// STRIPE WEBHOOK
 // STRIPE WEBHOOK
 export const stripeWebhooks = async (request, response) => {
   const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -372,6 +382,30 @@ export const stripeWebhooks = async (request, response) => {
           message: itemSummary,
           type: "order",
         });
+
+        // SEND CONFIRMATION EMAIL — never blocks webhook response if it fails
+        const recipientEmail =
+          userId && userId !== "guest"
+            ? (await User.findById(userId))?.email
+            : order.guestInfo?.email;
+
+        if (recipientEmail) {
+          const orderForEmail = {
+            _id: order._id,
+            items: order.items.map((item) => {
+              const product = productMap[item.product.toString()];
+              return {
+                name: product?.name?.en || "Item",
+                quantity: item.quantity,
+                price: product?.offerPrice || 0,
+              };
+            }),
+            totalAmount: order.amount,
+            address: order.isGuestOrder ? order.guestAddress : null,
+          };
+          const { subject, html } = buildOrderConfirmationEmail(orderForEmail, "en");
+          sendMail(recipientEmail, subject, html);
+        }
       }
       break;
     }
