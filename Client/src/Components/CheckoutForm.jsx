@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
-export default function CheckoutForm({ amount, currency = 'eur' }) {
+export default function CheckoutForm({ amount, currency = 'sek' }) {
   const stripe = useStripe();
   const elements = useElements();
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const formattedAmount = new Intl.NumberFormat(undefined, {
+  const formattedAmount = new Intl.NumberFormat('sv-SE', {
     style: 'currency',
     currency: currency.toUpperCase(),
   }).format(amount);

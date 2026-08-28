@@ -49,21 +49,28 @@ const appearance = {
   },
 };
 
+// SEK is displayed with the symbol AFTER the amount by convention (e.g. "199,00 kr")
+const formatSEK = (value) =>
+  new Intl.NumberFormat('sv-SE', {
+    style: 'currency',
+    currency: 'SEK',
+  }).format(value);
+
 export default function Checkout() {
   const { t } = useTranslation();
   const [clientSecret, setClientSecret] = useState('');
   const [amount, setAmount] = useState(0);
 
   useEffect(() => {
-    const pending = JSON.parse(sessionStorage.getItem("pendingOrder") || "{}");
-    console.log("pendingOrder from sessionStorage:", pending);
+    const pending = JSON.parse(sessionStorage.getItem('pendingOrder') || '{}');
+    console.log('pendingOrder from sessionStorage:', pending);
 
     const { items, address, guestInfo, guestAddress } = pending.payload || {};
 
     const hasValidAddress = address || (guestInfo && guestAddress);
 
     if (!items || !hasValidAddress) {
-      console.error("Missing items or address in pendingOrder");
+      console.error('Missing items or address in pendingOrder');
       return;
     }
 
@@ -83,7 +90,7 @@ export default function Checkout() {
         setAmount(res.data.amount || 0);
 
         if (res.data.orderId) {
-          sessionStorage.setItem("lastOrderId", res.data.orderId);
+          sessionStorage.setItem('lastOrderId', res.data.orderId);
         }
       })
       .catch((err) => {
@@ -99,13 +106,13 @@ export default function Checkout() {
             {t('checkout.complete_payment')}
           </h2>
           <p className="text-zinc-100 text-2xl font-medium mt-0.5">
-            €{amount.toFixed(2)}
+            {formatSEK(amount)}
           </p>
         </div>
 
         {clientSecret && (
           <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
-            <CheckoutForm amount={amount} />
+            <CheckoutForm amount={amount} currency="sek" />
           </Elements>
         )}
       </div>
