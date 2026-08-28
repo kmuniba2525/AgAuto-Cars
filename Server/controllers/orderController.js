@@ -7,7 +7,7 @@ import { errorResponse, successResponse } from "../utils/response.js";
 import { toCountryCode } from "../utils/countryCodes.js"; // normalizes country name/casing to ISO alpha-2
 import { getCurrencyForCountry } from "../utils/klarnaCurrency.js"; // currency should match customer's country
 import Stripe from "stripe";
-import { sendMail } from "../config/mailer.js";
+import { sendMail } from "../configs/mailer.js";
 import { buildOrderConfirmationEmail } from "../utils/emailTemplates/orderConfirmation.js";
 // shared helper — validates guest info/address, since guests
 // don't have a saved Address document to reference by id.
@@ -189,6 +189,7 @@ export const placeOrderCOD = async (req, res) => {
     );
 
     const amount = subtotal + taxAmount;
+    const orderLanguage = resolveOrderLanguage(language);
 
     // CREATE ORDER
     const order = await Order.create({
@@ -202,7 +203,7 @@ export const placeOrderCOD = async (req, res) => {
       ...(guestFields || {}),
       paymentType: "COD",
       isPaid: true,
-      language: resolveOrderLanguage(language),
+      language: orderLanguage,
     });
 
     // record the tax transaction for reporting/filing now that the order
@@ -270,6 +271,7 @@ export const placeOrderCOD = async (req, res) => {
     if (recipientEmail) {
       const orderForEmail = {
         _id: order._id,
+        currency,
         items: items.map((item) => {
           const product = productMap[item.product];
           return {
@@ -280,8 +282,9 @@ export const placeOrderCOD = async (req, res) => {
         }),
         totalAmount: amount,
         address: userId ? null : guestAddress, // populate this properly if you want saved addresses shown too
+        guestInfo,
       };
-      const { subject, html } = buildOrderConfirmationEmail(orderForEmail, "en");
+      const { subject, html } = buildOrderConfirmationEmail(orderForEmail, orderLanguage);
       sendMail(recipientEmail, subject, html);
     }
 
@@ -392,6 +395,7 @@ export const stripeWebhooks = async (request, response) => {
         if (recipientEmail) {
           const orderForEmail = {
             _id: order._id,
+            currency: order.currency,
             items: order.items.map((item) => {
               const product = productMap[item.product.toString()];
               return {
@@ -402,8 +406,12 @@ export const stripeWebhooks = async (request, response) => {
             }),
             totalAmount: order.amount,
             address: order.isGuestOrder ? order.guestAddress : null,
+            guestInfo: order.guestInfo,
           };
-          const { subject, html } = buildOrderConfirmationEmail(orderForEmail, "en");
+          const { subject, html } = buildOrderConfirmationEmail(
+            orderForEmail,
+            order.language || "en"
+          );
           sendMail(recipientEmail, subject, html);
         }
       }
