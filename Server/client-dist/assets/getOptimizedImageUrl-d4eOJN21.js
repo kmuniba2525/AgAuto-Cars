@@ -1,0 +1,1 @@
+var e=`/upload/`,t=t=>typeof t==`string`&&t.includes(`res.cloudinary.com`)&&t.indexOf(e)!==-1,n=(n,r=400)=>{if(!n||typeof n!=`string`)return n;let i=n.indexOf(e);if(!t(n))return n;let a=i+8;return n.slice(0,a)+`f_auto,q_auto,w_${r}/`+n.slice(a)},r=(e,r=[200,400,600,800,1200])=>{if(t(e))return r.map(t=>`${n(e,t)} ${t}w`).join(`, `)};export{r as n,n as t};
