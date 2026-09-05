@@ -4,8 +4,7 @@ import { assets, categories } from "../../assets/assets";
 import { useAppContext } from "../../Context/AppContext";
 import toast from "react-hot-toast";
 
-import { CKEditor } from "@ckeditor/ckeditor5-react";
-import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+
 
 const emptyVariant = () => ({
   label: "",
@@ -334,13 +333,13 @@ const EditProduct = () => {
                 ({l.label}{!l.required ? ", optional" : ""})
               </span>
             </label>
-            <div className="border rounded">
-              <CKEditor
-                editor={ClassicEditor}
-                data={description[l.code]}
-                onChange={(event, editor) => updateDescription(l.code, editor.getData())}
-              />
-            </div>
+            <textarea
+     value={description[l.code]}
+     onChange={(e) => updateDescription(l.code, e.target.value)}
+     rows={6}
+     placeholder={l.placeholder}
+     className="outline-none p-3 rounded border border-gray-400 focus:border-primary text-sm resize-y"
+   />
             {!l.required && (
               <p className="text-xs text-gray-400">
                 Leave blank to show the English description to {l.label} customers for now.

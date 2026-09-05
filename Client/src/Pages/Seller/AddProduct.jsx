@@ -3,9 +3,7 @@ import { assets, categories } from "../../assets/assets";
 import { useAppContext } from "../../Context/AppContext";
 import toast from "react-hot-toast";
 
-// CKEditor
-import { CKEditor } from "@ckeditor/ckeditor5-react";
-import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+
 
 const emptyVariant = () => ({
   label: "",
@@ -347,18 +345,14 @@ const AddProduct = () => {
             />
           </div>
 
-          <div className="border rounded overflow-hidden">
-            {/* key forces CKEditor to remount with the right initial data
-                when switching languages, since it's an uncontrolled editor */}
-            <CKEditor
-              key={activeDescLang}
-              editor={ClassicEditor}
-              data={description[activeDescLang]}
-              onChange={(event, editor) =>
-                updateDescription(activeDescLang, editor.getData())
-              }
-            />
-          </div>
+             <textarea
+     key={activeDescLang}
+     value={description[activeDescLang]}
+     onChange={(e) => updateDescription(activeDescLang, e.target.value)}
+     rows={6}
+     placeholder="Write the product description here..."
+     className="w-full outline-none p-3 rounded border border-gray-400 focus:border-primary text-sm sm:text-base resize-y"
+   />
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <p className="text-xs text-gray-400">
