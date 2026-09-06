@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useAppContext } from "../../Context/AppContext";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { Search, X } from "lucide-react";
+import { Search, X, Trash2 } from "lucide-react";
 import { getLocalizedText } from "../../utils/getLocalizedText";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { getOptimizedImageUrl } from "../../utils/getOptimizedImageUrl";
@@ -23,6 +23,28 @@ const ProductList = () => {
   const updateStock = async (id, stock) => {
     try {
       const { data } = await axios.post("/api/product/stock", { id, stock });
+
+      if (data.success) {
+        toast.success(data.message);
+        fetchProducts();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.response?.data?.message || error.message);
+    }
+  };
+
+  const deleteProduct = async (id, displayName) => {
+    const confirmed = window.confirm(
+      `Delete "${displayName}"? This removes it from the database permanently and everywhere it's shown on the site.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const { data } = await axios.delete(`/api/product/${id}`);
 
       if (data.success) {
         toast.success(data.message);
@@ -177,6 +199,16 @@ const ProductList = () => {
                       Edit
                     </button>
                   </div>
+
+                  <div className="flex justify-end mt-1.5">
+                    <button
+                      onClick={() => deleteProduct(product._id, displayName)}
+                      className="flex items-center gap-1 text-xs font-semibold text-red-500 hover:text-red-700 transition-colors"
+                    >
+                      <Trash2 size={13} />
+                      Delete
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -253,12 +285,21 @@ const ProductList = () => {
                       </td>
 
                       <td className="px-4 py-4">
-                        <button
-                          onClick={() => navigate(`/seller/edit-product/${product._id}`)}
-                          className="text-primary text-xs font-semibold border border-primary/30 rounded-full px-3 py-1.5 hover:bg-primary hover:text-white transition-colors"
-                        >
-                          Edit
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => navigate(`/seller/edit-product/${product._id}`)}
+                            className="text-primary text-xs font-semibold border border-primary/30 rounded-full px-3 py-1.5 hover:bg-primary hover:text-white transition-colors"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => deleteProduct(product._id, displayName)}
+                            className="flex items-center justify-center text-red-500 text-xs font-semibold border border-red-200 rounded-full p-1.5 hover:bg-red-500 hover:text-white transition-colors"
+                            aria-label={`Delete ${displayName}`}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

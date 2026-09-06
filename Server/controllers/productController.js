@@ -456,6 +456,59 @@ export const addReview = async (req, res) => {
 };
 
 // =========================
+// DELETE PRODUCT
+// =========================
+// Removes the product itself, plus:
+// - its images from Cloudinary (so storage doesn't accumulate orphaned files)
+// - any reference to it sitting in a user's cart (cartItems is a plain
+//   { productId: qty } object per user, so a deleted product would
+//   otherwise keep showing up in someone's cart with no way to remove it)
+// Existing orders are left untouched — an order is a historical record of
+// what was purchased and should still show what the customer actually
+// bought, even after the product is removed from the catalog.
+export const deleteProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const product = await Product.findById(id);
+
+    if (!product) {
+      return errorResponse(res, 404, "Product not found");
+    }
+
+    // Best-effort Cloudinary cleanup — don't let a failed image delete
+    // block removing the product itself.
+    if (Array.isArray(product.image)) {
+      await Promise.all(
+        product.image.map(async (url) => {
+          try {
+            const publicId = url.split("/upload/")[1]?.split(".")[0];
+            if (publicId) {
+              await cloudinary.uploader.destroy(publicId);
+            }
+          } catch (err) {
+            console.log("CLOUDINARY DELETE WARNING:", err.message);
+          }
+        })
+      );
+    }
+
+    // Strip this product out of every user's cart so it doesn't linger
+    // as an unpurchasable line item after deletion.
+    await User.updateMany(
+      { [`cartItems.${id}`]: { $exists: true } },
+      { $unset: { [`cartItems.${id}`]: "" } }
+    );
+
+    await Product.findByIdAndDelete(id);
+
+    return successResponse(res, 200, "Product deleted successfully");
+  } catch (error) {
+    console.log("DELETE PRODUCT ERROR:", error);
+    return errorResponse(res, 500, error.message);
+  }
+};
+// =========================
 // UPDATE PRODUCT (EDIT)
 // =========================
 export const updateProduct = async (req, res) => {

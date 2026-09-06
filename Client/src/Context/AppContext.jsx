@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import axios from "axios";
@@ -33,6 +33,14 @@ export const AppContextProvider = ({ children }) => {
   const [cartReady, setCartReady] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // Interceptors are registered once (see the useEffect below) so their
+  // closures would otherwise only ever see isSeller's initial value.
+  // This ref keeps a live copy they can read instead.
+  const isSellerRef = useRef(false);
+  useEffect(() => {
+    isSellerRef.current = isSeller;
+  }, [isSeller]);
 
   // ================= SELLER AUTH =================
   const fetchSeller = async () => {
@@ -214,6 +222,39 @@ const syncGuestCart = async () => {
 
     return Math.floor(totalAmount * 100) / 100;
   };
+
+  // ================= SELLER SESSION EXPIRY HANDLING =================
+  // Problem this fixes: isSeller is only checked once on initial page load
+  // (see fetchSeller in the init effect below). If the sellerToken cookie
+  // expires or gets cleared while someone is still browsing the seller
+  // dashboard, isSeller stays stuck at `true` in React state — so the
+  // dashboard UI keeps rendering while every API call underneath silently
+  // fails with 401, with no indication to the seller of what went wrong.
+  //
+  // This interceptor watches every response globally. It only acts when
+  // both are true: the request came back 401, AND we previously believed
+  // the person was an authenticated seller (isSellerRef.current). That
+  // second condition is what stops this from misfiring on a first-time
+  // visitor hitting the seller login page, whose initial fetchSeller()
+  // 401 is expected and not a "session expired" event.
+  useEffect(() => {
+    const interceptorId = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        const status = error.response?.status;
+
+        if (status === 401 && isSellerRef.current) {
+          setIsSeller(false);
+          toast.error("Your session has expired. Please log in again.");
+          navigate("/seller");
+        }
+
+        return Promise.reject(error);
+      }
+    );
+
+    return () => axios.interceptors.response.eject(interceptorId);
+  }, [navigate]);
 
   // ================= INITIAL LOAD =================
   // These three calls are independent of each other (user auth, product

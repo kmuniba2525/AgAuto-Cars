@@ -15,6 +15,8 @@ const MainBanner = () => {
     {
       image: assets.main_banner_bg,
       imageMobile: assets.main_banner_bg_sm,
+      width: 1200,
+      height: 675,
       tagline: t('banner.slide1_tagline'),
       title: (
         <>
@@ -31,6 +33,8 @@ const MainBanner = () => {
     {
       image: assets.main_banner_bg2,
       imageMobile: assets.main_banner_bg2_sm,
+      width: 1203,
+      height: 538,
       tagline: t('banner.slide2_tagline'),
       title: (
         <>
@@ -47,6 +51,8 @@ const MainBanner = () => {
     {
       image: assets.main_banner_bg3,
       imageMobile: assets.main_banner_bg3_sm,
+      width: 1200,
+      height: 675,
       tagline: t('banner.slide3_tagline'),
       title: (
         <>
@@ -82,6 +88,8 @@ const MainBanner = () => {
                   <img
                     src={slide.image}
                     alt=""
+                    width={slide.width}
+                    height={slide.height}
                     className="absolute inset-0 w-full h-full object-cover"
                     // Only the first slide is above-the-fold on initial load, so only it
                     // gets eager/high-priority loading. The rest are lazy to avoid

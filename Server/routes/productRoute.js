@@ -11,6 +11,7 @@ import {
   productList,
   addReview,
   updateProduct,
+  deleteProduct,
 } from "../controllers/productController.js";
 
 const productRouter = express.Router();
@@ -22,6 +23,8 @@ productRouter.post(
   addProduct
 );
 productRouter.put("/edit/:id", upload.array("image", 4), authSeller, updateProduct);
+
+productRouter.delete("/:id", authSeller, deleteProduct);
 
 productRouter.get("/list", productList);
 
