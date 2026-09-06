@@ -99,6 +99,10 @@ group
             <img
               src={category.image}
               alt={category.text}
+              width={250}
+              height={340}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
 

@@ -67,6 +67,9 @@ const Navbar = () => {
                         <img
                             src={assets.Logo}
                             alt="Auto Center AB"
+                            width={600}
+                            height={400}
+                            fetchpriority="high"
                             className="h-20 sm:h-24 lg:h-32 w-auto max-w-none object-contain"
                         />
                     </NavLink>

@@ -29,7 +29,7 @@ const Footer = () => {
 
                     {/* Logo & Description */}
                     <div className="max-w-sm">
-                        <img src={assets.Logo} alt="Autodex" className="w-40 sm:w-48 h-auto object-contain" />
+                        <img src={assets.Logo} alt="Autodex" width={600} height={400} loading="lazy" decoding="async" className="w-40 sm:w-48 h-auto object-contain" />
                         <p className="mt-3 sm:mt-4 text-gray-400 leading-6 text-xs sm:text-sm">
                             {t('footer.description')}
                         </p>

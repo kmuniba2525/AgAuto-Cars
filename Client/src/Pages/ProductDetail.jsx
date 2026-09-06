@@ -185,6 +185,8 @@ const ProductDetail = () => {
               srcSet={getSrcSet(heroImage, [400, 600, 800, 1000, 1200])}
               sizes="(max-width: 1024px) 100vw, 50vw"
               alt={localizedName}
+              width={800}
+              height={800}
               fetchpriority="high"
               decoding="async"
               className="w-full h-full object-cover"
@@ -205,6 +207,8 @@ const ProductDetail = () => {
                   <img
                     src={getOptimizedImageUrl(img, 100)}
                     alt={`thumb-${index}`}
+                    width={100}
+                    height={100}
                     loading="lazy"
                     decoding="async"
                     className="w-full h-full object-cover"

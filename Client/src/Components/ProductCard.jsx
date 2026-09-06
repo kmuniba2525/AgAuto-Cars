@@ -47,6 +47,8 @@ const ProductCard = ({ product, eager = false }) => {
           srcSet={getSrcSet(rawImage)}
           sizes="(max-width: 640px) 45vw, (max-width: 1024px) 25vw, 20vw"
           alt={localizedName}
+          width={400}
+          height={400}
           loading={eager ? "eager" : "lazy"}
           fetchpriority={eager ? "high" : "auto"}
           decoding="async"
