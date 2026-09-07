@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { assets } from '../assets/assets'
 import { useAppContext } from '../Context/AppContext'
@@ -11,6 +11,8 @@ const Navbar = () => {
     const [openChat, setOpenChat] = useState(false)
     const location = useLocation()
     const { t, i18n } = useTranslation()
+    const logoClickCount = useRef(0)
+    const logoClickTimer = useRef(null)
 
     const {
         user, setUser, setShowUserLogin, navigate,
@@ -58,12 +60,31 @@ const Navbar = () => {
         after:bg-accent after:transition-all after:duration-300
         ${isActive ? "after:w-full" : "after:w-0 hover:after:w-full"}`
 
+    // Triple-click the logo within 1s to open the admin panel — no visible
+    // affordance in the nav on purpose. A single/double click still navigates
+    // home as normal (NavLink's default behavior isn't blocked).
+    const handleLogoClick = (e) => {
+        logoClickCount.current += 1
+        if (logoClickTimer.current) clearTimeout(logoClickTimer.current)
+
+        if (logoClickCount.current >= 3) {
+            e.preventDefault()
+            logoClickCount.current = 0
+            navigate('/seller')
+            return
+        }
+
+        logoClickTimer.current = setTimeout(() => {
+            logoClickCount.current = 0
+        }, 1000)
+    }
+
     return (
         <>
             <nav className="flex items-center px-6 md:px-16 lg:px-24 xl:px-32 h-[95px] border-b border-gray-800 bg-primary sticky top-0 z-50">
 
                 <div className="flex flex-1 items-center">
-                    <NavLink to="/" className="flex items-center flex-shrink-0">
+                    <NavLink to="/" className="flex items-center flex-shrink-0" onClick={handleLogoClick}>
                         <img
                             src={assets.Logo}
                             alt="Auto Center AB"
@@ -116,7 +137,6 @@ const Navbar = () => {
                     <button onClick={() => setOpenChat(prev => !prev)} className="shrink-0">
                        <img src={assets.chat_icon} alt="chat" className="w-6 opacity-80" />
                     </button>
-
 
                     {/* LANGUAGE SWITCHER — GLOBE DROPDOWN */}
                     <div className="relative group shrink-0">
@@ -255,6 +275,8 @@ const Navbar = () => {
                                 {t('navbar.my_orders')}
                             </button>
                         )}
+
+
 
                         {/* MOBILE LANGUAGE SWITCHER */}
                         <div className="flex items-center gap-2 pt-1 flex-wrap">
